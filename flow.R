@@ -59,12 +59,9 @@ boxplot(differences, las = 0,
         xlab = 'YoY difference', 
         ylab = 'Number of cars')
 rm(differences, conditions, aggregate.by.hour_, YoY.diff)
-#### Can a given year traffic be predicted by the previous year traffic? ####
+#### Can a given day traffic be predicted by the previous days traffic? ####
 t <- rbind(
-  df[which(df$PERIODO == 2016), ] %>%
-    group_by(FECHA) %>%
-    summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)),
-  df[which(df$PERIODO == 2017), ] %>%
+  df[which(df$PERIODO >= 2015 & df$PERIODO <= 2018), ] %>%
     group_by(FECHA) %>%
     summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)))
 # Correct how rows are ordered by date.
