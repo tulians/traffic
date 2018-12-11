@@ -5,6 +5,7 @@
 rm(list = ls()); gc();
 library(dplyr)
 library(forecast)
+library(ggplot2)
 
 setwd('~/Documents/traffic/')
 source('utils.R')
@@ -15,7 +16,7 @@ df <- standarize.criteria()
 #### Data wrangling ####
 df <- transform.values(df, './datasets/traffic.csv')
 
-#### Increase in traffic comparing consecutive years ####
+#### Increase in traffic comparing consecutive years. ####
 
 aggregate.by.hour_ <- function(df) {
   return(df %>%
@@ -59,6 +60,7 @@ boxplot(differences, las = 0,
         xlab = 'YoY difference', 
         ylab = 'Number of cars')
 rm(differences, conditions, aggregate.by.hour_, YoY.diff)
+
 #### Can a given day traffic be predicted by the previous days traffic? ####
 t <- rbind(
   df[which(df$PERIODO >= 2015 & df$PERIODO <= 2018), ] %>%
@@ -75,3 +77,22 @@ fc <- forecast(fit)
 plot(fc)
 t.ts.components <- decompose(t.ts)
 plot(t.ts.components)
+
+#### Heatmap with the volume of traffic at a certain moment of time. ####
+features <- c('ESTACION', 'DIA', 'CANTIDAD_PASOS', 'PERIODO')
+t <- df[features]; rm(features)
+t <- rbind(t %>%
+            filter(PERIODO == '2015') %>%
+            group_by(ESTACION, DIA) %>%
+            summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)))
+t <- t %>% arrange(ESTACION, DIA)
+p <- ggplot(t, aes(x = DIA, y = ESTACION, fill = CANTIDAD_PASOS)) +
+  geom_tile() +
+  geom_text(aes(label = CANTIDAD_PASOS), size = 4) +
+  scale_fill_gradient(low = 'white', high = 'steelblue') +
+  scale_x_discrete(expand = c(0, 0)) + 
+  scale_y_discrete(expand = c(0, 0)) +
+  labs(x = '', y = '') +
+  coord_equal() +
+  theme_bw()
+plot(p)
