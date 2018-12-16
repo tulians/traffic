@@ -50,17 +50,6 @@ The tool used to perform aggregations and other operations over dataframes is th
 library(dplyr)
 ```
 
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
 As a way of starting to know this dataset, we can see that there is a difference on the amount of entries in each file of our dataset.
 
 ``` r
