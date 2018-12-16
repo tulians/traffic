@@ -79,20 +79,26 @@ t.ts.components <- decompose(t.ts)
 plot(t.ts.components)
 
 #### Heatmap with the volume of traffic at a certain moment of time. ####
-features <- c('ESTACION', 'DIA', 'CANTIDAD_PASOS', 'PERIODO')
-t <- df[features]; rm(features)
-t <- rbind(t %>%
-            filter(PERIODO == '2015') %>%
-            group_by(ESTACION, DIA) %>%
-            summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)))
-t <- t %>% arrange(ESTACION, DIA)
-p <- ggplot(t, aes(x = DIA, y = ESTACION, fill = CANTIDAD_PASOS)) +
-  geom_tile() +
-  geom_text(aes(label = CANTIDAD_PASOS), size = 4) +
-  scale_fill_gradient(low = 'white', high = 'steelblue') +
-  scale_x_discrete(expand = c(0, 0)) + 
-  scale_y_discrete(expand = c(0, 0)) +
-  labs(x = '', y = '') +
-  coord_equal() +
-  theme_bw()
-plot(p)
+traffic.volume.heatmap <- function(start.year, end.year=start.year) {
+  features <- c('ESTACION', 'DIA', 'CANTIDAD_PASOS', 'PERIODO')
+  t <- df[features]; rm(features)
+  t <- rbind(t %>%
+               filter(PERIODO >= start.year & PERIODO <= end.year) %>%
+               group_by(ESTACION, DIA) %>%
+               summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)))
+  t <- t %>% arrange(ESTACION, DIA)
+  p <- ggplot(t, aes(x = factor(DIA, level = c('DOMINGO', 'LUNES',  'MARTES', 
+                                               'MIERCOLES',  'JUEVES', 'VIERNES', 
+                                               'SABADO')),
+                     y = ESTACION, 
+                     fill = CANTIDAD_PASOS)) +
+    geom_tile() +
+    geom_text(aes(label = CANTIDAD_PASOS), size = 4) +
+    scale_fill_gradient(low = 'white', high = 'steelblue') +
+    scale_x_discrete(expand = c(0, 0)) + 
+    scale_y_discrete(expand = c(0, 0)) +
+    labs(x = '', y = '') +
+    coord_equal() +
+    theme_bw() 
+}
+plot(traffic.volume.heatmap(2015, 2016))

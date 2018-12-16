@@ -73,53 +73,44 @@ plot(volume.per.year$CANTIDAD_PASOS ~ volume.per.year$PERIODO,
 abline(trend, col = 'red')
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-3-1.png)
+![](README_files/figure-markdown_github/trend-1.png)
 
 For the graph above it's clear there's an order of magnitud of difference between the amount of vehicles in the period 2008-2013 versus the period 2014-2018. This doesn't mean the number of vehicles skyrocketed in a matter of two years, but rather that new toll booth locations were added to the dataset along those years, which ended up adding 10x more information. To make this evident, compare the amount of toll booths on this heatmap from 2013
 
 ``` r
+library(png)
 library(ggplot2)
-features <- c('ESTACION', 'DIA', 'CANTIDAD_PASOS', 'PERIODO')
-t <- df[features]; rm(features)
-t <- rbind(t %>%
-            filter(PERIODO == '2013') %>%
-            group_by(ESTACION, DIA) %>%
-            summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)))
-t <- t %>% arrange(ESTACION, DIA)
-p <- ggplot(t, aes(x = DIA, y = ESTACION, fill = CANTIDAD_PASOS)) +
-  geom_tile() +
-  geom_text(aes(label = CANTIDAD_PASOS), size = 3) +
-  scale_fill_gradient(low = 'white', high = 'steelblue') +
-  scale_x_discrete(expand = c(0, 0)) + 
-  scale_y_discrete(expand = c(0, 0)) +
-  labs(x = '', y = '') +
-  coord_equal() +
-  theme_bw()
-plot(p)
+traffic.volume.heatmap <- function(start.year, end.year=start.year) {
+  features <- c('ESTACION', 'DIA', 'CANTIDAD_PASOS', 'PERIODO')
+  t <- df[features]; rm(features)
+  t <- rbind(t %>%
+               filter(PERIODO >= start.year & PERIODO <= end.year) %>%
+               group_by(ESTACION, DIA) %>%
+               summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)))
+  t <- t %>% arrange(ESTACION, DIA)
+  p <- ggplot(t, aes(x = factor(DIA, level = c('DOMINGO', 'LUNES',  'MARTES', 
+                                               'MIERCOLES',  'JUEVES', 'VIERNES', 
+                                               'SABADO')),
+                     y = ESTACION, 
+                     fill = CANTIDAD_PASOS)) +
+    geom_tile() +
+    geom_text(aes(label = CANTIDAD_PASOS), size = 4) +
+    scale_fill_gradient(low = 'white', high = 'steelblue') +
+    scale_x_discrete(expand = c(0, 0)) + 
+    scale_y_discrete(expand = c(0, 0)) +
+    labs(x = '', y = '') +
+    coord_equal() +
+    theme_bw() 
+}
+plot(traffic.volume.heatmap(2013))
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)
+![](README_files/figure-markdown_github/heatmap2013-1.png)
 
 with those on this other one from 2015:
 
 ``` r
-features <- c('ESTACION', 'DIA', 'CANTIDAD_PASOS', 'PERIODO')
-t <- df[features]; rm(features)
-t <- rbind(t %>%
-            filter(PERIODO == '2015') %>%
-            group_by(ESTACION, DIA) %>%
-            summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)))
-t <- t %>% arrange(ESTACION, DIA)
-p <- ggplot(t, aes(x = DIA, y = ESTACION, fill = CANTIDAD_PASOS)) +
-  geom_tile() +
-  geom_text(aes(label = CANTIDAD_PASOS), size = 3) +
-  scale_fill_gradient(low = 'white', high = 'steelblue') +
-  scale_x_discrete(expand = c(0, 0)) + 
-  scale_y_discrete(expand = c(0, 0)) +
-  labs(x = '', y = '') +
-  coord_equal() +
-  theme_bw()
-plot(p)
+plot(traffic.volume.heatmap(2015))
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-5-1.png)
+![](README_files/figure-markdown_github/heatmap2015-1.png)
