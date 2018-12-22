@@ -7,12 +7,17 @@ library(png)
 library(dplyr)
 library(ggplot2)
 library(forecast)
+library(lazyeval)
 
-traffic.volume.heatmap <- function(start.year, end.year = start.year, normalize = T) {
+traffic.volume.heatmap <- function(start.year, 
+                                   end.year = start.year, 
+                                   normalize = T) {
   #' Heatmap with the volume of traffic at a certain moment of time.
   #' 
-  #' @param start.year First year to take into account when building the heatmap (inclusive).
-  #' @param end.year Last year to take into account when building the heatmap (inclusive).
+  #' @param start.year First year to take into account when building the 
+  #' heatmap (inclusive).
+  #' @param end.year Last year to take into account when building the heatmap 
+  #' (inclusive).
   #' @param normalize Normalize values in each cell to [0, 1] range.
   #' @return A ggplot2 object containing the heatmap.
   #' @example 
@@ -28,12 +33,13 @@ traffic.volume.heatmap <- function(start.year, end.year = start.year, normalize 
     t <- t %>%
       group_by(ESTACION) %>%
       mutate(CANTIDAD_PASOS = round(
-        (CANTIDAD_PASOS - min(CANTIDAD_PASOS)) / (max(CANTIDAD_PASOS) - min(CANTIDAD_PASOS)), 3))
+        (CANTIDAD_PASOS - min(CANTIDAD_PASOS)) / 
+          (max(CANTIDAD_PASOS) - min(CANTIDAD_PASOS)), 3))
   }
   t <- t %>% arrange(ESTACION, DIA)
-  p <- ggplot(t, aes(x = factor(DIA, level = c('DOMINGO', 'LUNES',  'MARTES', 
-                                               'MIERCOLES',  'JUEVES', 'VIERNES', 
-                                               'SABADO')),
+  p <- ggplot(t, aes(x = factor(DIA, level = c('DOMINGO', 'LUNES', 'MARTES', 
+                                               'MIERCOLES', 'JUEVES', 
+                                               'VIERNES', 'SABADO')),
                      y = ESTACION, 
                      fill = CANTIDAD_PASOS)) +
     geom_tile() +
@@ -46,27 +52,22 @@ traffic.volume.heatmap <- function(start.year, end.year = start.year, normalize 
     theme_bw() 
 }
 
-hourly.breakdown <- function(df, conditions) {
-  #' Traffic volume broken down by hour and vehicle type.
+custom.agg <- function(df, amount.of.years, ...) {
+  #' Returns an estimated daily average of vehicles for a custom breakdown.
   #' 
-  #' @param df Dataframe with toll booth name, vehicle type and volume, and time.
-  #' @param conditions Set of filtering conditions to apply.
-  #' @return A ggplot2 object containing the line chart.
-  #' @example 
-  #' hourly.breakdown(df)
-  
-  aggregate.by.hour_ <- function(df, amount.of.years) {
-    return(df %>%
-             group_by(TIPO_VEHICULO, HORA) %>%
-             summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)) %>%
-             mutate(CANTIDAD_PASOS = CANTIDAD_PASOS / (amount.of.years * 365.25 / 7))
-    )
-  }
-  
-  t <- aggregate.by.hour_(df[conditions,], length(unique(df$PERIODO)))
-  p <- ggplot(data = t, aes(x = format(strptime(HORA,"%H:%M:%S"),'%H'), 
-                            y = CANTIDAD_PASOS, group = TIPO_VEHICULO)) +
-    labs(x = 'HORA') +
-    geom_line(aes(linetype = TIPO_VEHICULO, color = TIPO_VEHICULO)) +
-    theme_bw() 
+  #'  @param df Dataframe with traffic information.
+  #'  @param amount.of.years Number of years to take into account for the daily
+  #'  average estimation.
+  #'  @param ... Columns to use in grouping.
+  #'  @return A tibble with the estimated amount of vehicles for a given group
+  #'  of columns.
+  #'  @example custom.agg(
+  #'       df[(df$ESTACION == 'RETIRO'),], 11, 'FORMA_PAGO', 'HORA'
+  #'  )
+  return(df %>%
+           group_by_(...) %>%
+           summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)) %>%
+           mutate(CANTIDAD_PASOS = CANTIDAD_PASOS / 
+                    (amount.of.years * 365.25 / 7))
+  )
 }

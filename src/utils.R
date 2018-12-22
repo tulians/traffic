@@ -4,7 +4,7 @@
 
 standarize.criteria <- function() {
   #' The dataset is composed of 11 files, consisting on samples from 2008 to
-  #' 2018. Not all of them have the same column names, not the same column
+  #' 2018. Not all of them have the same column names, nor the same column
   #' order. This function standardizes their format, and merges them all in a
   #' single .csv file.
 
@@ -205,6 +205,26 @@ transform.values <- function(df, output.file) {
       TIPO_VEHICULO == 'Pesado' ~ 'PESADO',
       TRUE ~ as.character(TIPO_VEHICULO)
     ),
+    LAT = case_when(ESTACION == 'ALBERDI' ~ -34.64480276487647,
+                    ESTACION == 'AVELLANEDA' ~ -34.648273239205025,
+                    ESTACION == 'DEL' ~ -34.648001,
+                    ESTACION == 'ILLIA' ~ 0,
+                    ESTACION == 'RETIRO' ~ -34.5752543,
+                    ESTACION == 'SARMIENTO' ~ 0,
+                    ESTACION == 'DEC' ~ 0,
+                    ESTACION == 'SALGUERO' ~ 0,
+                    ESTACION == 'DELLEPIANE CENTRO' ~ -34.648001,
+                    ESTACION == 'DELLEPIANE LINIERS' ~ -34.648001),
+    LONG = case_when(ESTACION == 'ALBERDI' ~ -58.49205422072362,
+                     ESTACION == 'AVELLANEDA' ~ -58.478106424442785,
+                     ESTACION == 'DEL' ~ -58.4645727,
+                     ESTACION == 'ILLIA' ~ 0,
+                     ESTACION == 'RETIRO' ~ -58.3921129,
+                     ESTACION == 'SARMIENTO' ~ 0,
+                     ESTACION == 'DEC' ~ 0,
+                     ESTACION == 'SALGUERO' ~ 0,
+                     ESTACION == 'DELLEPIANE CENTRO' ~ -58.4645727,
+                     ESTACION == 'DELLEPIANE LINIERS' ~ -58.4645727),
     ESTACION = as.factor(ESTACION),
     HORA = as.factor(HORA),
     HORA_FIN = as.factor(HORA_FIN),
