@@ -2,7 +2,7 @@
 # Julián Ailán - jailan@itba.edu.ar
 # ITBA - 2018/2019
 
-standarize.criteria <- function() {
+standarize.criteria_ <- function() {
   #' The dataset is composed of 11 files, consisting on samples from 2008 to
   #' 2018. Not all of them have the same column names, nor the same column
   #' order. This function standardizes their format, and merges them all in a
@@ -37,18 +37,19 @@ standarize.criteria <- function() {
   return(read.csv('./datasets/merged.csv', sep = ';', header = T, stringsAsFactors = T))
 }
 
-transform.values <- function(df, output.file) {
+transform.values <- function(output.file = './datasets/traffic.csv') {
   #' Among categorical attributes, not all of them have the same value for the
   #' same concept, fox example you could find the same toll name writen in 
   #' all caps and then all lowers. This function standardizes that, and creates
   #' a new dataset.
   #' 
-  #' @param df Input dataframe, over which all standardization is performed.
   #' @param output.file Path and name of the file which will result of values 
   #' transformation.
   #' 
   #' @return The standardized dataframe.
 
+  setwd('~/Documents/traffic/')
+  df <- standarize.criteria_()
   df <- df %>% as_tibble() %>% mutate(
     ESTACION = case_when(
       ESTACION == 'ALB' ~ 'ALBERDI',
@@ -205,33 +206,45 @@ transform.values <- function(df, output.file) {
       TIPO_VEHICULO == 'Pesado' ~ 'PESADO',
       TRUE ~ as.character(TIPO_VEHICULO)
     ),
-    LAT = case_when(ESTACION == 'ALBERDI' ~ -34.64480276487647,
-                    ESTACION == 'AVELLANEDA' ~ -34.648273239205025,
-                    ESTACION == 'DEL' ~ -34.648001,
-                    ESTACION == 'ILLIA' ~ 0,
-                    ESTACION == 'RETIRO' ~ -34.5752543,
-                    ESTACION == 'SARMIENTO' ~ 0,
-                    ESTACION == 'DEC' ~ 0,
-                    ESTACION == 'SALGUERO' ~ 0,
-                    ESTACION == 'DELLEPIANE CENTRO' ~ -34.648001,
-                    ESTACION == 'DELLEPIANE LINIERS' ~ -34.648001),
-    LONG = case_when(ESTACION == 'ALBERDI' ~ -58.49205422072362,
-                     ESTACION == 'AVELLANEDA' ~ -58.478106424442785,
-                     ESTACION == 'DEL' ~ -58.4645727,
-                     ESTACION == 'ILLIA' ~ 0,
-                     ESTACION == 'RETIRO' ~ -58.3921129,
-                     ESTACION == 'SARMIENTO' ~ 0,
-                     ESTACION == 'DEC' ~ 0,
-                     ESTACION == 'SALGUERO' ~ 0,
-                     ESTACION == 'DELLEPIANE CENTRO' ~ -58.4645727,
-                     ESTACION == 'DELLEPIANE LINIERS' ~ -58.4645727),
+    LAT = case_when(
+      ESTACION == 'ALBERDI' ~ -34.64480276487647,
+      ESTACION == 'AVELLANEDA' ~ -34.648273239205025,
+      ESTACION == 'DEL' ~ -34.648001,
+      ESTACION == 'ILLIA' ~ 0,
+      ESTACION == 'RETIRO' ~ -34.5752543,
+      ESTACION == 'SARMIENTO' ~ 0,
+      ESTACION == 'DEC' ~ 0,
+      ESTACION == 'SALGUERO' ~ 0,
+      ESTACION == 'DELLEPIANE CENTRO' ~ -34.648001,
+      ESTACION == 'DELLEPIANE LINIERS' ~ -34.648001
+    ),
+    LONG = case_when(
+      ESTACION == 'ALBERDI' ~ -58.49205422072362,
+      ESTACION == 'AVELLANEDA' ~ -58.478106424442785,
+      ESTACION == 'DEL' ~ -58.4645727,
+      ESTACION == 'ILLIA' ~ 0,
+      ESTACION == 'RETIRO' ~ -58.3921129,
+      ESTACION == 'SARMIENTO' ~ 0,
+      ESTACION == 'DEC' ~ 0,
+      ESTACION == 'SALGUERO' ~ 0,
+      ESTACION == 'DELLEPIANE CENTRO' ~ -58.4645727,
+      ESTACION == 'DELLEPIANE LINIERS' ~ -58.4645727
+    ),
+    # (2008, 2009, 2010, 2011, 2012, 2013) mm/dd/yyyy
+    # (2014, 2015) dd/mm/yyyy
+    # (2016, 2017, 2018) yyyy-mm-dd
+    FECHA = case_when(
+      PERIODO < 2014 ~ as.Date(
+        strptime(as.character(FECHA), "%m/%d/%Y"), format = "%Y-%m-%d"),
+      PERIODO >= 2014 & PERIODO < 2016 ~ as.Date(
+        strptime(as.character(FECHA), "%d/%m/%Y"), format = "%Y-%m-%d"),
+      PERIODO >= 2016 ~ as.Date(FECHA, format = "%Y-%m-%d")
+    ),
     ESTACION = as.factor(ESTACION),
     HORA = as.factor(HORA),
     HORA_FIN = as.factor(HORA_FIN),
     DIA = as.factor(DIA),
     TIPO_VEHICULO = as.factor(TIPO_VEHICULO)
   )
-
   write.csv(df, file = output.file, row.names = F)
-  return(df)
 }

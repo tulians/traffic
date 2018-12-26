@@ -4,9 +4,6 @@
 -   [Hourly flow of traffic going in and out of the city](#hourly-flow-of-traffic-going-in-and-out-of-the-city)
 -   [Predicting tomorrow's traffic volume on each toll booth](#predicting-tomorrows-traffic-volume-on-each-toll-booth)
 
-<style>
-body {text-align: justify}
-</style>
 ### Objective
 
 This project consists on analyzing the evolution of traffic on AUSA toll booths in Buenos Aires highways. The data being used in this project can be found on the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. In particular, it aims to predict the amount of vehicles going in and out of the city for a given date in the future. So, if given a day *d*<sub>*i*</sub>, the model will be able to predict the traffic volume on day *d*<sub>*i* + 1</sub>.
@@ -16,12 +13,12 @@ This project consists on analyzing the evolution of traffic on AUSA toll booths 
 The information provided consists of 11 files, one for each year from 2008 to 2018. There is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
 
 -   `standarize.criteria`: not all of the files have the same column names, nor the same column order. This function standardizes their format, and merges them all in a single .csv file.
--   `transform.values`: among categorical attributes, not all of them have the same value for the same concept, fox example you could find the same toll name writen in all caps and then all lowers. This function standardizes that, and creates a new dataset.
+-   `transform.values`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll name writen in all caps and then all lowers. This function standardizes that, and creates a new dataset.
 
 The .csv files provide in each entry an estimate of the amount of vehicles that went through a certain toll both in an interval of time of one hour. The following is the detail of each column:
 
 -   `PERIODO`: indicates the **year**.
--   `FECHA`: indicates the **full date** in *dd/mm/yyyy* format.
+-   `FECHA`: indicates the **full date** in *dd/mm/yyyy* format for 2008-2015 and *yyyy-mm-dd* for 2016-2018.
 -   `DIA`: indicates the **day of the week**.
 -   `HORA`: indicates the **start time of the interval**.
 -   `HORA_FIN`: indicates the **end time of the interval**.
@@ -42,12 +39,12 @@ head(df)
 ```
 
     ##   PERIODO      FECHA    DIA     HORA HORA_FIN   ESTACION TIPO_VEHICULO
-    ## 1    2008 01/01/2008 MARTES 00:00:00 01:00:00    ALBERDI       LIVIANO
-    ## 2    2008 01/01/2008 MARTES 00:00:00 01:00:00 AVELLANEDA       LIVIANO
-    ## 3    2008 01/01/2008 MARTES 00:00:00 01:00:00        DEL       LIVIANO
-    ## 4    2008 01/01/2008 MARTES 00:00:00 01:00:00      ILLIA       LIVIANO
-    ## 5    2008 01/01/2008 MARTES 01:00:00 02:00:00    ALBERDI       LIVIANO
-    ## 6    2008 01/01/2008 MARTES 01:00:00 02:00:00 AVELLANEDA       LIVIANO
+    ## 1    2008 2008-01-01 MARTES 00:00:00 01:00:00    ALBERDI       LIVIANO
+    ## 2    2008 2008-01-01 MARTES 00:00:00 01:00:00 AVELLANEDA       LIVIANO
+    ## 3    2008 2008-01-01 MARTES 00:00:00 01:00:00        DEL       LIVIANO
+    ## 4    2008 2008-01-01 MARTES 00:00:00 01:00:00      ILLIA       LIVIANO
+    ## 5    2008 2008-01-01 MARTES 01:00:00 02:00:00    ALBERDI       LIVIANO
+    ## 6    2008 2008-01-01 MARTES 01:00:00 02:00:00 AVELLANEDA       LIVIANO
     ##   FORMA_PAGO CANTIDAD_PASOS       LAT      LONG
     ## 1   EFECTIVO              7 -34.64480 -58.49205
     ## 2   EFECTIVO             71 -34.64827 -58.47811
