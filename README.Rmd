@@ -9,10 +9,10 @@ output:
     variant: markdown_github
   pdf_document:
     toc: yes
-    toc_depth: 2
+    toc_depth: 3
   html_document:
     toc: yes
-    toc_depth: 2
+    toc_depth: 3
 ---
 
 ```{r setup, include=FALSE, fig.align="center"}
@@ -20,18 +20,23 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### Objective
-This project consists on analyzing the evolution of traffic on AUSA toll booths in Buenos Aires highways. The data being used in this project can be found on the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. In particular, it aims to predict the amount of vehicles going in and out of the city for a given date in the future. So, if given a day $d_i$, the model will be able to predict the traffic volume on day $d_{i+1}$.
+This project consists on analyzing the evolution of traffic on AUSA toll booths in Buenos Aires highways. The data being used in this project can be found in the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. In particular, the project aims to predict the amount of vehicles going in and out of the city for a given date in the future. So, given a day $d_i$ the model will be able to predict the traffic volume on day $d_{i+1}$.
+
+### Prework
+* Unzip the `Flujo-Vehicular-por-Unidades-de-Peaje-AUSA.zip` file provided by the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site.
+* Run the `standardize.values()` function from `utils.R`.
 
 ### Structure of the data to use
-The information provided consists of 11 files, one for each year from 2008 to 2018. There is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
+The information provided consists of 11 files, one for each year from 2008 to 2018 (which only provides information until September 9th). There is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
 
-* `standarize.criteria`: not all of the files have the same column names, nor the same column order. This function standardizes their format, and merges them all in a single .csv file.
-* `transform.values`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll name writen in all caps and then all lowers. This function standardizes that, and creates a new dataset.
+* `standardize.columns.and.merge_`: not all of the files have the same column names, nor the same column order. This function standardizes their format, and merges them all in a single .csv file.
+* `standardize.values`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll name writen in all caps and then all lowers. This function standardizes that, and creates a new dataset.
 
 The .csv files provide in each entry an estimate of the amount of vehicles that went through a certain toll both in an interval of time of one hour. The following is the detail of each column:
 
-* `PERIODO`: indicates the **year**.
-* `FECHA`: indicates the **full date** in *dd/mm/yyyy* format for 2008-2015 and *yyyy-mm-dd* for 2016-2018.
+* `Y`: indicates the **year** number.
+* `M`: indicates the **month** number.
+* `D`: indicates the **day** number.
 * `DIA`: indicates the **day of the week**.
 * `HORA`: indicates the **start time of the interval**.
 * `HORA_FIN`: indicates the **end time of the interval**. 
@@ -44,6 +49,7 @@ In addition to the previously mentioned columns, two new columns were added to i
 
 For example:
 ```{r}
+rm(list = ls()); gc();
 # Include the definitions of the methods used throughout the notebook.
 source('./src/flow.R')
 df <- read.csv('~/Documents/traffic/datasets/traffic.csv')
@@ -51,35 +57,84 @@ head(df)
 ```
 
 ### Exploratory analysis
-As a way of starting to know this dataset, we can see that there is a difference on the amount of entries in each file of our dataset.
+
+#### Increment in traffic
+As a way of starting to know this dataset, we can see there's a difference in the amount of entries for each file in our dataset.
 ```{r trend}
 volume.per.year <- df %>%
-    group_by(PERIODO) %>% 
-    summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS))
-trend <- lm(volume.per.year$CANTIDAD_PASOS ~ volume.per.year$PERIODO)
-plot(volume.per.year$CANTIDAD_PASOS ~ volume.per.year$PERIODO, 
-     xlab = 'Time (years)', ylab = 'Number of vehicles')
-abline(trend, col = 'red')
+    group_by(Y) %>% 
+    summarise(total.volume = sum(CANTIDAD_PASOS))
+
+p <- ggplot(volume.per.year, 
+            aes(volume.per.year$Y, volume.per.year$total.volume)) +
+  geom_point(shape = 1) +
+  stat_summary(fun.data = mean_cl_normal) +
+  labs(x = 'Time', y = 'Number of vehicles') +
+  geom_smooth(method = 'lm') +
+  scale_x_continuous(labels = function(x) ceil(x)) +
+  theme_bw()
+
+plot(p)
 ```
 
-For the graph above it's clear there's an order of magnitud of difference between the amount of vehicles in the period 2008-2013 versus the period 2014-2018. This doesn't mean the number of vehicles skyrocketed in a matter of two years, but rather that new toll booth locations were added to the dataset along those years, which ended up adding 10x more information. To make this evident, compare the amount of toll booths on this heatmap from 2013
-```{r heatmap2013, fig.width=8}
-plot(traffic.volume.heatmap(2013))
+From the graph above it's clear there's an order of magnitud of difference between the amount of vehicles in the period 2008-2013 versus the period 2014-2018. This is the result of two factors:
+
+* An increment in the amount of observations for tool booths like those of Avellaneda and Alberdi.
+
+```{r incrementinobservations, fig.width=8}
+t <- df[c('ESTACION', 'Y', 'CANTIDAD_PASOS')] %>%
+  group_by(ESTACION, Y) %>%
+  summarise(total.volume = sum(CANTIDAD_PASOS))
+
+p <- ggplot(data = t,
+            aes(x = Y, y = total.volume, group = ESTACION)) +
+  geom_line(aes(linetype = ESTACION, color = ESTACION)) +
+  labs(x = NULL, y = NULL, title = 'Amount of vehicles per year') +
+  scale_x_continuous(labels = function(x) ceil(x)) +
+  theme_bw()
+
+plot(p)
 ```
 
-with those on this other one from 2015:
+* The addition of new toll booths around 2014 like those of Sarmiento, Retiro and Salguero as illustrated below.
 
-```{r heatmap2015, fig.width=15, fig.height=10}
-plot(traffic.volume.heatmap(2015))
+```{r timeframes, fig.width=8}
+theme_set(theme_classic())
+
+t <- df[c('ESTACION', 'Y', 'CANTIDAD_PASOS')] %>%
+  group_by(ESTACION, Y) %>%
+  summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)) %>%
+  mutate(
+    start_year = min(Y),
+    end_year = max(Y)) %>%
+  distinct(ESTACION, start_year, end_year)
+
+p <- ggplot(data = t, aes(x = start_year, xend = end_year, 
+                          y = ESTACION, group = ESTACION)) +
+  geom_dumbbell(color = '#0e668b', colour_x = '#0e668b', size_x = 1.5, 
+                colour_xend = '#a3c4dc', size_xend = 0.75) +
+  labs(x = NULL, y = NULL, 
+       title = 'Addition of new toll booths to the dataset') +
+  scale_x_continuous(labels = function(x) ceil(x)) +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold'),
+        plot.background = element_rect(fill='#ffffff'),
+        panel.background = element_rect(fill='#ffffff'),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(),
+        axis.ticks = element_blank(),
+        legend.position = 'top',
+        panel.border = element_blank())
+plot(p)
 ```
 
-Each cell in the previous two heatmaps holds the normalized values (to the range $[0, 1]$) of the traffic volume for each toll booth for each day, being DOMINGO (Sunday) the day where the lowest amount of vehicles is registered, and VIERNES (Friday) the one in which there's higher volume of traffic, in most cases.
 
-This traffic flow holds a pattern for each toll booth. Performing an hourly breakdown of traffic for the Alberdi tool booth, shown in the following graph, two traffic peaks can be identified: one around 8am and another one around 6pm. This matches with the times people is commuting to an from work. Another interesting pattern is that traffic keeps relatively still between the time of the two peaks.
+#### Hourly patterns in toll booths
+Traffic flow holds a pattern for each toll booth. Performing an hourly breakdown of traffic for the Alberdi tool booth, shown in the following graph, two traffic peaks can be identified: one around 8am and another one around 6pm. This matches with the times people is commuting to an from work. Another interesting pattern is that traffic keeps relatively still between the time of the two peaks.
 
 ```{r breakdownalberdi, fig.width=8}
 t <- custom.agg(df[(df$ESTACION == 'ALBERDI'),],
-                length(unique(df$PERIODO)),
+                length(unique(df$Y)),
                 'TIPO_VEHICULO', 'HORA')
 p <- ggplot(data = t, aes(x = format(strptime(t$HORA,"%H:%M:%S"),'%H'), 
                           y = CANTIDAD_PASOS, group = TIPO_VEHICULO)) +
@@ -95,7 +150,7 @@ The previous graph differenciates between the two different kinds of vehicles: m
 
 ```{r breakdownretiro, fig.width=8}
 t <- custom.agg(df[(df$ESTACION == 'RETIRO'),],
-                length(unique(df$PERIODO)),
+                length(unique(df$Y)),
                 'TIPO_VEHICULO', 'HORA')
 p <- ggplot(data = t, aes(x = format(strptime(t$HORA,"%H:%M:%S"),'%H'), 
                           y = CANTIDAD_PASOS, group = TIPO_VEHICULO)) +
@@ -112,7 +167,7 @@ Even though the volume of vehicles going through the Retiro toll booth is approx
 Another interesting aspect to analyze of this dataset is the distribution of drivers commiting infractions (id est, not paying when they cross the toll booth), and whether this is something that only happens for light vehicles or in heavy vehicles too. Below are two charts with the distribution of infractions for both Alberdi and Retiro.
 ```{r infractionsalberdi, fig.width=8}
 t <- custom.agg(df[(df$ESTACION == 'ALBERDI' & df$FORMA_PAGO == 'INFRACCION'),],
-                length(unique(df$PERIODO)),
+                length(unique(df$Y)),
                 'TIPO_VEHICULO', 'HORA')
 p <- ggplot(data = t, aes(x = format(strptime(t$HORA,"%H:%M:%S"),'%H'), 
                           y = CANTIDAD_PASOS, group = TIPO_VEHICULO)) +
@@ -125,7 +180,7 @@ plot(p)
 ```
 ```{r infractionsretiro, fig.width=8}
 t <- custom.agg(df[(df$ESTACION == 'RETIRO' & df$FORMA_PAGO == 'INFRACCION'),],
-                length(unique(df$PERIODO)),
+                length(unique(df$Y)),
                 'TIPO_VEHICULO', 'HORA')
 p <- ggplot(data = t, aes(x = format(strptime(t$HORA,"%H:%M:%S"),'%H'), 
                           y = CANTIDAD_PASOS, group = TIPO_VEHICULO)) +
@@ -139,8 +194,37 @@ plot(p)
 
 In both cases, the distribution of infractions seems to follow the same distribution of traffic throughout the day: the moments where there are more infractions correlate with those in which traffic volume is the highest.
 
-### Hourly flow of traffic going in and out of the city
-TODO(tulians): This section will include a map showing the zones where toll booths are, and how the volume of traffic changes throughout the day.
+Another interesting phenomenom are users moving from paying in cash (EFECTIVO) to using automatic tolls (AUPASS). Looking at the animation below, 2016 starts showing a decline in the number of vehicle owners paying in *cash*. However, since 2014 the use of *automatic tolls* started to steadily increase. As a note, the decline in 2018 on both cash and automatic tolls is due to the fact that 2018 data is still not complete.
+
+```{r paymentsperyearanimated, fig.width=10}
+t <- df %>%
+  group_by(FORMA_PAGO, Y) %>%
+  filter(FORMA_PAGO %in% c('EFECTIVO', 
+                           'AUPASS', 
+                           'NO COBRADO',
+                           'INFRACCION')) %>%
+  summarise(total.volume = sum(CANTIDAD_PASOS))
+
+a <- ggplot(data = t,
+            aes(Y, total.volume, group = FORMA_PAGO)) +
+  geom_line(aes(linetype = FORMA_PAGO, color = FORMA_PAGO)) +
+  geom_segment(aes(xend = 2018, yend = total.volume), 
+               linetype = 2, colour = 'grey') +
+  geom_point(size = 2) +
+  scale_y_log10() +
+  geom_text(aes(x = 2018.2, label = FORMA_PAGO), hjust = 0) +
+  transition_reveal(Y) +
+  coord_cartesian(clip = 'off') + 
+  labs(title = 'Evolution of top 4 payment methods along the years',
+       x = NULL, y = 'Total amount of payments') +
+  scale_x_continuous(labels = function(x) ceil(x)) +
+  theme_minimal() +
+  theme(plot.margin = margin(5.5, 60, 5.5, 5.5), 
+        legend.position='none')
+
+animate(a)
+```
+
 
 ### Predicting tomorrow's traffic volume on each toll booth
-TODO(tulians): Use the forecast library to predict the next 2 days traffic volume.
+TODO(tulians): Use the `forecast` library to predict the next 2 days traffic volume.

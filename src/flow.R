@@ -3,11 +3,24 @@
 # ITBA - 2018/2019
 # Definition of methods used in the notebook.
 
+library(zoo)
+library(xts)
 library(png)
+library(plyr)
 library(dplyr)
+library(ggalt)
+library(Hmisc)
+library(shiny)
+library(seqinr)
+library(scales)
+library(stringr)
 library(ggplot2)
+library(leaflet)
 library(forecast)
 library(lazyeval)
+library(gganimate)
+library(tidyverse)
+library(lubridate)
 
 traffic.volume.heatmap <- function(start.year, 
                                    end.year = start.year, 
