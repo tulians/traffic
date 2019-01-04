@@ -25,13 +25,13 @@ The .csv files provide in each entry an estimate of the amount of vehicles that 
 -   `Y`: indicates the **year** number.
 -   `M`: indicates the **month** number.
 -   `D`: indicates the **day** number.
--   `DIA`: indicates the **day of the week**.
--   `HORA`: indicates the **start time of the interval**.
--   `HORA_FIN`: indicates the **end time of the interval**.
--   `ESTACION`: indicates the **name of the toll booth**.
--   `TIPO_VEHICULO`: indicates whether the vehicle was a **truck or a car**.
--   `FORMA_PAGO`: indicates if the **payment method**.
--   `CANTIDAD_PASOS`: indicates the **number of vehicles** that went through the toll booth at that interval of time, and payed with a given payment method.
+-   `day.name`: indicates the **day of the week**.
+-   `start.hour`: indicates the **start time of the interval**.
+-   `end.hour`: indicates the **end time of the interval**.
+-   `toll.booth`: indicates the **name of the toll booth**.
+-   `vehicle.type`: indicates whether the vehicle was a **truck or a car**.
+-   `payment.method`: indicates if the **payment method**.
+-   `amount`: indicates the **number of vehicles** that went through the toll booth at that interval of time, and payed with a given payment method.
 
 In addition to the previously mentioned columns, two new columns were added to include the geographic position of each toll booth via coordinates, `LAT` and `LONG`. The values of each coordinate were not provided by the dataset, and had to be manually searched using Google Maps.
 
@@ -45,20 +45,20 @@ df <- read.csv('~/Documents/traffic/datasets/traffic.csv')
 head(df)
 ```
 
-    ##      DIA     HORA HORA_FIN   ESTACION TIPO_VEHICULO FORMA_PAGO
-    ## 1 MARTES 00:00:00 01:00:00    ALBERDI       LIVIANO   EFECTIVO
-    ## 2 MARTES 00:00:00 01:00:00 AVELLANEDA       LIVIANO   EFECTIVO
-    ## 3 MARTES 00:00:00 01:00:00 DELLEPIANE       LIVIANO   EFECTIVO
-    ## 4 MARTES 00:00:00 01:00:00      ILLIA       LIVIANO   EFECTIVO
-    ## 5 MARTES 01:00:00 02:00:00    ALBERDI       LIVIANO   EFECTIVO
-    ## 6 MARTES 01:00:00 02:00:00 AVELLANEDA       LIVIANO   EFECTIVO
-    ##   CANTIDAD_PASOS       LAT      LONG    Y M D Q
-    ## 1              7 -34.64480 -58.49205 2008 1 1 1
-    ## 2             71 -34.64827 -58.47811 2008 1 1 1
-    ## 3             34 -34.65047 -58.46561 2008 1 1 1
-    ## 4             27   0.00000   0.00000 2008 1 1 1
-    ## 5             37 -34.64480 -58.49205 2008 1 1 1
-    ## 6            345 -34.64827 -58.47811 2008 1 1 1
+    ##   day.name start.hour end.hour toll.booth vehicle.type payment.method
+    ## 1   MARTES   00:00:00 01:00:00    ALBERDI      LIVIANO       EFECTIVO
+    ## 2   MARTES   00:00:00 01:00:00 AVELLANEDA      LIVIANO       EFECTIVO
+    ## 3   MARTES   00:00:00 01:00:00 DELLEPIANE      LIVIANO       EFECTIVO
+    ## 4   MARTES   00:00:00 01:00:00      ILLIA      LIVIANO       EFECTIVO
+    ## 5   MARTES   01:00:00 02:00:00    ALBERDI      LIVIANO       EFECTIVO
+    ## 6   MARTES   01:00:00 02:00:00 AVELLANEDA      LIVIANO       EFECTIVO
+    ##   amount       LAT      LONG    Y M D Q
+    ## 1      7 -34.64480 -58.49205 2008 1 1 1
+    ## 2     71 -34.64827 -58.47811 2008 1 1 1
+    ## 3     34 -34.65047 -58.46561 2008 1 1 1
+    ## 4     27   0.00000   0.00000 2008 1 1 1
+    ## 5     37 -34.64480 -58.49205 2008 1 1 1
+    ## 6    345 -34.64827 -58.47811 2008 1 1 1
 
 ### Exploratory analysis
 
@@ -69,7 +69,7 @@ As a way of starting to know this dataset, we can see there's a difference in th
 ``` r
 volume.per.year <- df %>%
     group_by(Y) %>% 
-    summarise(total.volume = sum(CANTIDAD_PASOS))
+    summarise(total.volume = sum(amount))
 
 p <- ggplot(volume.per.year, 
             aes(volume.per.year$Y, volume.per.year$total.volume)) +
@@ -90,13 +90,13 @@ From the graph above it's clear there's an order of magnitud of difference betwe
 -   An increment in the amount of observations for tool booths like those of Avellaneda and Alberdi.
 
 ``` r
-t <- df[c('ESTACION', 'Y', 'CANTIDAD_PASOS')] %>%
-  group_by(ESTACION, Y) %>%
-  summarise(total.volume = sum(CANTIDAD_PASOS))
+t <- df[c('toll.booth', 'Y', 'amount')] %>%
+  group_by(toll.booth, Y) %>%
+  summarise(total.volume = sum(amount))
 
 p <- ggplot(data = t,
-            aes(x = Y, y = total.volume, group = ESTACION)) +
-  geom_line(aes(linetype = ESTACION, color = ESTACION)) +
+            aes(x = Y, y = total.volume, group = toll.booth)) +
+  geom_line(aes(linetype = toll.booth, color = toll.booth)) +
   labs(x = NULL, y = NULL, title = 'Amount of vehicles per year') +
   scale_x_continuous(labels = function(x) ceil(x)) +
   theme_bw()
@@ -111,16 +111,16 @@ plot(p)
 ``` r
 theme_set(theme_classic())
 
-t <- df[c('ESTACION', 'Y', 'CANTIDAD_PASOS')] %>%
-  group_by(ESTACION, Y) %>%
-  summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)) %>%
+t <- df[c('toll.booth', 'Y', 'amount')] %>%
+  group_by(toll.booth, Y) %>%
+  summarise(amount = sum(amount)) %>%
   mutate(
     start_year = min(Y),
     end_year = max(Y)) %>%
-  distinct(ESTACION, start_year, end_year)
+  distinct(toll.booth, start_year, end_year)
 
 p <- ggplot(data = t, aes(x = start_year, xend = end_year, 
-                          y = ESTACION, group = ESTACION)) +
+                          y = toll.booth, group = toll.booth)) +
   geom_dumbbell(color = '#0e668b', colour_x = '#0e668b', size_x = 1.5, 
                 colour_xend = '#a3c4dc', size_xend = 0.75) +
   labs(x = NULL, y = NULL, 
@@ -145,15 +145,15 @@ plot(p)
 Traffic flow holds a pattern for each toll booth. Performing an hourly breakdown of traffic for the Alberdi tool booth, shown in the following graph, two traffic peaks can be identified: one around 8am and another one around 6pm. This matches with the times people is commuting to an from work. Another interesting pattern is that traffic keeps relatively still between the time of the two peaks.
 
 ``` r
-t <- custom.agg(df[(df$ESTACION == 'ALBERDI'),],
+t <- custom.agg(df[(df$toll.booth == 'ALBERDI'),],
                 length(unique(df$Y)),
-                'TIPO_VEHICULO', 'HORA')
-p <- ggplot(data = t, aes(x = format(strptime(t$HORA,"%H:%M:%S"),'%H'), 
-                          y = CANTIDAD_PASOS, group = TIPO_VEHICULO)) +
+                'vehicle.type', 'start.hour')
+p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
+                          y = amount, group = vehicle.type)) +
     labs(title = 'Vehicles per hour in Alberdi toll booth', 
-         x = 'HORA',
+         x = 'start.hour',
          y = 'Number of vehicles') +
-    geom_line(aes(linetype = TIPO_VEHICULO, color = TIPO_VEHICULO)) +
+    geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
     theme_bw()
 plot(p)
 ```
@@ -163,15 +163,15 @@ plot(p)
 The previous graph differenciates between the two different kinds of vehicles: motorbikes/cars and trucks. While both kinds show a similar behavior, the volume of motorbikes/cars is greater than the one of trucks. Although this behavior can be seen in other toll booths like Avellaneda or Sarmiento, there are cases like Retiro, where the amount of trucks is almost the same as the one of cars.
 
 ``` r
-t <- custom.agg(df[(df$ESTACION == 'RETIRO'),],
+t <- custom.agg(df[(df$toll.booth == 'RETIRO'),],
                 length(unique(df$Y)),
-                'TIPO_VEHICULO', 'HORA')
-p <- ggplot(data = t, aes(x = format(strptime(t$HORA,"%H:%M:%S"),'%H'), 
-                          y = CANTIDAD_PASOS, group = TIPO_VEHICULO)) +
+                'vehicle.type', 'start.hour')
+p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
+                          y = amount, group = vehicle.type)) +
     labs(title = 'Vehicles per hour in Retiro toll booth', 
-         x = 'HORA',
+         x = 'start.hour',
          y = 'Number of vehicles') +
-    geom_line(aes(linetype = TIPO_VEHICULO, color = TIPO_VEHICULO)) +
+    geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
     theme_bw()
 plot(p)
 ```
@@ -183,15 +183,16 @@ Even though the volume of vehicles going through the Retiro toll booth is approx
 Another interesting aspect to analyze of this dataset is the distribution of drivers commiting infractions (id est, not paying when they cross the toll booth), and whether this is something that only happens for light vehicles or in heavy vehicles too. Below are two charts with the distribution of infractions for both Alberdi and Retiro.
 
 ``` r
-t <- custom.agg(df[(df$ESTACION == 'ALBERDI' & df$FORMA_PAGO == 'INFRACCION'),],
+t <- custom.agg(df[(df$toll.booth == 'ALBERDI' & 
+                      df$payment.method == 'INFRACCION'),],
                 length(unique(df$Y)),
-                'TIPO_VEHICULO', 'HORA')
-p <- ggplot(data = t, aes(x = format(strptime(t$HORA,"%H:%M:%S"),'%H'), 
-                          y = CANTIDAD_PASOS, group = TIPO_VEHICULO)) +
+                'vehicle.type', 'start.hour')
+p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
+                          y = amount, group = vehicle.type)) +
     labs(title = 'Infractions per hour in Alberdi toll booth', 
-         x = 'HORA',
+         x = 'start.hour',
          y = 'Number of vehicles') +
-    geom_line(aes(linetype = TIPO_VEHICULO, color = TIPO_VEHICULO)) +
+    geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
     theme_bw()
 plot(p)
 ```
@@ -199,15 +200,16 @@ plot(p)
 ![](README_files/figure-markdown_github/infractionsalberdi-1.png)
 
 ``` r
-t <- custom.agg(df[(df$ESTACION == 'RETIRO' & df$FORMA_PAGO == 'INFRACCION'),],
+t <- custom.agg(df[(df$toll.booth == 'RETIRO' & 
+                      df$payment.method == 'INFRACCION'),],
                 length(unique(df$Y)),
-                'TIPO_VEHICULO', 'HORA')
-p <- ggplot(data = t, aes(x = format(strptime(t$HORA,"%H:%M:%S"),'%H'), 
-                          y = CANTIDAD_PASOS, group = TIPO_VEHICULO)) +
+                'vehicle.type', 'start.hour')
+p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
+                          y = amount, group = vehicle.type)) +
     labs(title = 'Infractions per hour in Retiro toll booth', 
-         x = 'HORA',
+         x = 'start.hour',
          y = 'Number of vehicles') +
-    geom_line(aes(linetype = TIPO_VEHICULO, color = TIPO_VEHICULO)) +
+    geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
     theme_bw()
 plot(p)
 ```
@@ -220,21 +222,19 @@ Another interesting phenomenom are users moving from paying in cash (EFECTIVO) t
 
 ``` r
 t <- df %>%
-  group_by(FORMA_PAGO, Y) %>%
-  filter(FORMA_PAGO %in% c('EFECTIVO', 
-                           'AUPASS', 
-                           'NO COBRADO',
-                           'INFRACCION')) %>%
-  summarise(total.volume = sum(CANTIDAD_PASOS))
+  group_by(payment.method, Y) %>%
+  filter(payment.method %in% c(
+    'EFECTIVO', 'AUPASS', 'NO COBRADO', 'INFRACCION')) %>%
+  summarise(total.volume = sum(amount))
 
 a <- ggplot(data = t,
-            aes(Y, total.volume, group = FORMA_PAGO)) +
-  geom_line(aes(linetype = FORMA_PAGO, color = FORMA_PAGO)) +
+            aes(Y, total.volume, group = payment.method)) +
+  geom_line(aes(linetype = payment.method, color = payment.method)) +
   geom_segment(aes(xend = 2018, yend = total.volume), 
                linetype = 2, colour = 'grey') +
   geom_point(size = 2) +
   scale_y_log10() +
-  geom_text(aes(x = 2018.2, label = FORMA_PAGO), hjust = 0) +
+  geom_text(aes(x = 2018.2, label = payment.method), hjust = 0) +
   transition_reveal(Y) +
   coord_cartesian(clip = 'off') + 
   labs(title = 'Evolution of top 4 payment methods along the years',

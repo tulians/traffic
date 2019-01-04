@@ -36,27 +36,28 @@ traffic.volume.heatmap <- function(start.year,
   #' @example 
   #' traffic.volume.heatmap(2008, 2009)
 
-  features <- c('ESTACION', 'DIA', 'CANTIDAD_PASOS', 'PERIODO')
+  features <- c('toll.booth', 'day.name', 'amount', 'Y')
   t <- df[features]; rm(features)
   t <- rbind(t %>%
-               filter(PERIODO >= start.year & PERIODO <= end.year) %>%
-               group_by(ESTACION, DIA) %>%
-               summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)))
+               filter(Y >= start.year & Y <= end.year) %>%
+               group_by(toll.booth, day.name) %>%
+               summarise(amount = sum(amount)))
   if(normalize) {
     t <- t %>%
-      group_by(ESTACION) %>%
-      mutate(CANTIDAD_PASOS = round(
-        (CANTIDAD_PASOS - min(CANTIDAD_PASOS)) / 
-          (max(CANTIDAD_PASOS) - min(CANTIDAD_PASOS)), 3))
+      group_by(toll.booth) %>%
+      mutate(amount = round(
+        (amount - min(amount)) / 
+          (max(amount) - min(amount)), 3))
   }
-  t <- t %>% arrange(ESTACION, DIA)
-  p <- ggplot(t, aes(x = factor(DIA, level = c('DOMINGO', 'LUNES', 'MARTES', 
-                                               'MIERCOLES', 'JUEVES', 
-                                               'VIERNES', 'SABADO')),
-                     y = ESTACION, 
-                     fill = CANTIDAD_PASOS)) +
+  t <- t %>% arrange(toll.booth, day.name)
+  p <- ggplot(t, aes(x = factor(day.name, level = c('
+                                                    DOMINGO', 'LUNES', 'MARTES', 
+                                                    'MIERCOLES', 'JUEVES', 
+                                                    'VIERNES', 'SABADO')),
+                     y = toll.booth, 
+                     fill = amount)) +
     geom_tile() +
-    geom_text(aes(label = CANTIDAD_PASOS), size = 4) +
+    geom_text(aes(label = amount), size = 4) +
     scale_fill_gradient(low = 'white', high = 'orange') +
     scale_x_discrete(expand = c(0, 0)) + 
     scale_y_discrete(expand = c(0, 0)) +
@@ -75,12 +76,12 @@ custom.agg <- function(df, amount.of.years, ...) {
   #'  @return A tibble with the estimated amount of vehicles for a given group
   #'  of columns.
   #'  @example custom.agg(
-  #'       df[(df$ESTACION == 'RETIRO'),], 11, 'FORMA_PAGO', 'HORA'
+  #'       df[(df$toll.booth == 'RETIRO'),], 11, 'FORMA_PAGO', 'HORA'
   #'  )
   return(df %>%
            group_by_(...) %>%
-           summarise(CANTIDAD_PASOS = sum(CANTIDAD_PASOS)) %>%
-           mutate(CANTIDAD_PASOS = CANTIDAD_PASOS / 
+           summarise(amount = sum(amount)) %>%
+           mutate(amount = amount / 
                     (amount.of.years * 365.25 / 7))
   )
 }

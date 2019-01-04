@@ -369,6 +369,15 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
     DIA = as.factor(DIA)
   )
   
+  df <- df %>%
+    rename(vehicle.type = TIPO_VEHICULO,
+           toll.booth = ESTACION,
+           start.hour = HORA,
+           end.hour = HORA_FIN,
+           day.name = DIA,
+           payment.method = FORMA_PAGO,
+           amount = CANTIDAD_PASOS)
+  
   df[df$PERIODO < 2014,] <- arrange(df[df$PERIODO < 2014,], FECHA)
   df[df$PERIODO == 2018, c('M', 'D')] <-
     swap_if_(df[df$PERIODO == 2018, c('M', 'D')]$D %in% c(1, 2, 3),
