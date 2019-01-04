@@ -178,7 +178,7 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
   setwd('~/Documents/traffic/')
   df <- standardize.columns.and.merge_()
   df <- df %>% as_tibble() %>% mutate(
-    ESTACION = case_when(
+    toll.booth = case_when(
       ESTACION %in% c('ALB', 'Alberdi') ~ 'ALBERDI',
       ESTACION %in% c('AVE', 'Avellaneda') ~ 'AVELLANEDA',
       ESTACION %in% c(
@@ -195,7 +195,7 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
       ESTACION %in% c('SAR', 'Sarmiento') ~ 'SARMIENTO',
       TRUE ~ as.character(ESTACION)
     ), 
-    HORA = case_when(
+    start.hour = case_when(
       HORA == '0' ~ '00:00:00',
       HORA == '1' ~ '01:00:00',
       HORA == '2' ~ '02:00:00',
@@ -256,7 +256,7 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
       HORA == '0 days 23:00:00' ~ '23:00:00',
       TRUE ~ as.character(HORA)
     ),
-    HORA_FIN = case_when(
+    end.hour = case_when(
       HORA_FIN == '0' ~ '00:00:00',
       HORA_FIN == '1' ~ '01:00:00',
       HORA_FIN == '2' ~ '02:00:00',
@@ -318,7 +318,7 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
       HORA_FIN == '0 days 23:00:00' ~ '23:00:00',
       TRUE ~ as.character(HORA_FIN)
     ),
-    DIA = case_when(
+    day.name = case_when(
       DIA == 'Lunes' ~ 'LUNES',
       DIA == 'Martes' ~ 'MARTES',
       DIA == 'Miercoles' ~ 'MIERCOLES',
@@ -328,28 +328,28 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
       DIA == 'Domingo' ~ 'DOMINGO',
       TRUE ~ as.character(DIA)
     ),
-    TIPO_VEHICULO = case_when(
+    vehicle.type = case_when(
       TIPO_VEHICULO == 'Liviano' ~ 'LIVIANO',
       TIPO_VEHICULO == 'Pesado' ~ 'PESADO',
       TRUE ~ as.character(TIPO_VEHICULO)
     ), 
-    LAT = case_when(
-      ESTACION == 'ALBERDI' ~ -34.6448027,
-      ESTACION == 'AVELLANEDA' ~ -34.6482732,
-      ESTACION == 'DELLEPIANE' ~ -34.6504678,
-      ESTACION == 'ILLIA' ~ 0,
-      ESTACION == 'RETIRO' ~ -34.5752543,
-      ESTACION == 'SARMIENTO' ~ -34.5674364,
-      ESTACION == 'SALGUERO' ~ -34.5717106
+    lat = case_when(
+      toll.booth == 'ALBERDI' ~ -34.6448027,
+      toll.booth == 'AVELLANEDA' ~ -34.6482732,
+      toll.booth == 'DELLEPIANE' ~ -34.6504678,
+      toll.booth == 'ILLIA' ~ 0,
+      toll.booth == 'RETIRO' ~ -34.5752543,
+      toll.booth == 'SARMIENTO' ~ -34.5674364,
+      toll.booth == 'SALGUERO' ~ -34.5717106
     ),
-    LONG = case_when(
-      ESTACION == 'ALBERDI' ~ -58.4920542,
-      ESTACION == 'AVELLANEDA' ~ -58.4781064,
-      ESTACION == 'DELLEPIANE' ~ -58.4656122,
-      ESTACION == 'ILLIA' ~ 0,
-      ESTACION == 'RETIRO' ~ -58.3921129,
-      ESTACION == 'SARMIENTO' ~ -58.4079902,
-      ESTACION == 'SALGUERO' ~ -58.4003948
+    long = case_when(
+      toll.booth == 'ALBERDI' ~ -58.4920542,
+      toll.booth == 'AVELLANEDA' ~ -58.4781064,
+      toll.booth == 'DELLEPIANE' ~ -58.4656122,
+      toll.booth == 'ILLIA' ~ 0,
+      toll.booth == 'RETIRO' ~ -58.3921129,
+      toll.booth == 'SARMIENTO' ~ -58.4079902,
+      toll.booth == 'SALGUERO' ~ -58.4003948
     ),
     FECHA = case_when(
       PERIODO < 2014 ~ as.Date(
@@ -362,21 +362,14 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
     Y = lubridate::year(FECHA),
     M = lubridate::month(FECHA),
     D = lubridate::day(FECHA),
-    TIPO_VEHICULO = as.factor(TIPO_VEHICULO),
-    ESTACION = as.factor(ESTACION),
-    HORA_FIN = as.factor(HORA_FIN),
-    HORA = as.factor(HORA),
-    DIA = as.factor(DIA)
+    vehicle.type = as.factor(vehicle.type),
+    payment.method = as.factor(FORMA_PAGO),
+    toll.booth = as.factor(toll.booth),
+    start.hour = as.factor(start.hour),
+    end.hour = as.factor(end.hour),
+    day.name = as.factor(day.name),
+    amount = CANTIDAD_PASOS
   )
-  
-  df <- df %>%
-    rename(vehicle.type = TIPO_VEHICULO,
-           toll.booth = ESTACION,
-           start.hour = HORA,
-           end.hour = HORA_FIN,
-           day.name = DIA,
-           payment.method = FORMA_PAGO,
-           amount = CANTIDAD_PASOS)
   
   df[df$PERIODO < 2014,] <- arrange(df[df$PERIODO < 2014,], FECHA)
   df[df$PERIODO == 2018, c('M', 'D')] <-
@@ -393,7 +386,9 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
     )
   )
 
-  drops <- c('FECHA', 'PERIODO')
+  drops <- c('FECHA', 'PERIODO', 'CANTIDAD_PASOS',
+             'FORMA_PAGO', 'TIPO_VEHICULO', 'ESTACION',
+             'HORA', 'HORA_FIN', 'DIA')
   df <- df[, !(names(df) %in% drops)]
   
   write.csv(df, file = output.file, row.names = F)

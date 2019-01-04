@@ -33,7 +33,7 @@ The .csv files provide in each entry an estimate of the amount of vehicles that 
 -   `payment.method`: indicates if the **payment method**.
 -   `amount`: indicates the **number of vehicles** that went through the toll booth at that interval of time, and payed with a given payment method.
 
-In addition to the previously mentioned columns, two new columns were added to include the geographic position of each toll booth via coordinates, `LAT` and `LONG`. The values of each coordinate were not provided by the dataset, and had to be manually searched using Google Maps.
+In addition to the previously mentioned columns, two new columns were added to include the geographic position of each toll booth via coordinates, `lat` and `long`. The values of each coordinate were not provided by the dataset, and had to be manually searched using Google Maps.
 
 For example:
 
@@ -45,20 +45,20 @@ df <- read.csv('~/Documents/traffic/datasets/traffic.csv')
 head(df)
 ```
 
-    ##   day.name start.hour end.hour toll.booth vehicle.type payment.method
-    ## 1   MARTES   00:00:00 01:00:00    ALBERDI      LIVIANO       EFECTIVO
-    ## 2   MARTES   00:00:00 01:00:00 AVELLANEDA      LIVIANO       EFECTIVO
-    ## 3   MARTES   00:00:00 01:00:00 DELLEPIANE      LIVIANO       EFECTIVO
-    ## 4   MARTES   00:00:00 01:00:00      ILLIA      LIVIANO       EFECTIVO
-    ## 5   MARTES   01:00:00 02:00:00    ALBERDI      LIVIANO       EFECTIVO
-    ## 6   MARTES   01:00:00 02:00:00 AVELLANEDA      LIVIANO       EFECTIVO
-    ##   amount       LAT      LONG    Y M D Q
-    ## 1      7 -34.64480 -58.49205 2008 1 1 1
-    ## 2     71 -34.64827 -58.47811 2008 1 1 1
-    ## 3     34 -34.65047 -58.46561 2008 1 1 1
-    ## 4     27   0.00000   0.00000 2008 1 1 1
-    ## 5     37 -34.64480 -58.49205 2008 1 1 1
-    ## 6    345 -34.64827 -58.47811 2008 1 1 1
+    ##   toll.booth start.hour end.hour day.name vehicle.type       lat      long
+    ## 1    ALBERDI   00:00:00 01:00:00   MARTES      LIVIANO -34.64480 -58.49205
+    ## 2 AVELLANEDA   00:00:00 01:00:00   MARTES      LIVIANO -34.64827 -58.47811
+    ## 3 DELLEPIANE   00:00:00 01:00:00   MARTES      LIVIANO -34.65047 -58.46561
+    ## 4      ILLIA   00:00:00 01:00:00   MARTES      LIVIANO   0.00000   0.00000
+    ## 5    ALBERDI   01:00:00 02:00:00   MARTES      LIVIANO -34.64480 -58.49205
+    ## 6 AVELLANEDA   01:00:00 02:00:00   MARTES      LIVIANO -34.64827 -58.47811
+    ##      Y M D payment.method amount Q
+    ## 1 2008 1 1       EFECTIVO      7 1
+    ## 2 2008 1 1       EFECTIVO     71 1
+    ## 3 2008 1 1       EFECTIVO     34 1
+    ## 4 2008 1 1       EFECTIVO     27 1
+    ## 5 2008 1 1       EFECTIVO     37 1
+    ## 6 2008 1 1       EFECTIVO    345 1
 
 ### Exploratory analysis
 
@@ -77,11 +77,12 @@ p <- ggplot(volume.per.year,
   stat_summary(fun.data = mean_cl_normal) +
   labs(x = 'Time', y = 'Number of vehicles') +
   geom_smooth(method = 'lm') +
-  scale_x_continuous(labels = function(x) ceil(x)) +
   theme_bw()
 
 plot(p)
 ```
+
+    ## Warning: Removed 11 rows containing missing values (geom_pointrange).
 
 ![](README_files/figure-markdown_github/trend-1.png)
 
@@ -98,7 +99,6 @@ p <- ggplot(data = t,
             aes(x = Y, y = total.volume, group = toll.booth)) +
   geom_line(aes(linetype = toll.booth, color = toll.booth)) +
   labs(x = NULL, y = NULL, title = 'Amount of vehicles per year') +
-  scale_x_continuous(labels = function(x) ceil(x)) +
   theme_bw()
 
 plot(p)
@@ -125,7 +125,6 @@ p <- ggplot(data = t, aes(x = start_year, xend = end_year,
                 colour_xend = '#a3c4dc', size_xend = 0.75) +
   labs(x = NULL, y = NULL, 
        title = 'Addition of new toll booths to the dataset') +
-  scale_x_continuous(labels = function(x) ceil(x)) +
   theme(plot.title = element_text(hjust = 0.5, face = 'bold'),
         plot.background = element_rect(fill='#ffffff'),
         panel.background = element_rect(fill='#ffffff'),
@@ -135,6 +134,7 @@ p <- ggplot(data = t, aes(x = start_year, xend = end_year,
         axis.ticks = element_blank(),
         legend.position = 'top',
         panel.border = element_blank())
+
 plot(p)
 ```
 
@@ -148,6 +148,7 @@ Traffic flow holds a pattern for each toll booth. Performing an hourly breakdown
 t <- custom.agg(df[(df$toll.booth == 'ALBERDI'),],
                 length(unique(df$Y)),
                 'vehicle.type', 'start.hour')
+
 p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
                           y = amount, group = vehicle.type)) +
     labs(title = 'Vehicles per hour in Alberdi toll booth', 
@@ -155,6 +156,7 @@ p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'),
          y = 'Number of vehicles') +
     geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
     theme_bw()
+
 plot(p)
 ```
 
@@ -166,6 +168,7 @@ The previous graph differenciates between the two different kinds of vehicles: m
 t <- custom.agg(df[(df$toll.booth == 'RETIRO'),],
                 length(unique(df$Y)),
                 'vehicle.type', 'start.hour')
+
 p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
                           y = amount, group = vehicle.type)) +
     labs(title = 'Vehicles per hour in Retiro toll booth', 
@@ -173,6 +176,7 @@ p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'),
          y = 'Number of vehicles') +
     geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
     theme_bw()
+
 plot(p)
 ```
 
@@ -187,6 +191,7 @@ t <- custom.agg(df[(df$toll.booth == 'ALBERDI' &
                       df$payment.method == 'INFRACCION'),],
                 length(unique(df$Y)),
                 'vehicle.type', 'start.hour')
+
 p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
                           y = amount, group = vehicle.type)) +
     labs(title = 'Infractions per hour in Alberdi toll booth', 
@@ -194,6 +199,7 @@ p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'),
          y = 'Number of vehicles') +
     geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
     theme_bw()
+
 plot(p)
 ```
 
@@ -204,6 +210,7 @@ t <- custom.agg(df[(df$toll.booth == 'RETIRO' &
                       df$payment.method == 'INFRACCION'),],
                 length(unique(df$Y)),
                 'vehicle.type', 'start.hour')
+
 p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
                           y = amount, group = vehicle.type)) +
     labs(title = 'Infractions per hour in Retiro toll booth', 
@@ -211,12 +218,15 @@ p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'),
          y = 'Number of vehicles') +
     geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
     theme_bw()
+
 plot(p)
 ```
 
 ![](README_files/figure-markdown_github/infractionsretiro-1.png)
 
 In both cases, the distribution of infractions seems to follow the same distribution of traffic throughout the day: the moments where there are more infractions correlate with those in which traffic volume is the highest.
+
+#### Evolution of payment methods
 
 Another interesting phenomenom are users moving from paying in cash (EFECTIVO) to using automatic tolls (AUPASS). Looking at the animation below, 2016 starts showing a decline in the number of vehicle owners paying in *cash*. However, since 2014 the use of *automatic tolls* started to steadily increase. As a note, the decline in 2018 on both cash and automatic tolls is due to the fact that 2018 data is still not complete.
 
@@ -239,7 +249,6 @@ a <- ggplot(data = t,
   coord_cartesian(clip = 'off') + 
   labs(title = 'Evolution of top 4 payment methods along the years',
        x = NULL, y = 'Total amount of payments') +
-  scale_x_continuous(labels = function(x) ceil(x)) +
   theme_minimal() +
   theme(plot.margin = margin(5.5, 60, 5.5, 5.5), 
         legend.position='none')
