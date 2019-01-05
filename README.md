@@ -2,29 +2,66 @@
 -   [Prework](#prework)
 -   [Structure of the data to use](#structure-of-the-data-to-use)
 -   [Exploratory analysis](#exploratory-analysis)
--   [Predicting tomorrow's traffic volume on each toll booth](#predicting-tomorrows-traffic-volume-on-each-toll-booth)
+-   [Predicting next two weeks' traffic volume toll booths](#predicting-next-two-weeks-traffic-volume-toll-booths)
+-   [Conclusions and next steps](#conclusions-and-next-steps)
 
 ### Objective
 
-This project consists on analyzing the evolution of traffic on AUSA toll booths in Buenos Aires highways. The data being used in this project can be found in the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. In particular, the project aims to predict the amount of vehicles going in and out of the city for a given date in the future. So, given a day *d*<sub>*i*</sub> the model will be able to predict the traffic volume on day *d*<sub>*i* + 1</sub>.
+This project consists on analyzing the evolution of traffic on AUSA toll booths in Buenos Aires highways. The data being used in this project can be found in the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. In particular, the project aims to predict the amount of vehicles going through toll booths for a given date in the future. Concretely, given a week *w*<sub>*i*</sub> the model will be able to predict the traffic volume on weeks *w*<sub>*i* + 1</sub> and *w*<sub>*i* + 2</sub>.
 
 ### Prework
 
--   Unzip the `Flujo-Vehicular-por-Unidades-de-Peaje-AUSA.zip` file provided by the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site.
--   Run the `standardize.values()` function from `utils.R`.
+-   Unzip the `Flujo-Vehicular-por-Unidades-de-Peaje-AUSA.zip` file provided by the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. This .zip file contains eleven .csv files.
+-   Run the `standardize.values()` function from `utils.R`. This function will perform certain transformations in the unzipped .csv files, and will generate a file called `traffic.csv`. This function takes some minutes to finish (approximatelly .... minutes).
 
 ### Structure of the data to use
 
-The information provided consists of 11 files, one for each year from 2008 to 2018 (which only provides information until September 9th). There is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
+The information provided consists of eleven files, one for each year from 2008 to 2018 (where the latter only provides information until September 9th). Among these files, there is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
 
 -   `standardize.columns.and.merge_`: not all of the files have the same column names, nor the same column order. This function standardizes their format, and merges them all in a single .csv file.
--   `standardize.values`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll name writen in all caps and then all lowers. This function standardizes that, and creates a new dataset.
+-   `standardize.values`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll booth name writen in all caps and then all lowers. This function standardizes that, and creates a new dataset.
 
-The .csv files provide in each entry an estimate of the amount of vehicles that went through a certain toll both in an interval of time of one hour. The following is the detail of each column:
+Great part of the work was devoted to obtaining an homogeneous dataset. The following bullets show the transformation steps followed to transform the eleven heterogeneous and non-standardized files into a single homogeneous one:
+
+-   Separators: characters used as column separators were not consistent across the different eleven files, as the vast majority used the ';' character, while the 2018 file used ','.
+-   Header names: names used for file headers differed among the original eleven files, in aspects such as
+    -   Not being consistent when using '\_' (underscore) to separate words when the column name consists of more than one word.
+    -   Not using the same column ordering.
+    -   Lastly, not being consistent on whether to use all upper- or all lower-case characters.
+-   No consistency on how to write categorical values: as time went by, the name for a given toll booth changed. For example, you could find the 'Retiro' toll booth named as either 'RET', 'Retiro' or 'RETIRO', depending on which file you were looking at. The same level of inconsistency can be found for attributes like the day name and vehicle type.
+-   Time convention: all time values related to hours, minutes and seconds where homogenized to the `HH:MM:SS` format. This action was performed as there were instances in which the format was `H:MM:SS`, or even `HH`.
+-   Date formats: this particular section was the one that required more time. All eleven files have a column named `FECHA`, but its format was incosistent among groups of files. To get dates right, a combination of reading with different formats and moving them to R's date standard was needed. In the end this column was divided into three new ones, one for each component of a date (year, month, day), to allow the user to perform aggregations in a more flexible way, rather than just by day. What follows is the date format that each file had.
+    -   Files of 2008 all the way to 2013 used the `MM/DD/YYYY` format.
+    -   Files of 2014 and 2015 used the `DD/MM/YYYY` format.
+    -   Files of 2016 and 2017 used the `YYYY-MM-DD`.
+    -   The file of 2018 also uses `YYYY-MM-DD`, but its rows increase by month and then by date, which ends up leaving the file with an incorrect order. An example of how dates transition on this file is:
+
+            2018,2018-11-01,JUEVES,21:00:00,22:00:00,DELLEPIANE LINIERS,PESADO,EFECTIVO,28
+            2018,2018-11-01,JUEVES,21:00:00,22:00:00,DELLEPIANE LINIERS,PESADO,INFRACCION,5
+            2018,2018-11-01,JUEVES,21:00:00,22:00:00,DELLEPIANE LINIERS,PESADO,AUPASS,59
+            2018,2018-11-01,JUEVES,21:00:00,22:00:00,DELLEPIANE LINIERS,PESADO,AUPASS,3
+            ...
+            2018,2018-12-01,VIERNES,23:00:00,00:00:00,RETIRO,PESADO,AUPASS,5
+            2018,2018-12-01,VIERNES,23:00:00,00:00:00,SALGUERO,LIVIANO,NO COBRADO,10
+            2018,2018-12-01,VIERNES,23:00:00,00:00:00,SALGUERO,LIVIANO,AUPASS,18
+            2018,2018-12-01,VIERNES,23:00:00,00:00:00,SARMIENTO,LIVIANO,NO COBRADO,13
+            2018,2018-12-01,VIERNES,23:00:00,00:00:00,SARMIENTO,LIVIANO,AUPASS,36
+            2018,2018-01-13,SABADO,00:00:00,01:00:00,ALBERDI,LIVIANO,NO COBRADO,1
+            2018,2018-01-13,SABADO,00:00:00,01:00:00,ALBERDI,LIVIANO,EFECTIVO,6
+            2018,2018-01-13,SABADO,00:00:00,01:00:00,ALBERDI,LIVIANO,EXENTO,3
+            2018,2018-01-13,SABADO,00:00:00,01:00:00,ALBERDI,LIVIANO,EFECTIVO,167
+            ...
+            2018,2018-01-14,DOMINGO,03:00:00,04:00:00,SALGUERO,LIVIANO,NO COBRADO,10
+            2018,2018-01-14,DOMINGO,03:00:00,04:00:00,SALGUERO,LIVIANO,AUPASS,9
+            2018,2018-01-14,DOMINGO,03:00:00,04:00:00,SARMIENTO,LIVIANO,NO COBRADO,14
+            2018,2018-01-14,DOMINGO,03:00:00,04:00:00,SARMIENTO,LIVIANO,NO COBRADO,1
+
+The original .csv files provide in each entry an estimate of the amount of vehicles that went through a certain toll both in an interval of time of one hour. After all the transformations mentioned above the finalized datasets consists of the following columns:
 
 -   `Y`: indicates the **year** number.
 -   `M`: indicates the **month** number.
 -   `D`: indicates the **day** number.
+-   `Q`: indicates the **quarter** number.
 -   `day.name`: indicates the **day of the week**.
 -   `start.hour`: indicates the **start time of the interval**.
 -   `end.hour`: indicates the **end time of the interval**.
@@ -35,12 +72,60 @@ The .csv files provide in each entry an estimate of the amount of vehicles that 
 
 In addition to the previously mentioned columns, two new columns were added to include the geographic position of each toll booth via coordinates, `lat` and `long`. The values of each coordinate were not provided by the dataset, and had to be manually searched using Google Maps.
 
-For example:
+In the end, the first rows from the dataset being used look like this:
 
 ``` r
 rm(list = ls()); gc();
+```
+
+    ##          used (Mb) gc trigger (Mb) limit (Mb) max used (Mb)
+    ## Ncells 456043 24.4     987698 52.8         NA   630562 33.7
+    ## Vcells 891971  6.9    8388608 64.0      16384  1767651 13.5
+
+``` r
 # Include the definitions of the methods used throughout the notebook.
 source('./src/flow.R')
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+    ## Loading required package: ggplot2
+
+    ## Warning: package 'gganimate' was built under R version 3.5.2
+
+    ## ── Attaching packages ───────────────────────────────────────────────────── tidyverse 1.2.1 ──
+
+    ## ✔ tibble  2.0.0     ✔ readr   1.3.1
+    ## ✔ tidyr   0.8.2     ✔ purrr   0.2.5
+    ## ✔ tibble  2.0.0     ✔ forcats 0.3.0
+
+    ## Warning: package 'tibble' was built under R version 3.5.2
+
+    ## ── Conflicts ──────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ readr::col_factor() masks scales::col_factor()
+    ## ✖ purrr::discard()    masks scales::discard()
+    ## ✖ dplyr::filter()     masks stats::filter()
+    ## ✖ purrr::is_atomic()  masks lazyeval::is_atomic()
+    ## ✖ purrr::is_formula() masks lazyeval::is_formula()
+    ## ✖ dplyr::lag()        masks stats::lag()
+
+    ## 
+    ## Attaching package: 'lubridate'
+
+    ## The following object is masked from 'package:base':
+    ## 
+    ##     date
+
+``` r
 df <- read.csv('~/Documents/traffic/datasets/traffic.csv')
 head(df)
 ```
@@ -86,9 +171,26 @@ plot(p)
 
 ![](README_files/figure-markdown_github/trend-1.png)
 
-From the graph above it's clear there's an order of magnitud of difference between the amount of vehicles in the period 2008-2013 versus the period 2014-2018. This is the result of two factors:
+From the graph above it's clear there's an order of magnitud of difference between the amount of vehicles in the 2008-2013 period versus the period 2014-2018. This is the result of two factors:
 
--   An increment in the amount of observations for tool booths like those of Avellaneda and Alberdi.
+-   An increment in the amount of observations for tool booths, in particular those of Avellaneda, Alberdi and Dellepiane. The reason why the amount of observations increased an order of magnitude is not known, and not clarified in the web site that provides the information.
+
+``` bash
+cd ~/Documents/traffic/datasets/flujo-vehicular-por-unidades-de-peaje-ausa
+find . -name '*.csv' -exec wc -l {} \;
+```
+
+    ##   140517 ./flujo-vehicular-2008.csv
+    ##   140161 ./flujo-vehicular-2009.csv
+    ##   140149 ./flujo-vehicular-2010.csv
+    ##   140157 ./flujo-vehicular-2011.csv
+    ##   140533 ./flujo-vehicular-2012.csv
+    ##   215868 ./flujo-vehicular-2013.csv
+    ##   908847 ./flujo-vehicular-2014.csv
+    ##  1048576 ./flujo-vehicular-2015.csv
+    ##  1040856 ./flujo-vehicular-2016.csv
+    ##  1030020 ./flujo-vehicular-2017.csv
+    ##   847751 ./flujo-vehicular-2018.csv
 
 ``` r
 t <- df[c('toll.booth', 'Y', 'amount')] %>%
@@ -258,6 +360,30 @@ animate(a)
 
 ![](README_files/figure-markdown_github/paymentsperyearanimated-1.gif)
 
-### Predicting tomorrow's traffic volume on each toll booth
+### Predicting next two weeks' traffic volume toll booths
 
-TODO(tulians): Use the `forecast` library to predict the next 2 days traffic volume.
+``` r
+t <- df %>%
+  filter(Y == 2016) %>%
+  group_by(Y, M, D) %>%
+  summarise(total.volume = sum(amount))
+
+# Grouped the amount of vehicles per day in `t`, and now creating a time-series.
+# This time series uses 7 as frequency as we're interested in weekly
+# seasonalities.
+t.ts <- msts(t$total.volume, seasonal.periods = c(7))
+fit <- stlf(t.ts)
+fc <- forecast(fit)
+autoplot(fc)
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-3-1.png)
+
+``` r
+t.ts.components <- ets(t.ts)
+autoplot(t.ts.components)
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)
+
+### Conclusions and next steps

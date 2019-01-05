@@ -39,16 +39,13 @@ traffic.volume.heatmap <- function(start.year,
     t <- t %>%
       group_by(toll.booth) %>%
       mutate(amount = round(
-        (amount - min(amount)) / 
-          (max(amount) - min(amount)), 3))
+        (amount - min(amount)) / (max(amount) - min(amount)), 3))
   }
   t <- t %>% arrange(toll.booth, day.name)
-  p <- ggplot(t, aes(x = factor(day.name, level = c('
-                                                    DOMINGO', 'LUNES', 'MARTES', 
-                                                    'MIERCOLES', 'JUEVES', 
-                                                    'VIERNES', 'SABADO')),
-                     y = toll.booth, 
-                     fill = amount)) +
+  p <- ggplot(t, aes(
+    x = factor(day.name, level = c('DOMINGO', 'LUNES', 'MARTES','MIERCOLES', 
+                                   'JUEVES', 'VIERNES', 'SABADO')),
+    y = toll.booth, fill = amount)) +
     geom_tile() +
     geom_text(aes(label = amount), size = 4) +
     scale_fill_gradient(low = 'white', high = 'orange') +
