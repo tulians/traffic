@@ -76,56 +76,8 @@ In the end, the first rows from the dataset being used look like this:
 
 ``` r
 rm(list = ls()); gc();
-```
-
-    ##          used (Mb) gc trigger (Mb) limit (Mb) max used (Mb)
-    ## Ncells 456043 24.4     987698 52.8         NA   630562 33.7
-    ## Vcells 891971  6.9    8388608 64.0      16384  1767651 13.5
-
-``` r
 # Include the definitions of the methods used throughout the notebook.
 source('./src/flow.R')
-```
-
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-    ## Loading required package: ggplot2
-
-    ## Warning: package 'gganimate' was built under R version 3.5.2
-
-    ## ── Attaching packages ───────────────────────────────────────────────────── tidyverse 1.2.1 ──
-
-    ## ✔ tibble  2.0.0     ✔ readr   1.3.1
-    ## ✔ tidyr   0.8.2     ✔ purrr   0.2.5
-    ## ✔ tibble  2.0.0     ✔ forcats 0.3.0
-
-    ## Warning: package 'tibble' was built under R version 3.5.2
-
-    ## ── Conflicts ──────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ readr::col_factor() masks scales::col_factor()
-    ## ✖ purrr::discard()    masks scales::discard()
-    ## ✖ dplyr::filter()     masks stats::filter()
-    ## ✖ purrr::is_atomic()  masks lazyeval::is_atomic()
-    ## ✖ purrr::is_formula() masks lazyeval::is_formula()
-    ## ✖ dplyr::lag()        masks stats::lag()
-
-    ## 
-    ## Attaching package: 'lubridate'
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     date
-
-``` r
 df <- read.csv('~/Documents/traffic/datasets/traffic.csv')
 head(df)
 ```
@@ -166,8 +118,6 @@ p <- ggplot(volume.per.year,
 
 plot(p)
 ```
-
-    ## Warning: Removed 11 rows containing missing values (geom_pointrange).
 
 ![](README_files/figure-markdown_github/trend-1.png)
 
