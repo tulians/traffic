@@ -9,17 +9,21 @@ library(ggalt)
 library(scales)
 library(stringr)
 library(ggplot2)
+library(ggExtra)
 library(forecast)
 library(lazyeval)
 library(gganimate)
 library(tidyverse)
 library(lubridate)
+library(ggcorrplot)
 
-traffic.volume.heatmap <- function(start.year, 
+traffic.volume.heatmap <- function(df,
+                                   start.year, 
                                    end.year = start.year, 
                                    normalize = T) {
   #' Heatmap with the volume of traffic at a certain moment of time.
   #' 
+  #' @param df Dataframe from which the graph is generated.
   #' @param start.year First year to take into account when building the 
   #' heatmap (inclusive).
   #' @param end.year Last year to take into account when building the heatmap 

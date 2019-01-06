@@ -337,7 +337,7 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
       toll.booth == 'ALBERDI' ~ -34.6448027,
       toll.booth == 'AVELLANEDA' ~ -34.6482732,
       toll.booth == 'DELLEPIANE' ~ -34.6504678,
-      toll.booth == 'ILLIA' ~ 0,
+      toll.booth == 'ILLIA' ~ -34.5752543,
       toll.booth == 'RETIRO' ~ -34.5752543,
       toll.booth == 'SARMIENTO' ~ -34.5674364,
       toll.booth == 'SALGUERO' ~ -34.5717106
@@ -346,7 +346,7 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
       toll.booth == 'ALBERDI' ~ -58.4920542,
       toll.booth == 'AVELLANEDA' ~ -58.4781064,
       toll.booth == 'DELLEPIANE' ~ -58.4656122,
-      toll.booth == 'ILLIA' ~ 0,
+      toll.booth == 'ILLIA' ~ -58.3921129,
       toll.booth == 'RETIRO' ~ -58.3921129,
       toll.booth == 'SARMIENTO' ~ -58.4079902,
       toll.booth == 'SALGUERO' ~ -58.4003948
