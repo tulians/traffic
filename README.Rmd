@@ -19,13 +19,25 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r requiredpackages, echo=FALSE}
+rm(list = ls()); gc();
+
+packages.to.include <- c(
+  'dplyr', 'forecast', 'ggalt', 'gganimate', 'ggExtra', 'ggplot2', 'lazyeval', 
+  'lubridate', 'png', 'scales', 'stringr', 'tidyverse'
+)
+
+lapply(packages.to.include, require, character.only = T)
+```
+
+
 ### Objective
 This project consists on analyzing the evolution of traffic on AUSA toll booths in Buenos Aires highways. The data being used in this project can be found in the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. In particular, the project aims to predict the amount of vehicles going through toll booths for a given date in the future. Concretely, given a week $w_i$ the model will be able to predict the traffic volume on weeks $w_{i+1}$ and $w_{i+2}$.
 
 ### Prework
 * Unzip the `Flujo-Vehicular-por-Unidades-de-Peaje-AUSA.zip` file provided by the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. This .zip file contains eleven .csv files.
 * Run the `standardize.values()` function from `utils.R`. This function will perform certain transformations in the unzipped .csv files, and will generate a file called `traffic.csv`. This function takes some minutes to finish (approximately 5 minutes).
-* For details on how graphs were generated, please take a look at `README.Rmd`, and the two files under `src/`.
+* For details on how graphs were generated, please take a look at `README.Rmd` and `src/utils.R`.
 
 ### Structure of the data to use
 The information provided consists of eleven files, one for each year from 2008 to 2018 (where the latter only provides information until September 9th). Among these files, there is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
@@ -87,19 +99,17 @@ In addition to the previously mentioned columns, two new columns were added to i
 
 In the end, the first rows from the data set being used look like this:
 ```{r, echo=FALSE}
-rm(list = ls()); gc();
-# Include the definitions of the methods used throughout the notebook.
-source('./src/flow.R')
 df <- read.csv('~/Documents/traffic/datasets/traffic.csv')
 head(df)
 ```
 
 ### Exploratory analysis
-The analysis to be presented in this section has the objective of getting to know better the data set, and will consist primarily on three areas:
+The analysis to be presented in this section has the objective of getting to know better the data set, and will consist primarily on four areas:
 
 * The increment in the number of observations that happens during 2014.
 * The hourly patterns vehicle follow in and out of the city of Buenos Aires.
 * The distribution of drivers committing infractions.
+* The change on how drivers pay in toll booths along the years.
 
 #### Increment in traffic
 The first analysis performed right after the cleansing and wrangling of the data set was checking whether the data set was homogeneous in terms of the amount of observations per year. It would be expected to see differences among years, given that from one year to the next one the could be more vehicles on the road (more taking into account this is Buenos Aires traffic), but the actual difference in volume was far from expected.
@@ -109,16 +119,14 @@ volume.per.year <- df %>%
     group_by(Y) %>% 
     summarise(total.volume = sum(amount))
 
-p <- ggplot(data = volume.per.year, 
-            aes(x = volume.per.year$Y, y = volume.per.year$total.volume)) +
+ggplot(data = volume.per.year, 
+       aes(x = volume.per.year$Y, y = volume.per.year$total.volume)) +
   geom_point(shape = 1) +
   stat_summary(fun.data = mean_cl_normal) +
   labs(x = NULL, y = NULL, 
        title = 'Amount of vehicles per year', caption = 'Figure 1') +
   geom_smooth(span = 1.2, se = F) +
   theme_bw()
-
-plot(p)
 ```
 
 From the graph above it's clear there's an order of magnitude of difference between the amount of vehicles in the 2008-2013 period versus the period 2014-2018. That could also be inferred from the number of rows on the files.
@@ -131,25 +139,22 @@ This order of magnitude of difference in the number of observations can't be exp
 
 Looking deeper into the increment, a breakdown per toll booth name was performed, which indicated the main contributors for the increase in the number of observations per year were the *Avellaneda*, *Alberdi* and *Dellepiane* toll booths. Right after these top three contributors, there are other four toll booths, and as it can be see, three of them start having observations around mid-2014 and the start of 2015. Figures 2 and 3 below illustrate these points: the first one shows the breakdown per toll booth, while the second one shows the start dates of each one of them.
 
-```{r incrementinobservations, fig.width=8, echo=FALSE}
-t <- df[c('toll.booth', 'Y', 'amount')] %>%
+```{r incrementinobservations, fig.width=10, echo=FALSE}
+data <- df[c('toll.booth', 'Y', 'amount')] %>%
   group_by(toll.booth, Y) %>%
   summarise(total.volume = sum(amount))
 
-p <- ggplot(data = t,
-            aes(x = Y, y = total.volume, group = toll.booth)) +
+ggplot(data = data, aes(x = Y, y = total.volume, group = toll.booth)) +
   geom_line(aes(linetype = toll.booth, color = toll.booth)) +
   labs(x = NULL, y = NULL, 
        title = 'Amount of vehicles per year', caption = 'Figure 2') +
   theme_bw()
-
-plot(p)
 ```
 
-```{r timeframes, fig.width=8, echo=FALSE}
+```{r timeframes, fig.width=10, echo=FALSE}
 theme_set(theme_classic())
 
-t <- df[c('toll.booth', 'Y', 'amount')] %>%
+data <- df[c('toll.booth', 'Y', 'amount')] %>%
   group_by(toll.booth, Y) %>%
   summarise(amount = sum(amount)) %>%
   mutate(
@@ -157,8 +162,9 @@ t <- df[c('toll.booth', 'Y', 'amount')] %>%
     end_year = max(Y)) %>%
   distinct(toll.booth, start_year, end_year)
 
-p <- ggplot(data = t, aes(x = start_year, xend = end_year, 
-                          y = toll.booth, group = toll.booth)) +
+ggplot(data = data, 
+       aes(x = start_year, xend = end_year, 
+           y = toll.booth, group = toll.booth)) +
   geom_dumbbell(color = '#0e668b', colour_x = '#0e668b', size_x = 1.5, 
                 colour_xend = '#a3c4dc', size_xend = 0.75) +
   labs(x = NULL, y = NULL, 
@@ -172,11 +178,9 @@ p <- ggplot(data = t, aes(x = start_year, xend = end_year,
         axis.ticks = element_blank(),
         legend.position = 'top',
         panel.border = element_blank())
-
-plot(p)
 ```
 
-Another point worth mentioning for this section is whether there's a difference between the *Illia* toll booth and the *Retiro* one. Geographically, the *Retiro* toll booth is located in the *President Arturo Umberto Illia* highway, however there are no signs of where the *Illia* toll booth could be. In the beginning one hypothesis was that there was a change in names, so that both names refer to the same toll booth, but as shown in both Figure 2 and 3, *Illia* has been on since the first 2008 file, and it wasn't until 2014 that *Retiro* started to appear in files, with a low contribution. Given this context, and after finding no information in the news, there two toll booths will be considered as one for all analysis. 
+Another point worth mentioning for this section is whether there's a difference between the *Illia* toll booth and the *Retiro* one. Geographically, the *Retiro* toll booth is located in the *President Arturo Umberto Illia* highway, however there are no signs of where the *Illia* toll booth could be. In the beginning one hypothesis was that there was a change in names, so that both names refer to the same toll booth, but as shown in both Figure 2 and 3, *Illia* has been on since the first 2008 file, and it wasn't until 2014 that *Retiro* started to appear in files, with a low contribution. Given this context, and after finding no information in the news, there two toll booths will be considered separately, as the contribution of *Retiro* will not change the behavior of *Illia*.
 
 Lastly, it's important to highlight a difference between the seven toll booths present in this data set. The group of *Alberdi*, *Avellaneda*, *Dellepiane* and *Illia/Retiro* are toll booths located in highways, while the remaining Sarmiento and Salguero are actually outside the Illia highway. They are both entrance and exit to the Illia highway, and its only payment method is via AUPASS (which is the automatic option). This is shown in Figure 4, where both *Sarmiento* and *Salguero* have no cash-related payment method.
 
@@ -185,63 +189,94 @@ data <- df %>%
   group_by(toll.booth, payment.method) %>%
   summarise(total.volume = sum(amount))
 
-p <- ggplot(data = data, 
-            aes(x = toll.booth, y = total.volume, fill = payment.method)) +
+ggplot(data = data, 
+       aes(x = toll.booth, y = total.volume, fill = payment.method)) +
   geom_bar(position = 'fill', stat = 'identity') +
   scale_y_continuous(labels = percent_format()) +
   labs(x = NULL, y = NULL, 
        title = 'Distribution of payment methods across toll booths',
        caption = 'Figure 4') + 
   theme(legend.title = element_blank())
-
-plot(p)
 ```
 
 
 #### Volume of traffic during the day
-Traffic flow holds a pattern for each toll booth. Performing an hourly breakdown of traffic for the Alberdi tool booth, shown in the following graph, two traffic peaks can be identified: one around 8am and another one around 6pm. This matches with the times people is commuting to an from work. Another interesting pattern is that traffic keeps relatively still between the time of the two peaks.
+In this section the data set will be analyzed for hourly patterns in traffic volume, with the objective to identify if there are common patterns shared by groups or all toll booths. It would be expected to see an increase in vehicles going through toll booths at peak times like 7-8am and 5-7pm, as those are times in which the vast majority of people commute to and from work.
 
-```{r breakdownalberdi, fig.width=8, echo=FALSE}
-t <- custom.agg(df[(df$toll.booth == 'ALBERDI'),],
-                length(unique(df$Y)),
-                'vehicle.type', 'start.hour')
+```{r totalvolumeofvehicles, fig.width=10, echo=FALSE}
+years.to.include <- unique(df$Y)
+data <- df %>%
+  group_by(vehicle.type, start.hour) %>%
+  summarise(amount = sum(amount)) %>% 
+  mutate(
+    amount = amount / (length(years.to.include) * 365.25 / 7),
+    hour = format(strptime(start.hour,"%H:%M:%S"),'%H')
+  )
 
-p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
-                          y = amount, group = vehicle.type)) +
-    labs(title = 'Vehicles per hour in Alberdi toll booth', 
-         x = 'start.hour',
-         y = 'Number of vehicles') +
-    geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
-    theme_bw()
-
-plot(p)
+ggplot(data = data, aes(x = hour, y = amount, group = vehicle.type)) +
+  labs(x = NULL, y = NULL,
+       title = 'Vehicles per hour for all toll booths', 
+       caption = 'Figure 5') +
+  geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
+  theme_bw()
 ```
 
-The previous graph differentiates between the two different kinds of vehicles: motorbikes/cars and trucks. While both kinds show a similar behavior, the volume of motorbikes/cars is greater than the one of trucks. Although this behavior can be seen in other toll booths like Avellaneda or Sarmiento, there are cases like Retiro, where the amount of trucks is almost the same as the one of cars.
+Figure 4 shows the amount of vehicles going through Buenos Aires toll booths, with a breakdown per hour and vehicle type. The red solid line indicates light vehicles, like cars and motorbikes, while the dashed light blue line indicates heavy vehicles, like trucks. Looking at the behavior of both curves, the do have peaks at the two intervals of time mentioned before, but also there's a third peak that was unexpected for me in the beginning. The third peak happens between 12pm and 2pm, and could be related to people who start or finish their workday around that time.
 
-```{r breakdownretiro, fig.width=8, echo=FALSE}
-t <- custom.agg(df[(df$toll.booth == 'RETIRO'),],
-                length(unique(df$Y)),
-                'vehicle.type', 'start.hour')
+```{r breakdownbytollbooth, fig.width=10, echo=FALSE}
+years.to.include <- unique(df$Y)
+data <- df %>%
+  group_by(toll.booth, start.hour) %>%
+  summarise(amount = sum(amount)) %>% 
+  mutate(
+    amount = amount / (length(years.to.include) * 365.25 / 7),
+    hour = format(strptime(start.hour,"%H:%M:%S"),'%H')
+  )
 
-p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
-                          y = amount, group = vehicle.type)) +
-    labs(title = 'Vehicles per hour in Retiro toll booth', 
-         x = 'start.hour',
-         y = 'Number of vehicles') +
-    geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
-    theme_bw()
-
-plot(p)
+ggplot(data = data, aes(x = hour, y = amount, group = toll.booth)) +
+  labs(x = NULL, y = NULL,
+       title = 'Vehicles per hour per toll booths', 
+       caption = 'Figure 6') +
+  geom_line(aes(linetype = toll.booth, color = toll.booth)) +
+  theme_bw()
 ```
 
-Even though the volume of vehicles going through the Retiro toll booth is approximately three times smaller than the one of Alberdi, the ratio Liviano-Pesado (light-heavy) is greater. The reason for this is that Retiro is a a commercial route, located in the road to the Port of Buenos Aires, reason why the volume of heavy vehicles is greater than in other toll booths.
+From Figure 6 there are some aspects to analyze:
+* It was know from Figure 2 that the *Avellaneda* toll booth was the one with more traffic, but the breakdown Figure 5 provides show that there's an incremental flow of vehicles going through this toll booth in from 7am to 6pm. This behavior is different to that of the rest of the toll booths. The fact that there are more vehicles going through the *Avellaneda* toll booth at 6pm than 7am could imply the Perito Moreno highway (which is where the *Avellaneda* toll booth is located) is a good option for leaving the Buenos Aires city, rather that entering the city.
+* The second most used toll both is the *Illia* one (plus *Retiro*), which happens to be the one with the most clear peaks in traffic among all toll booths. Those can be seen a 8am and 6pm, which could imply this highway is mostly used for people commuting to and from their work. This is supported by the "valley" between those hours, where there is a reduction in traffic. Making a parallelism with the point made above for the *Avellaneda* toll booth, the *Illia/Retiro* one has a more balanced set of peaks, which can be interpreted as if the Presidente Arturo Umberto Illia highway is used by drivers both to enter and leave the city.
+
+The last set of patters that I wanted to analyze in this section was whether there are particular days during the year where traffic is either very high or very low compared to the average week day. Figure 7 shows the aggregate of traffic for each day of the year, taking into account all eleven files of data. Three horizontal lines feature in this graph, representing thresholds like 10% more than the mean, the mean and 10% less than the mean, in blue, red and green respectively.
+```{r seasonalities, fig.width=10, echo=FALSE}
+data <- df %>%
+  group_by(M, D) %>%
+  summarise(amount = sum(amount)) %>% 
+  mutate(amount = amount / (length(years.to.include) * 365.25 / 7))
+
+ggplot(data = data, aes(x = 1:nrow(data), y = amount)) +
+  geom_line() + 
+  geom_hline(yintercept = 1.1 * mean(data$amount), color = 'blue') +
+  geom_hline(yintercept = mean(data$amount), color = 'red') +
+  geom_hline(yintercept = 0.9 * mean(data$amount), color = 'green') +
+  labs(x = NULL, y = NULL, 
+       title = 'Average amount of cars per day of the year', 
+       caption = 'Figure 7') + 
+  theme(legend.position = 'none') + theme_bw()
+```
+
+From the days above the blue line and below the green line, we can identify particular dates that explain why there was more (or less) amount of traffic than on a regular day.
+* Starting with days with more than 10% of the usual traffic, we can find the winter holidays period spanning from July to August.
+* On the other hand, days with less than 10% of the usual traffic are the first and last day of a given year, which can be explained by the fact that people are celebrating in their houses; the last week of the year, which includes the Christmas celebrations and the days before New Years Eve; holidays like May Revolution on May 25th, Labor Day on May 1st, Independence on July 9th, or Feast of the Immaculate Conception on December 8th.
+
+```{r specialdates, echo=FALSE}
+data[data$amount > 1.1 * mean(data$amount), c('M', 'D')]
+data[data$amount < 0.9 * mean(data$amount), c('M', 'D')]
+```
 
 
 #### Drivers commiting infractions
-Another interesting aspect to analyze of this data set is the distribution of drivers committing infractions (id est, not paying when they cross the toll booth), and whether this is something that only happens for light vehicles or in heavy vehicles too. As a first step, .
+Among the many payment methods available in the data set, infractions is the only one which has a negative connotation, as it involves drives not paying the obligatory fee when crossing the toll booth. Figure 8 shows the distribution of infractions along the different toll booths. Those toll booths with more squares of their color are the ones where more infractions happen. *Salguero* and *Sarmiento* toll booths don't seem to be measuring this kind of phenomenon. 
 
-```{r distributionofinfractions, fig.width=8, echo=FALSE}
+```{r distributionofinfractions, fig.width=10, echo=FALSE}
 tolls.with.infractions <- df[df$payment.method == 'INFRACCION', ]$toll.booth
 nrows <- 12
 grid <- expand.grid(x = 1:nrows, y = 1:nrows)
@@ -254,7 +289,8 @@ p <- ggplot(data = grid, aes(x = x, y = y, fill = category)) +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0), trans = 'reverse') +
   scale_fill_brewer(palette = 'Spectral') +
-  labs(title = 'Distribution of infractions along toll booths') +
+  labs(title = 'Distribution of infractions along toll booths',
+       caption = 'Figure 8') +
   theme(plot.title = element_text(size = rel(1.2)),
         axis.text = element_blank(), 
         axis.title = element_blank(),
@@ -266,46 +302,46 @@ p <- ggplot(data = grid, aes(x = x, y = y, fill = category)) +
 plot(p)
 ```
 
+However, it's expected that toll booths like Avellaneda, Dellepiane and Illia/Retiro have more infractions than the rest of the toll booths, as they have more traffic as per Figure 2. For this reason, Figure 9 shows the which is the relative percentage of infractions, as it takes into account the total traffic of each toll booth. Having such information shows that the toll booth where there are more infractions is the *Dellepiane* one, with approximately 0.6% of its traffic being only infractions.
 
+```{r relativeinfractions, fig.width=10, echo=FALSE}
+'%!in%' <- function(x,y)!('%in%'(x,y))
+data.all <- df %>%
+  filter(toll.booth %!in% c('SALGUERO', 'SARMIENTO'))%>%
+  group_by(toll.booth) %>%
+  summarise(total.volume = sum(amount))
 
-Below are two charts with the distribution of infractions for both Alberdi and Retiro.
-```{r infractionsalberdi, fig.width=8, echo=FALSE}
-t <- custom.agg(df[(df$toll.booth == 'ALBERDI' & 
-                      df$payment.method == 'INFRACCION'),],
-                length(unique(df$Y)),
-                'vehicle.type', 'start.hour')
+data.infractions <- df %>%
+  filter(payment.method == 'INFRACCION') %>%
+  group_by(toll.booth) %>%
+  summarise(infractions.volume = sum(amount))
 
-p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
-                          y = amount, group = vehicle.type)) +
-    labs(title = 'Infractions per hour in Alberdi toll booth', 
-         x = 'start.hour',
-         y = 'Number of vehicles') +
-    geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
-    theme_bw()
+data <- rbind(
+  data.frame(
+    toll.booth = unique(data.infractions$toll.booth),
+    infractions = data.infractions$infractions.volume,
+    total.volume = data.all$total.volume),
+  data.frame('toll.booth' = 'ILLIA/RETIRO', 
+             'infractions' = data.infractions[data.infractions$toll.booth == 'RETIRO', ]$infractions.volume + 
+               data.infractions[data.infractions$toll.booth == 'ILLIA', ]$infractions.volume,
+             'total.volume' = data.all[data.all$toll.booth == 'RETIRO', ]$total.volume + 
+               data.all[data.all$toll.booth == 'ILLIA', ]$total.volume)
+) %>% filter(!(toll.booth %in% c('RETIRO', 'ILLIA'))) %>%
+  mutate(percentage = infractions / total.volume)
 
-plot(p)
+ggplot(data = data, aes(x = 1, y = percentage, fill = toll.booth)) +
+  geom_bar(position = 'fill', stat = 'identity') +
+  scale_y_continuous(labels = percent_format()) +
+  labs(x = NULL, y = NULL, 
+       title = 'Percentage of infractions on total traffic', 
+       caption = 'Figure 9') +
+  theme_bw() + 
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
 ```
-```{r infractionsretiro, fig.width=8, echo=FALSE}
-t <- custom.agg(df[(df$toll.booth == 'RETIRO' & 
-                      df$payment.method == 'INFRACCION'),],
-                length(unique(df$Y)),
-                'vehicle.type', 'start.hour')
 
-p <- ggplot(data = t, aes(x = format(strptime(t$start.hour,"%H:%M:%S"),'%H'), 
-                          y = amount, group = vehicle.type)) +
-    labs(title = 'Infractions per hour in Retiro toll booth', 
-         x = 'start.hour',
-         y = 'Number of vehicles') +
-    geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
-    theme_bw()
-
-plot(p)
-```
-
-In both cases, the distribution of infractions seems to follow the same distribution of traffic throughout the day: the moments where there are more infractions correlate with those in which traffic volume is the highest.
-
-
-```{r evolutionofinfractions, fig.width=8, echo=FALSE}
+```{r evolutionofinfractions, fig.width=10, echo=FALSE}
 t <- df %>%
   filter(payment.method == 'INFRACCION') %>%
   group_by(Y, toll.booth, day.name) %>%

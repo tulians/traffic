@@ -13,7 +13,7 @@ This project consists on analyzing the evolution of traffic on AUSA toll booths 
 
 -   Unzip the `Flujo-Vehicular-por-Unidades-de-Peaje-AUSA.zip` file provided by the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. This .zip file contains eleven .csv files.
 -   Run the `standardize.values()` function from `utils.R`. This function will perform certain transformations in the unzipped .csv files, and will generate a file called `traffic.csv`. This function takes some minutes to finish (approximately 5 minutes).
--   For details on how graphs were generated, please take a look at `README.Rmd`, and the two files under `src/`.
+-   For details on how graphs were generated, please take a look at `README.Rmd` and `src/utils.R`.
 
 ### Structure of the data to use
 
@@ -92,11 +92,12 @@ In the end, the first rows from the data set being used look like this:
 
 ### Exploratory analysis
 
-The analysis to be presented in this section has the objective of getting to know better the data set, and will consist primarily on three areas:
+The analysis to be presented in this section has the objective of getting to know better the data set, and will consist primarily on four areas:
 
 -   The increment in the number of observations that happens during 2014.
 -   The hourly patterns vehicle follow in and out of the city of Buenos Aires.
 -   The distribution of drivers committing infractions.
+-   The change on how drivers pay in toll booths along the years.
 
 #### Increment in traffic
 
@@ -111,17 +112,17 @@ cd ~/Documents/traffic/datasets/flujo-vehicular-por-unidades-de-peaje-ausa
 find . -name '*.csv' -exec wc -l {} \;
 ```
 
-    ##   140517 ./flujo-vehicular-2008.csv
+    ##   847751 ./flujo-vehicular-2018.csv
     ##   140161 ./flujo-vehicular-2009.csv
-    ##   140149 ./flujo-vehicular-2010.csv
-    ##   140157 ./flujo-vehicular-2011.csv
+    ##   140517 ./flujo-vehicular-2008.csv
     ##   140533 ./flujo-vehicular-2012.csv
     ##   215868 ./flujo-vehicular-2013.csv
+    ##   140157 ./flujo-vehicular-2011.csv
+    ##   140149 ./flujo-vehicular-2010.csv
     ##   908847 ./flujo-vehicular-2014.csv
     ##  1048576 ./flujo-vehicular-2015.csv
-    ##  1040856 ./flujo-vehicular-2016.csv
     ##  1030020 ./flujo-vehicular-2017.csv
-    ##   847751 ./flujo-vehicular-2018.csv
+    ##  1040856 ./flujo-vehicular-2016.csv
 
 This order of magnitude of difference in the number of observations can't be explained with a real increase of such amount in the number of cars going in and out the city, as that would mean and increase of ten times the amount of vehicles in the period 2012-2014. I posted a [question](http://disq.us/p/1ynoflv) on the [web site](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) that provides the information, asking for clarifications.
 
@@ -131,7 +132,7 @@ Looking deeper into the increment, a breakdown per toll booth name was performed
 
 ![](README_files/figure-markdown_github/timeframes-1.png)
 
-Another point worth mentioning for this section is whether there's a difference between the *Illia* toll booth and the *Retiro* one. Geographically, the *Retiro* toll booth is located in the *President Arturo Umberto Illia* highway, however there are no signs of where the *Illia* toll booth could be. In the beginning one hypothesis was that there was a change in names, so that both names refer to the same toll booth, but as shown in both Figure 2 and 3, *Illia* has been on since the first 2008 file, and it wasn't until 2014 that *Retiro* started to appear in files, with a low contribution. Given this context, and after finding no information in the news, there two toll booths will be considered as one for all analysis.
+Another point worth mentioning for this section is whether there's a difference between the *Illia* toll booth and the *Retiro* one. Geographically, the *Retiro* toll booth is located in the *President Arturo Umberto Illia* highway, however there are no signs of where the *Illia* toll booth could be. In the beginning one hypothesis was that there was a change in names, so that both names refer to the same toll booth, but as shown in both Figure 2 and 3, *Illia* has been on since the first 2008 file, and it wasn't until 2014 that *Retiro* started to appear in files, with a low contribution. Given this context, and after finding no information in the news, there two toll booths will be considered separately, as the contribution of *Retiro* will not change the behavior of *Illia*.
 
 Lastly, it's important to highlight a difference between the seven toll booths present in this data set. The group of *Alberdi*, *Avellaneda*, *Dellepiane* and *Illia/Retiro* are toll booths located in highways, while the remaining Sarmiento and Salguero are actually outside the Illia highway. They are both entrance and exit to the Illia highway, and its only payment method is via AUPASS (which is the automatic option). This is shown in Figure 4, where both *Sarmiento* and *Salguero* have no cash-related payment method.
 
@@ -139,25 +140,29 @@ Lastly, it's important to highlight a difference between the seven toll booths p
 
 #### Volume of traffic during the day
 
-Traffic flow holds a pattern for each toll booth. Performing an hourly breakdown of traffic for the Alberdi tool booth, shown in the following graph, two traffic peaks can be identified: one around 8am and another one around 6pm. This matches with the times people is commuting to an from work. Another interesting pattern is that traffic keeps relatively still between the time of the two peaks.
+In this section the data set will be analyzed for hourly patterns in traffic volume, with the objective to identify if there are common patterns shared by groups or all toll booths. It would be expected to see an increase in vehicles going through toll booths at peak times like 7-8am and 5-7pm, as those are times in which the vast majority of people commute to and from work.
 
-![](README_files/figure-markdown_github/breakdownalberdi-1.png)
+![](README_files/figure-markdown_github/totalvolumeofvehicles-1.png)
 
-The previous graph differentiates between the two different kinds of vehicles: motorbikes/cars and trucks. While both kinds show a similar behavior, the volume of motorbikes/cars is greater than the one of trucks. Although this behavior can be seen in other toll booths like Avellaneda or Sarmiento, there are cases like Retiro, where the amount of trucks is almost the same as the one of cars.
+Figure 4 shows the amount of vehicles going through Buenos Aires toll booths, with a breakdown per hour and vehicle type. The red solid line indicates light vehicles, like cars and motorbikes, while the dashed light blue line indicates heavy vehicles, like trucks. Looking at the behavior of both curves, the do have peaks at the two intervals of time mentioned before, but also there's a third peak that was unexpected for me in the beginning. The third peak happens between 12pm and 2pm, and could be related to people who start or finish their workday around that time.
 
-![](README_files/figure-markdown_github/breakdownretiro-1.png)
+![](README_files/figure-markdown_github/breakdownbytollbooth-1.png)
 
-Even though the volume of vehicles going through the Retiro toll booth is approximately three times smaller than the one of Alberdi, the ratio Liviano-Pesado (light-heavy) is greater. The reason for this is that Retiro is a a commercial route, located in the road to the Port of Buenos Aires, reason why the volume of heavy vehicles is greater than in other toll booths.
+From Figure 6 there are some aspects to analyze: \* It was know from Figure 2 that the *Avellaneda* toll booth was the one with more traffic, but the breakdown Figure 5 provides show that there's an incremental flow of vehicles going through this toll booth in from 7am to 6pm. This behavior is different to that of the rest of the toll booths. The fact that there are more vehicles going through the *Avellaneda* toll booth at 6pm than 7am could imply the Perito Moreno highway (which is where the *Avellaneda* toll booth is located) is a good option for leaving the Buenos Aires city, rather that entering the city. \* The second most used toll both is the *Illia* one (plus *Retiro*), which happens to be the one with the most clear peaks in traffic among all toll booths. Those can be seen a 8am and 6pm, which could imply this highway is mostly used for people commuting to and from their work. This is supported by the "valley" between those hours, where there is a reduction in traffic. Making a parallelism with the point made above for the *Avellaneda* toll booth, the *Illia/Retiro* one has a more balanced set of peaks, which can be interpreted as if the Presidente Arturo Umberto Illia highway is used by drivers both to enter and leave the city.
+
+The last set of patters that I wanted to analyze in this section was whether there are particular days during the year where traffic is either very high or very low compared to the average week day. Figure 7 shows the aggregate of traffic for each day of the year, taking into account all eleven files of data. Three horizontal lines feature in this graph, representing thresholds like 10% more than the mean, the mean and 10% less than the mean, in blue, red and green respectively. ![](README_files/figure-markdown_github/seasonalities-1.png)
+
+From the days above the blue line and below the green line, we can identify particular dates that explain why there was more (or less) amount of traffic than on a regular day. \* Starting with days with more than 10% of the usual traffic, we can find the winter holidays period spanning from July to August. \* On the other hand, days with less than 10% of the usual traffic are the first and last day of a given year, which can be explained by the fact that people are celebrating in their houses; the last week of the year, which includes the Christmas celebrations and the days before New Years Eve; holidays like May Revolution on May 25th, Labor Day on May 1st, Independence on July 9th, or Feast of the Immaculate Conception on December 8th.
 
 #### Drivers commiting infractions
 
-Another interesting aspect to analyze of this data set is the distribution of drivers committing infractions (id est, not paying when they cross the toll booth), and whether this is something that only happens for light vehicles or in heavy vehicles too. As a first step, .
+Among the many payment methods available in the data set, infractions is the only one which has a negative connotation, as it involves drives not paying the obligatory fee when crossing the toll booth. Figure 8 shows the distribution of infractions along the different toll booths. Those toll booths with more squares of their color are the ones where more infractions happen. *Salguero* and *Sarmiento* toll booths don't seem to be measuring this kind of phenomenon.
 
 ![](README_files/figure-markdown_github/distributionofinfractions-1.png)
 
-Below are two charts with the distribution of infractions for both Alberdi and Retiro. ![](README_files/figure-markdown_github/infractionsalberdi-1.png) ![](README_files/figure-markdown_github/infractionsretiro-1.png)
+However, it's expected that toll booths like Avellaneda, Dellepiane and Illia/Retiro have more infractions than the rest of the toll booths, as they have more traffic as per Figure 2. For this reason, Figure 9 shows the which is the relative percentage of infractions, as it takes into account the total traffic of each toll booth. Having such information shows that the toll booth where there are more infractions is the *Dellepiane* one, with approximately 0.6% of its traffic being only infractions.
 
-In both cases, the distribution of infractions seems to follow the same distribution of traffic throughout the day: the moments where there are more infractions correlate with those in which traffic volume is the highest.
+![](README_files/figure-markdown_github/relativeinfractions-1.png)
 
 ![](README_files/figure-markdown_github/evolutionofinfractions-1.gif)
 
