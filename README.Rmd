@@ -40,7 +40,7 @@ This project consists on analyzing the evolution of traffic on AUSA toll booths 
 * For details on how graphs were generated, please take a look at `README.Rmd` and `src/utils.R`.
 
 ### Structure of the data to use
-The information provided consists of eleven files, one for each year from 2008 to 2018 (where the latter only provides information until September 9th). Among these files, there is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
+The information provided consists of eleven files, one for each year from 2008 to 2018 (where the latter only provides information until September 30th). Among these files, there is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
 
 * `standardize.columns.and.merge_`: not all of the files have the same column names, nor the same column order. This function standardizes their format, and merges them all in a single .csv file.
 * `standardize.values`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll booth name written in all caps and then all lowers. This function standardizes that, and creates a new data set.
@@ -210,14 +210,14 @@ data <- df %>%
   summarise(amount = sum(amount)) %>% 
   mutate(
     amount = amount / (length(years.to.include) * 365.25 / 7),
-    hour = format(strptime(start.hour,"%H:%M:%S"),'%H')
+    hour = as.integer(format(strptime(start.hour,"%H:%M:%S"),'%H'))
   )
 
 ggplot(data = data, aes(x = hour, y = amount, group = vehicle.type)) +
+  geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
   labs(x = NULL, y = NULL,
        title = 'Vehicles per hour for all toll booths', 
        caption = 'Figure 5') +
-  geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
   theme_bw()
 ```
 
@@ -230,18 +230,19 @@ data <- df %>%
   summarise(amount = sum(amount)) %>% 
   mutate(
     amount = amount / (length(years.to.include) * 365.25 / 7),
-    hour = format(strptime(start.hour,"%H:%M:%S"),'%H')
+    hour = as.integer(format(strptime(start.hour,"%H:%M:%S"),'%H'))
   )
 
 ggplot(data = data, aes(x = hour, y = amount, group = toll.booth)) +
-  labs(x = NULL, y = NULL,
+  geom_line(aes(linetype = toll.booth, color = toll.booth)) +
+   labs(x = NULL, y = NULL,
        title = 'Vehicles per hour per toll booths', 
        caption = 'Figure 6') +
-  geom_line(aes(linetype = toll.booth, color = toll.booth)) +
   theme_bw()
 ```
 
 From Figure 6 there are some aspects to analyze:
+
 * It was know from Figure 2 that the *Avellaneda* toll booth was the one with more traffic, but the breakdown Figure 5 provides show that there's an incremental flow of vehicles going through this toll booth in from 7am to 6pm. This behavior is different to that of the rest of the toll booths. The fact that there are more vehicles going through the *Avellaneda* toll booth at 6pm than 7am could imply the Perito Moreno highway (which is where the *Avellaneda* toll booth is located) is a good option for leaving the Buenos Aires city, rather that entering the city.
 * The second most used toll both is the *Illia* one (plus *Retiro*), which happens to be the one with the most clear peaks in traffic among all toll booths. Those can be seen a 8am and 6pm, which could imply this highway is mostly used for people commuting to and from their work. This is supported by the "valley" between those hours, where there is a reduction in traffic. Making a parallelism with the point made above for the *Avellaneda* toll booth, the *Illia/Retiro* one has a more balanced set of peaks, which can be interpreted as if the Presidente Arturo Umberto Illia highway is used by drivers both to enter and leave the city.
 
@@ -264,6 +265,7 @@ ggplot(data = data, aes(x = 1:nrow(data), y = amount)) +
 ```
 
 From the days above the blue line and below the green line, we can identify particular dates that explain why there was more (or less) amount of traffic than on a regular day.
+
 * Starting with days with more than 10% of the usual traffic, we can find the winter holidays period spanning from July to August.
 * On the other hand, days with less than 10% of the usual traffic are the first and last day of a given year, which can be explained by the fact that people are celebrating in their houses; the last week of the year, which includes the Christmas celebrations and the days before New Years Eve; holidays like May Revolution on May 25th, Labor Day on May 1st, Independence on July 9th, or Feast of the Immaculate Conception on December 8th.
 
@@ -304,7 +306,7 @@ plot(p)
 
 However, it's expected that toll booths like Avellaneda, Dellepiane and Illia/Retiro have more infractions than the rest of the toll booths, as they have more traffic as per Figure 2. For this reason, Figure 9 shows the which is the relative percentage of infractions, as it takes into account the total traffic of each toll booth. Having such information shows that the toll booth where there are more infractions is the *Dellepiane* one, with approximately 0.6% of its traffic being only infractions.
 
-```{r relativeinfractions, fig.width=10, echo=FALSE}
+```{r relativeinfractions, fig.width=5, echo=FALSE}
 '%!in%' <- function(x,y)!('%in%'(x,y))
 data.all <- df %>%
   filter(toll.booth %!in% c('SALGUERO', 'SARMIENTO'))%>%
@@ -330,7 +332,7 @@ data <- rbind(
   mutate(percentage = infractions / total.volume)
 
 ggplot(data = data, aes(x = 1, y = percentage, fill = toll.booth)) +
-  geom_bar(position = 'fill', stat = 'identity') +
+  geom_bar(position = 'fill', stat = 'identity', width = .5) +
   scale_y_continuous(labels = percent_format()) +
   labs(x = NULL, y = NULL, 
        title = 'Percentage of infractions on total traffic', 
@@ -341,28 +343,51 @@ ggplot(data = data, aes(x = 1, y = percentage, fill = toll.booth)) +
         axis.ticks.x = element_blank())
 ```
 
-```{r evolutionofinfractions, fig.width=10, echo=FALSE}
-t <- df %>%
-  filter(payment.method == 'INFRACCION') %>%
-  group_by(Y, toll.booth, day.name) %>%
-  summarise(amount = sum(amount)) %>%
-  mutate(amount = (amount - min(amount)) / (max(amount) - min(amount)))
+Zooming into the *Dellepiane* toll booth, it could be of interest to know when during the day do the vast majority of infractions happen, in order to avoid them from happening. Looking at Figure 10, it can be see that 68% of the infractions happen during the interval of time of 7am to 6pm. During that time-frame a dedicated system or group of people can be put in place to control drivers and avoid them committing infractions.
 
-p <- ggplot(t, aes(
-  x = factor(day.name, level = c('DOMINGO', 'LUNES', 'MARTES','MIERCOLES', 
-                                 'JUEVES', 'VIERNES', 'SABADO')),
-  y = toll.booth, fill = amount)) +
-  geom_tile() +
-  scale_fill_gradient(low = "#132B43", high = "#56B1F7") +
-  scale_x_discrete(expand = c(0, 0)) + scale_y_discrete(expand = c(0, 0)) +
-  labs(x = NULL, y = NULL, title = 'Year: {frame_time}') +
-  transition_time(Y) + coord_equal() + theme_bw()
+```{r infractionsdellepianehour, fig.width=10, echo=FALSE}
+data <- df %>%
+  filter(toll.booth == 'DELLEPIANE' & payment.method == 'INFRACCION') %>%
+  group_by(vehicle.type, start.hour) %>%
+  summarise(amount = sum(amount)) %>% 
+  mutate(
+    amount = amount / (length(years.to.include) * 365.25 / 7),
+    hour = as.integer(format(strptime(start.hour,"%H:%M:%S"),'%H'))
+  )
 
-animate(p)
+ggplot(data = data, aes(x = hour, y = amount, group = vehicle.type)) +
+  geom_line(aes(linetype = vehicle.type, color = vehicle.type)) +
+  labs(x = 'Time', y = 'Number of infractions',
+       title = 'Infractions per hour in Dellepiane toll booth', 
+       caption = 'Figure 10') +
+  theme_bw()
+```
+
+Lastly, it would also be good to know if infractions are most likely to happen in particular days of the week more than others. To check if there  was a pattern of that kind, a breakdown per day of the week was performed in Figure 11, which ends up showing Tuesdays, Wednesdays, Thursdays and Fridays behave more or less the same in terms of number of infractions, with Monday being lower than them. Given that context, all days share a similar distribution in the number of infrations they get (without taking into account Saturdays and Sundays which have a much lower amount due to less traffic).
+
+```{r infractionsdellepianeday, fig.width=10, echo=FALSE}
+data <- df %>%
+  filter(toll.booth == 'DELLEPIANE' & payment.method == 'INFRACCION') %>%
+  group_by(day.name, start.hour) %>%
+  summarise(amount = sum(amount)) %>% 
+  mutate(
+    amount = amount / (length(years.to.include) * 365.25 / 7),
+    hour = as.integer(format(strptime(start.hour,"%H:%M:%S"),'%H'))
+  )
+
+ggplot(data = data, aes(x = hour, y = amount, group = day.name)) +
+  geom_line(aes(linetype = day.name, color = day.name)) + 
+  labs(x = 'Time', y = 'Number of infractions',
+       title = 'Infractions per hour and day in Dellepiane toll booth', 
+       caption = 'Figure 11') +
+  theme_bw()
 ```
 
 #### Evolution of payment methods
-Another interesting phenomenon are users moving from paying in cash (EFECTIVO) to using automatic tolls (AUPASS). Looking at the animation below, 2016 starts showing a decline in the number of vehicle owners paying in *cash*. However, since 2014 the use of *automatic tolls* started to steadily increase. As a note, the decline in 2018 on both cash and automatic tolls is due to the fact that 2018 data is still not complete.
+Another interesting phenomenon are users moving from paying in cash (EFECTIVO) to using automatic tolls (AUPASS). Looking at the animation below, 2016 starts showing a decline in the number of vehicle owners paying in *cash*. However, since 2014 the use of *automatic tolls* started to steadily increase. 
+
+As it can be seen by the end of the animation, the decline in 2018 on both cash and automatic tolls is due to the fact that 2018 data is still not complete. Secondly, payment methods like 'INFRACCION' and 'NO COBRADO' only appeared in 2014, which is the reason why they only appear by the middle of the animation.
+
 
 ```{r paymentsperyearanimated, fig.width=10, echo=FALSE}
 t <- df %>%

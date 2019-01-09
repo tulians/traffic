@@ -17,7 +17,7 @@ This project consists on analyzing the evolution of traffic on AUSA toll booths 
 
 ### Structure of the data to use
 
-The information provided consists of eleven files, one for each year from 2008 to 2018 (where the latter only provides information until September 9th). Among these files, there is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
+The information provided consists of eleven files, one for each year from 2008 to 2018 (where the latter only provides information until September 30th). Among these files, there is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
 
 -   `standardize.columns.and.merge_`: not all of the files have the same column names, nor the same column order. This function standardizes their format, and merges them all in a single .csv file.
 -   `standardize.values`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll booth name written in all caps and then all lowers. This function standardizes that, and creates a new data set.
@@ -103,6 +103,7 @@ The analysis to be presented in this section has the objective of getting to kno
 
 The first analysis performed right after the cleansing and wrangling of the data set was checking whether the data set was homogeneous in terms of the amount of observations per year. It would be expected to see differences among years, given that from one year to the next one the could be more vehicles on the road (more taking into account this is Buenos Aires traffic), but the actual difference in volume was far from expected.
 
+
 ![](README_files/figure-markdown_github/trend-1.png)
 
 From the graph above it's clear there's an order of magnitude of difference between the amount of vehicles in the 2008-2013 period versus the period 2014-2018. That could also be inferred from the number of rows on the files.
@@ -148,11 +149,17 @@ Figure 4 shows the amount of vehicles going through Buenos Aires toll booths, wi
 
 ![](README_files/figure-markdown_github/breakdownbytollbooth-1.png)
 
-From Figure 6 there are some aspects to analyze: \* It was know from Figure 2 that the *Avellaneda* toll booth was the one with more traffic, but the breakdown Figure 5 provides show that there's an incremental flow of vehicles going through this toll booth in from 7am to 6pm. This behavior is different to that of the rest of the toll booths. The fact that there are more vehicles going through the *Avellaneda* toll booth at 6pm than 7am could imply the Perito Moreno highway (which is where the *Avellaneda* toll booth is located) is a good option for leaving the Buenos Aires city, rather that entering the city. \* The second most used toll both is the *Illia* one (plus *Retiro*), which happens to be the one with the most clear peaks in traffic among all toll booths. Those can be seen a 8am and 6pm, which could imply this highway is mostly used for people commuting to and from their work. This is supported by the "valley" between those hours, where there is a reduction in traffic. Making a parallelism with the point made above for the *Avellaneda* toll booth, the *Illia/Retiro* one has a more balanced set of peaks, which can be interpreted as if the Presidente Arturo Umberto Illia highway is used by drivers both to enter and leave the city.
+From Figure 6 there are some aspects to analyze:
+
+-   It was know from Figure 2 that the *Avellaneda* toll booth was the one with more traffic, but the breakdown Figure 5 provides show that there's an incremental flow of vehicles going through this toll booth in from 7am to 6pm. This behavior is different to that of the rest of the toll booths. The fact that there are more vehicles going through the *Avellaneda* toll booth at 6pm than 7am could imply the Perito Moreno highway (which is where the *Avellaneda* toll booth is located) is a good option for leaving the Buenos Aires city, rather that entering the city.
+-   The second most used toll both is the *Illia* one (plus *Retiro*), which happens to be the one with the most clear peaks in traffic among all toll booths. Those can be seen a 8am and 6pm, which could imply this highway is mostly used for people commuting to and from their work. This is supported by the "valley" between those hours, where there is a reduction in traffic. Making a parallelism with the point made above for the *Avellaneda* toll booth, the *Illia/Retiro* one has a more balanced set of peaks, which can be interpreted as if the Presidente Arturo Umberto Illia highway is used by drivers both to enter and leave the city.
 
 The last set of patters that I wanted to analyze in this section was whether there are particular days during the year where traffic is either very high or very low compared to the average week day. Figure 7 shows the aggregate of traffic for each day of the year, taking into account all eleven files of data. Three horizontal lines feature in this graph, representing thresholds like 10% more than the mean, the mean and 10% less than the mean, in blue, red and green respectively. ![](README_files/figure-markdown_github/seasonalities-1.png)
 
-From the days above the blue line and below the green line, we can identify particular dates that explain why there was more (or less) amount of traffic than on a regular day. \* Starting with days with more than 10% of the usual traffic, we can find the winter holidays period spanning from July to August. \* On the other hand, days with less than 10% of the usual traffic are the first and last day of a given year, which can be explained by the fact that people are celebrating in their houses; the last week of the year, which includes the Christmas celebrations and the days before New Years Eve; holidays like May Revolution on May 25th, Labor Day on May 1st, Independence on July 9th, or Feast of the Immaculate Conception on December 8th.
+From the days above the blue line and below the green line, we can identify particular dates that explain why there was more (or less) amount of traffic than on a regular day.
+
+-   Starting with days with more than 10% of the usual traffic, we can find the winter holidays period spanning from July to August.
+-   On the other hand, days with less than 10% of the usual traffic are the first and last day of a given year, which can be explained by the fact that people are celebrating in their houses; the last week of the year, which includes the Christmas celebrations and the days before New Years Eve; holidays like May Revolution on May 25th, Labor Day on May 1st, Independence on July 9th, or Feast of the Immaculate Conception on December 8th.
 
 #### Drivers commiting infractions
 
@@ -164,11 +171,19 @@ However, it's expected that toll booths like Avellaneda, Dellepiane and Illia/Re
 
 ![](README_files/figure-markdown_github/relativeinfractions-1.png)
 
-![](README_files/figure-markdown_github/evolutionofinfractions-1.gif)
+Zooming into the *Dellepiane* toll booth, it could be of interest to know when during the day do the vast majority of infractions happen, in order to avoid them from happening. Looking at Figure 10, it can be see that 68% of the infractions happen during the interval of time of 7am to 6pm. During that time-frame a dedicated system or group of people can be put in place to control drivers and avoid them committing infractions.
+
+![](README_files/figure-markdown_github/infractionsdellepianehour-1.png)
+
+Lastly, it would also be good to know if infractions are most likely to happen in particular days of the week more than others. To check if there was a pattern of that kind, a breakdown per day of the week was performed in Figure 11, which ends up showing Tuesdays, Wednesdays, Thursdays and Fridays behave more or less the same in terms of number of infractions, with Monday being lower than them. Given that context, all days share a similar distribution in the number of infrations they get (without taking into account Saturdays and Sundays which have a much lower amount due to less traffic).
+
+![](README_files/figure-markdown_github/infractionsdellepianeday-1.png)
 
 #### Evolution of payment methods
 
-Another interesting phenomenon are users moving from paying in cash (EFECTIVO) to using automatic tolls (AUPASS). Looking at the animation below, 2016 starts showing a decline in the number of vehicle owners paying in *cash*. However, since 2014 the use of *automatic tolls* started to steadily increase. As a note, the decline in 2018 on both cash and automatic tolls is due to the fact that 2018 data is still not complete.
+Another interesting phenomenon are users moving from paying in cash (EFECTIVO) to using automatic tolls (AUPASS). Looking at the animation below, 2016 starts showing a decline in the number of vehicle owners paying in *cash*. However, since 2014 the use of *automatic tolls* started to steadily increase.
+
+As it can be seen by the end of the animation, the decline in 2018 on both cash and automatic tolls is due to the fact that 2018 data is still not complete. Secondly, payment methods like 'INFRACCION' and 'NO COBRADO' only appeared in 2014, which is the reason why they only appear by the middle of the animation.
 
 ![](README_files/figure-markdown_github/paymentsperyearanimated-1.gif)
 
