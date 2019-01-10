@@ -372,8 +372,10 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
   )
   
   df[df$PERIODO < 2014,] <- arrange(df[df$PERIODO < 2014,], FECHA)
+  df[df$PERIODO == 2018,] <- df[df$PERIODO == 2018,] %>% arrange(M, D)
   df[df$PERIODO == 2018, c('M', 'D')] <-
-    swap_if_(df[df$PERIODO == 2018, c('M', 'D')]$D %in% c(1, 2, 3),
+    swap_if_(df[df$PERIODO == 2018, c('M', 'D')]$D %in% c(1, 2, 3) & 
+               df[df$PERIODO == 2018, c('M', 'D')]$M %in% c(10, 11, 12),
              df[df$PERIODO == 2018, c('M', 'D')]$M,
              df[df$PERIODO == 2018, c('M', 'D')]$D)
   

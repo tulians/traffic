@@ -2,7 +2,7 @@
 -   [Prework](#prework)
 -   [Structure of the data to use](#structure-of-the-data-to-use)
 -   [Exploratory analysis](#exploratory-analysis)
--   [Analyzing traffic as a time series](#analyzing-traffic-as-a-time-series)
+-   [Analyzing traffic as a time-series and forecast future traffic](#analyzing-traffic-as-a-time-series-and-forecast-future-traffic)
 -   [Conclusions and next steps](#conclusions-and-next-steps)
 
 ### Objective
@@ -103,7 +103,6 @@ The analysis to be presented in this section has the objective of getting to kno
 
 The first analysis performed right after the cleansing and wrangling of the data set was checking whether the data set was homogeneous in terms of the amount of observations per year. It would be expected to see differences among years, given that from one year to the next one the could be more vehicles on the road (more taking into account this is Buenos Aires traffic), but the actual difference in volume was far from expected.
 
-
 ![](README_files/figure-markdown_github/trend-1.png)
 
 From the graph above it's clear there's an order of magnitude of difference between the amount of vehicles in the 2008-2013 period versus the period 2014-2018. That could also be inferred from the number of rows on the files.
@@ -113,17 +112,17 @@ cd ~/Documents/traffic/datasets/flujo-vehicular-por-unidades-de-peaje-ausa
 find . -name '*.csv' -exec wc -l {} \;
 ```
 
-    ##   847751 ./flujo-vehicular-2018.csv
-    ##   140161 ./flujo-vehicular-2009.csv
     ##   140517 ./flujo-vehicular-2008.csv
+    ##   140161 ./flujo-vehicular-2009.csv
+    ##   140149 ./flujo-vehicular-2010.csv
+    ##   140157 ./flujo-vehicular-2011.csv
     ##   140533 ./flujo-vehicular-2012.csv
     ##   215868 ./flujo-vehicular-2013.csv
-    ##   140157 ./flujo-vehicular-2011.csv
-    ##   140149 ./flujo-vehicular-2010.csv
     ##   908847 ./flujo-vehicular-2014.csv
     ##  1048576 ./flujo-vehicular-2015.csv
     ##  1030020 ./flujo-vehicular-2017.csv
     ##  1040856 ./flujo-vehicular-2016.csv
+    ##   847751 ./flujo-vehicular-2018.csv
 
 This order of magnitude of difference in the number of observations can't be explained with a real increase of such amount in the number of cars going in and out the city, as that would mean and increase of ten times the amount of vehicles in the period 2012-2014. I posted a [question](http://disq.us/p/1ynoflv) on the [web site](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) that provides the information, asking for clarifications.
 
@@ -175,7 +174,7 @@ Zooming into the *Dellepiane* toll booth, it could be of interest to know when d
 
 ![](README_files/figure-markdown_github/infractionsdellepianehour-1.png)
 
-Lastly, it would also be good to know if infractions are most likely to happen in particular days of the week more than others. To check if there was a pattern of that kind, a breakdown per day of the week was performed in Figure 11, which ends up showing Tuesdays, Wednesdays, Thursdays and Fridays behave more or less the same in terms of number of infractions, with Monday being lower than them. Given that context, all days share a similar distribution in the number of infrations they get (without taking into account Saturdays and Sundays which have a much lower amount due to less traffic).
+Lastly, it would also be good to know if infractions are most likely to happen in particular days of the week more than others. To check if there was a pattern of that kind, a breakdown per day of the week was performed in Figure 11, which ends up showing Tuesdays, Wednesdays, Thursdays and Fridays behave more or less the same in terms of number of infractions, with Monday being lower than them. Given that context, all days share a similar distribution in the number of infractions they get (without taking into account Saturdays and Sundays which have a much lower amount due to less traffic).
 
 ![](README_files/figure-markdown_github/infractionsdellepianeday-1.png)
 
@@ -187,12 +186,36 @@ As it can be seen by the end of the animation, the decline in 2018 on both cash 
 
 ![](README_files/figure-markdown_github/paymentsperyearanimated-1.gif)
 
-### Analyzing traffic as a time series
+### Analyzing traffic as a time-series and forecast future traffic
 
-![](README_files/figure-markdown_github/unnamed-chunk-3-1.png)
+In this last section of the analysis, we'll be predicting future traffic based on the information our data set provides. The prediction will be performed using the `forecast` R package, which even though it not part of R's `base` core package, it's one of the renowned forecasting packages, if not the most, by the R community. In this opportunity, we will be looking to predict the traffic volume of from two weeks in the future given a point in time from 2018. For this reason, the data from 2018 will be the one used in this section.
+
+Prior to performing forecasts, the data must be transformed into a time-series object. Given all the analysis performed in previous sections, we expect this time-series to have a strong seasonal component, which has to be reflected on the object we're creating. This seasonal component *s*(*t*) will then be influenced in a multiplicative fashion by the inherent trend *l*(*t*) in the traffic volume, thus yielding the observed curve *o*(*t*)=*s*(*t*)⋅*l*(*t*) of traffic. A multiplicative approach is used as it's visually more intuitive at the time of building the observed curve.
+
+One important step before creating the time-series is to define which is the seasonality period that we want to capture from the signal. Even though the information provided by the file has hour granularity, for this particular analysis information was aggregated by day, in order to have the amount of vehicles that went through toll booths each day of 2018, since January 1st and up to September 30th. Because the granularity is at the level of days, the seasonality that would be interesting to analyze will be those that happen on a weekly basis, id est, in a period of 7 days. This is the period that will be used as input when creating the time-series.
+
+The figure presented below shows us three different functions:
+
+-   The `observed` function which corresponds to the daily traffic volume aggregation for each day of 2018.
+-   The `level` function, which describes the trend of this traffic volume along the year.
+-   And lastly the `season` function, which presents the periodic patterns present in our data.
+
+Based on the point made above, the observed function is the direct result of multiplying the `level` and `season` functions together. That's also visible in the name on the figure, *Components of ETS(M,N,M) method*, where the `M`s in the name make reference to the fact that a multiplicative approach was requested for dividing the the observed time-series into the trend and seasonal components. If instead an additive approach was requested, then the observed function will have to be the result of summing together the trend function and the season function.
+
+Another important point to define is what does ETS mean. ETS stands for Exponential Smoothing, which is a technique for smoothing time-series data using the *exponential window function*. Exponential functions are used to assign exponentially decreasing weights over time, in contrast to simple moving average windows where past observations are weighted equally. The `forecast` package uses this technique for analysing time-series data and generate the three part decomposition.
+
+![](README_files/figure-markdown_github/timeseriescomponents-1.png)
 
 #### Predicting next two weeks' traffic volume toll booths
 
-![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)
+As the period used for the creation of the time-series was defined as weekly, the `forecast` method included in the package will return the forecasted values of the next two weeks traffic, as in this case the unit of time is a week. As 2018 data is not complete, both the previous and following graphs show less than 52 weeks (which would be an approximate of the 365.25/7 weeks an year has). The two predicted weeks will then be the first two weeks of October. These are shown near week 40 on the following graph.
+
+![](README_files/figure-markdown_github/forecastedvalues-1.png)
+
+The predicted values can be identified with a solid blue line surrounded by two prediction intervals, one of 80% and another of 95%. For a prediction interval, the interval represents the range of plausible values we expect to observe at some future point in time. An 80% prediction interval can be interpreted as there is an 80% probability that the future observation's value will fall somewhere between the upper and lower bounds of such interval.
+
+Looking deeper into the forecasted values, it can be seen that they belong to week 38 and 39, which correspond to the month of October, and where `fc$mean` corresponds to the forecast values' amplitudes. ![](README_files/figure-markdown_github/forecastedvaluesdeepdive-1.png)
+
+These forecasted values can then be used to predict which would be the flow of traffic going in and out the city, and prepare the toll booths to receive such load.
 
 ### Conclusions and next steps
