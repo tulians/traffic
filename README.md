@@ -120,8 +120,8 @@ find . -name '*.csv' -exec wc -l {} \;
     ##   215868 ./flujo-vehicular-2013.csv
     ##   908847 ./flujo-vehicular-2014.csv
     ##  1048576 ./flujo-vehicular-2015.csv
-    ##  1030020 ./flujo-vehicular-2017.csv
     ##  1040856 ./flujo-vehicular-2016.csv
+    ##  1030020 ./flujo-vehicular-2017.csv
     ##   847751 ./flujo-vehicular-2018.csv
 
 This order of magnitude of difference in the number of observations can't be explained with a real increase of such amount in the number of cars going in and out the city, as that would mean and increase of ten times the amount of vehicles in the period 2012-2014. I posted a [question](http://disq.us/p/1ynoflv) on the [web site](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) that provides the information, asking for clarifications.
@@ -202,7 +202,7 @@ The figure presented below shows us three different functions:
 
 Based on the point made above, the observed function is the direct result of multiplying the `level` and `season` functions together. That's also visible in the name on the figure, *Components of ETS(M,N,M) method*, where the `M`s in the name make reference to the fact that a multiplicative approach was requested for dividing the the observed time-series into the trend and seasonal components. If instead an additive approach was requested, then the observed function will have to be the result of summing together the trend function and the season function.
 
-Another important point to define is what does ETS mean. ETS stands for Exponential Smoothing, which is a technique for smoothing time-series data using the *exponential window function*. Exponential functions are used to assign exponentially decreasing weights over time, in contrast to simple moving average windows where past observations are weighted equally. The `forecast` package uses this technique for analysing time-series data and generate the three part decomposition.
+Another important point to define is what does ETS mean. ETS stands for Exponential Smoothing, which is a technique for smoothing time-series data using the *exponential window function*. Exponential functions are used to assign exponentially decreasing weights over time, in contrast to simple moving average windows where past observations are weighted equally. The `forecast` package uses this technique for analyzing time-series data and generate the three part decomposition.
 
 ![](README_files/figure-markdown_github/timeseriescomponents-1.png)
 
@@ -214,8 +214,42 @@ As the period used for the creation of the time-series was defined as weekly, th
 
 The predicted values can be identified with a solid blue line surrounded by two prediction intervals, one of 80% and another of 95%. For a prediction interval, the interval represents the range of plausible values we expect to observe at some future point in time. An 80% prediction interval can be interpreted as there is an 80% probability that the future observation's value will fall somewhere between the upper and lower bounds of such interval.
 
-Looking deeper into the forecasted values, it can be seen that they belong to week 38 and 39, which correspond to the month of October, and where `fc$mean` corresponds to the forecast values' amplitudes. ![](README_files/figure-markdown_github/forecastedvaluesdeepdive-1.png)
+![](README_files/figure-markdown_github/comparing2017trafficwithforecasted-1.png)
 
-These forecasted values can then be used to predict which would be the flow of traffic going in and out the city, and prepare the toll booths to receive such load.
+Figure 16 shows the behavior of traffic during the first two weeks of October, where the solid red line is the one for 2017, and the blue one consists of the forecasted values for 2018. Comparing the shape of each curve, it can be seen that the forecasted traffic for looks similar to that of 2017, for the same period of time, with the exception of some days like those listed in the table below, where the similarity between the figures was less than 80%.
+
+    ## Source: local data frame [5 x 4]
+    ## Groups: <by row>
+    ## 
+    ## # A tibble: 5 x 4
+    ##    date data.2017 data.2018 distance
+    ##   <int>     <int>     <dbl>    <dbl>
+    ## 1     1    246784   335726.     73.5
+    ## 2     6    426086   273031.     64.1
+    ## 3     7    340891   223894.     65.7
+    ## 4    13    429028   273031.     63.6
+    ## 5    14    334221   223894.     67.0
+
+Alternatively, we can analyze the same time-series and perform the prediction using another technique called [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average). ARIMA stands for Autoregresive integrated moving average, and can be applied when the time-series is stationary. A series is said to be stationary when its mean, variance, and autocovariance are time invariant. This limitation is something that has to be taken into account before performing the forecast with ARIMA, as certain transformations on the time-series have to be performed. These transformations can involve differentiating the time-series in order to make it stationary, so that it's properties don't depend on the time at which the series is observed. In order to difference the data, the difference between consecutive observations is computed, which can be written as *y*′<sub>*t*</sub> = *y*<sub>*t*</sub> − *y*<sub>*t* − 1</sub>.
+
+![](README_files/figure-markdown_github/arima-1.png)
+
+![](README_files/figure-markdown_github/arima-2.png)
+
+In the above two graphs, we can see that there are no spikes outside the 95% significance boundaries represented with the blue dotted lines. This helps conclude that the residuals of the ARIMA approach are random, and the model is working fine.
+
+To compare the two forecast approaches, ETS and ARIMA, we need a common metric. A metric which helps comparing models is the [AIC](https://en.wikipedia.org/wiki/Akaike_information_criterion), or Akaike information criterion, which is an estimator of the relative quality of statistical models, thus provide a means for model selection. For the particular case of the two forecast models, the *A**I**C*<sub>*E**T**S*</sub> = 7218.331, while the *A**I**C*<sub>*A**R**I**M**A*</sub> = 6394.42. AICs values are not compared via their absolute values, but considers their difference *Δ*<sub>*i*</sub> = *A**I**C*<sub>*i*</sub> − *A**I**C*<sub>*m**i**n*</sub>, where *A**I**C*<sub>*i*</sub> is the AIC of the *i*-th model, and *A**I**C*<sub>*m**i**n*</sub> is the lowest AIC of the list of models. As in this case we only have 2 models, the ARIMA and the ETS, then *Δ* = *A**I**C*<sub>*E**T**S*</sub> − *A**I**C*<sub>*A**R**I**M**A*</sub> = 7218.331 − 6394.42 = 823.911. Following the rule of thumb outlined in [Burnham & Anderson 2004](http://faculty.washington.edu/skalski/classes/QERM597/papers_xtra/Burnham%20and%20Anderson.pdf)(page 12), *Δ* = 823.9 ≫ 10 then there is evidence that the ARIMA model should be preferred over the ETS one.
 
 ### Conclusions and next steps
+
+This project was a great learning opportunity, where I was presented with a real data set, free of any kind of pre-processing, following no standards or conventions. During the process of analysis and development I learned:
+
+-   *Structure and order matter*. This was particularly true for the data wrangling process to standardize criteria on categorical values, and more importantly **dates**. In a context in which your observations are each associated with a time metric, there's a need for those time metrics to follow the same structure, so that they can be compared one against the other. This structure will additionally allow us to order information following a certain criteria, in order to find patterns of behavior through time.
+-   *Exploratory analysis is a must*. Getting to know the data you'll be working with show take an important percentage of the time, as there may be unexpected patterns. An example of this could be the peak between 12pm and 2pm in Figure 5, which I wasn't expecting when I started working with this data set, and shown there's a substantial amount of people that either start working or finish their workday. Another example would be one shown in Figure 6, where more people leave the Buenos Aires city thorough the Avellaneda toll booth than those who enter the city through the exact same toll booth.
+-   *Test different approaches to the same problematic*. Even though the technical solution to perform the forecast using the ETS approach was simpler than the one required by ARIMA, the latter ended up being more accurate. In this particular area a balance has to be made between the tolerance in accuracy and the technical requirements of the forecast. Using the ARIMA approach requires a more technical and statistical knowledge than the the ETS approach, and for this particular case, yielded better results. However, if we imagine we have a level of tolerance of 80%, ETS could also have almost decently as approximately 65% of the predicted values were in our range of tolerance.
+
+Among the next steps are:
+
+-   Looking for information about the historical evolution of toll booth cost, and check if there were changes in the traffic flow behavior.
+-   Using the `lat` and `long` attributes to locate and display information about toll booths over a map. This has not been performed yet as there were no use cases that required a solution of this kind.
+-   Extend the amount of forecasted days and check whether seasonalities are well represented in forecasts.
