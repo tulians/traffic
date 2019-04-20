@@ -4,3 +4,4 @@
 .Ruserdata
 .DS_Store
 ./datasets/traffic.csv
+traffic.Rproj

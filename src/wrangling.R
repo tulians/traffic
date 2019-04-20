@@ -8,153 +8,57 @@ join.traffic.files <- function() {
   #' order. This function standardizes their format, and merges them all in a
   #' single .csv file.
   
-  path <- './datasets/flujo-vehicular-por-unidades-de-peaje-ausa/'
+  path <- './datasets/sources/flujo-vehicular-por-unidades-de-peaje-ausa/'
   traffic.2012.file <- paste(path, 'flujo-vehicular-2012.csv', sep = '')
   traffic.2014.file <- paste(path, 'flujo-vehicular-2014.csv', sep = '')
   traffic.2016.file <- paste(path, 'flujo-vehicular-2016.csv', sep = '')
   traffic.2017.file <- paste(path, 'flujo-vehicular-2017.csv', sep = '')
   traffic.2018.file <- paste(path, 'flujo-vehicular-2018.csv', sep = '')
   traffic.2012 <-
-    read.csv(
-      traffic.2012.file,
-      sep = ';',
-      header = T,
-      stringsAsFactors = T
-    )
+    read.csv(traffic.2012.file, sep = ';', header = T, stringsAsFactors = T)
   traffic.2014 <-
-    read.csv(
-      traffic.2014.file,
-      sep = ';',
-      header = T,
-      stringsAsFactors = T
-    )
+    read.csv(traffic.2014.file, sep = ';', header = T, stringsAsFactors = T)
   traffic.2016 <-
-    read.csv(
-      traffic.2016.file,
-      sep = ';',
-      header = T,
-      stringsAsFactors = T
-    )
+    read.csv(traffic.2016.file, sep = ';', header = T, stringsAsFactors = T)
   traffic.2017 <-
-    read.csv(
-      traffic.2017.file,
-      sep = ';',
-      header = T,
-      stringsAsFactors = T
-    )
-  traffic.2018 <-
-    read.csv(
-      traffic.2018.file,
-      sep = ',',
-      header = T,
-      stringsAsFactors = T
-    )
+    read.csv(traffic.2017.file, sep = ';', header = T, stringsAsFactors = T)
+  traffic.2018 <- 
+    read.csv(traffic.2018.file, sep = ',', header = T, stringsAsFactors = T)
   traffic.2012 <-
-    traffic.2012[c(
-      'PERIODO',
-      'FECHA',
-      'DIA',
-      'HORA',
-      'HORA_FIN',
-      'ESTACION',
-      'TIPOVEHICULO',
-      'FORMA_PAGO',
-      'CANTIDAD_PASOS'
-    )]
+    traffic.2012[c('PERIODO', 'FECHA', 'DIA', 'HORA', 'HORA_FIN', 'ESTACION', 
+                   'TIPOVEHICULO', 'FORMA_PAGO', 'CANTIDAD_PASOS')]
   traffic.2014 <-
-    traffic.2014[c(
-      'PERIODO',
-      'FECHA',
-      'DIA',
-      'HORA',
-      'HORAFIN',
-      'ESTACION',
-      'TIPOVEHICULO',
-      'FORMAPAGO',
-      'CANTIDADPASOS'
-    )]
+    traffic.2014[c('PERIODO', 'FECHA', 'DIA', 'HORA', 'HORAFIN', 'ESTACION',
+                   'TIPOVEHICULO', 'FORMAPAGO', 'CANTIDADPASOS')]
   traffic.2016 <-
-    traffic.2016[c(
-      'PERIODO',
-      'FECHA',
-      'DIA',
-      'HORA',
-      'HORA_FIN',
-      'ESTACION',
-      'TIPO_VEHICULO',
-      'FORMA_PAGO',
-      'CANTIDAD_PASOS'
-    )]
+    traffic.2016[c('PERIODO', 'FECHA', 'DIA', 'HORA', 'HORA_FIN', 'ESTACION',
+                   'TIPO_VEHICULO', 'FORMA_PAGO', 'CANTIDAD_PASOS')]
   traffic.2017 <-
-    traffic.2017[c(
-      'PERIODO',
-      'FECHA',
-      'DIA',
-      'HORA',
-      'HORA_FIN',
-      'ESTACION',
-      'TIPO_VEHICULO',
-      'FORMA_PAGO',
-      'CANTIDAD_PASOS'
-    )]
+    traffic.2017[c('PERIODO', 'FECHA', 'DIA', 'HORA', 'HORA_FIN', 'ESTACION',
+                   'TIPO_VEHICULO', 'FORMA_PAGO', 'CANTIDAD_PASOS')]
   traffic.2018 <-
-    traffic.2018[c(
-      'periodo',
-      'fecha',
-      'dia',
-      'hora',
-      'hora_fin',
-      'estacion',
-      'tipo_vehiculo',
-      'forma_pago',
-      'cantidad_pasos'
-    )]
-  write.table(traffic.2012,
-              file = traffic.2012.file,
-              row.names = F,
-              sep = ';')
-  write.table(traffic.2014,
-              file = traffic.2014.file,
-              row.names = F,
-              sep = ';')
-  write.table(traffic.2016,
-              file = traffic.2016.file,
-              row.names = F,
-              sep = ';')
-  write.table(traffic.2017,
-              file = traffic.2017.file,
-              row.names = F,
-              sep = ';')
-  write.table(traffic.2018,
-              file = traffic.2018.file,
-              row.names = F,
-              sep = ';')
-  rm(
-    traffic.2012,
-    traffic.2012.file,
-    traffic.2014,
-    traffic.2014.file,
-    traffic.2016,
-    traffic.2016.file,
-    traffic.2017,
-    traffic.2017.file,
-    traffic.2018,
-    traffic.2018.file
-  )
+    traffic.2018[c('periodo', 'fecha', 'dia', 'hora', 'hora_fin', 'estacion', 
+                   'tipo_vehiculo', 'forma_pago', 'cantidad_pasos')]
+  write.table(traffic.2012, file = traffic.2012.file, row.names = F, sep = ';')
+  write.table(traffic.2014, file = traffic.2014.file, row.names = F, sep = ';')
+  write.table(traffic.2016, file = traffic.2016.file, row.names = F, sep = ';')
+  write.table(traffic.2017, file = traffic.2017.file, row.names = F, sep = ';')
+  write.table(traffic.2018, file = traffic.2018.file, row.names = F, sep = ';')
+  rm(traffic.2012, traffic.2012.file,
+     traffic.2014, traffic.2014.file,
+     traffic.2016, traffic.2016.file,
+     traffic.2017, traffic.2017.file,
+     traffic.2018, traffic.2018.file)
   
-  # Merged all .csv files into one using awk rather than R packages.
+  # Merge all .csv files into one using awk rather than R packages.
   system(
-    'awk "FNR==1 && NR!=1{next;}{print}" ./datasets/flujo-vehicular-por-unidades-de-peaje-ausa/*.csv > ./datasets/merged.csv'
+    'awk "FNR==1 && NR!=1{next;}{print}" ./datasets/sources/flujo-vehicular-por-unidades-de-peaje-ausa/*.csv > ./datasets/sources/merged.csv'
   )
-  return(read.csv(
-    './datasets/merged.csv',
-    sep = ';',
-    header = T,
-    stringsAsFactors = T
-  ))
 }
 
-standardize.traffic <- function(output.file = './datasets/traffic.csv') {
+standardize.traffic <- function(
+  input.file = './datasets/sources/merged.csv',
+  output.file = './datasets/traffic.csv') {
   #' Among categorical attributes, not all of them have the same value for the
   #' same concept, fox example you could find the same toll name writen in 
   #' all caps and then all lowers. This function standardizes that, and creates
@@ -204,7 +108,8 @@ standardize.traffic <- function(output.file = './datasets/traffic.csv') {
   
   # Data wrangling for the traffic dataset.
   setwd('~/Documents/traffic/')
-  df <- join.traffic.files()
+  join.traffic.files()
+  df <- read.csv(input.file, sep = ';', header = T, stringsAsFactors = T)
   df <- df %>% as_tibble() %>% mutate(
     toll.booth = case_when(
       ESTACION %in% c('ALB', 'Alberdi') ~ 'ALBERDI',
@@ -304,10 +209,11 @@ standardize.traffic <- function(output.file = './datasets/traffic.csv') {
   df <- df[, !(names(df) %in% drops)]
   
   write.csv(df, file = output.file, row.names = F)
+  file.remove(input.file)
 }
 
 standardize.oil <- function(
-  input.file = './datasets/oil.csv',
+  input.file = './datasets/sources/oil.csv',
   output.file = './datasets/oil_prices.csv') {
   #' Wrangling of dates, from YYYY-MM-DD to individual Y and M variables,
   #' in order to match the traffic's dataset Y and M variables for posterion
