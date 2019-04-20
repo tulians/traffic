@@ -175,6 +175,33 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
     setNames(tibble(out_x, out_y), names(c('M', 'D')))
   }
   
+  # Normalizes the format of the time columns.
+  to_std_time_format <- function(d) {
+    one.digit <- grep('^\\d$', d)
+    two.digits <- grep('^\\d{2}$', d)
+    five.digits <- grep('^\\d:00:00$', d)
+    extra.text <- grep('0 days \\d{2}:00:00', d)
+    midnight <- grep('24:00:00', d)
+    
+    if(length(one.digit)) {
+      d[one.digit] <- paste('0', d[one.digit], ':00:00', sep = '')
+    }
+    if(length(two.digits)) {
+      d[two.digits] <- paste(d[two.digits], ':00:00', sep = '')
+    }
+    if(length(five.digits)) {
+      d[five.digits] <- paste('0', d[five.digits], sep = '')
+    }
+    if(length(extra.text)) {
+      d[extra.text] <- str_sub(d[extra.text], -8)
+    }
+    if(length(midnight)) {
+      d[midnight] <- paste('00:00:00')
+    }
+    
+    return(d)
+  }
+  
   setwd('~/Documents/traffic/')
   df <- standardize.columns.and.merge_()
   df <- df %>% as_tibble() %>% mutate(
@@ -194,129 +221,6 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
       ESTACION %in% c('SAL', 'Salguero') ~ 'SALGUERO',
       ESTACION %in% c('SAR', 'Sarmiento') ~ 'SARMIENTO',
       TRUE ~ as.character(ESTACION)
-    ), 
-    start.hour = case_when(
-      HORA == '0' ~ '00:00:00',
-      HORA == '1' ~ '01:00:00',
-      HORA == '2' ~ '02:00:00',
-      HORA == '3' ~ '03:00:00',
-      HORA == '4' ~ '04:00:00',
-      HORA == '5' ~ '05:00:00',
-      HORA == '6' ~ '06:00:00',
-      HORA == '7' ~ '07:00:00',
-      HORA == '8' ~ '08:00:00',
-      HORA == '9' ~ '09:00:00',
-      HORA == '10' ~ '10:00:00',
-      HORA == '11' ~ '11:00:00',
-      HORA == '12' ~ '12:00:00',
-      HORA == '13' ~ '13:00:00',
-      HORA == '14' ~ '14:00:00',
-      HORA == '15' ~ '15:00:00',
-      HORA == '16' ~ '16:00:00',
-      HORA == '17' ~ '17:00:00',
-      HORA == '18' ~ '18:00:00',
-      HORA == '19' ~ '19:00:00',
-      HORA == '20' ~ '20:00:00',
-      HORA == '21' ~ '21:00:00',
-      HORA == '22' ~ '22:00:00',
-      HORA == '23' ~ '23:00:00',
-      HORA == '0:00:00' ~ '00:00:00',
-      HORA == '1:00:00' ~ '01:00:00',
-      HORA == '2:00:00' ~ '02:00:00',
-      HORA == '3:00:00' ~ '03:00:00',
-      HORA == '4:00:00' ~ '04:00:00',
-      HORA == '5:00:00' ~ '05:00:00',
-      HORA == '6:00:00' ~ '06:00:00',
-      HORA == '7:00:00' ~ '07:00:00',
-      HORA == '8:00:00' ~ '08:00:00',
-      HORA == '9:00:00' ~ '09:00:00',
-      HORA == '0 days 00:00:00' ~ '00:00:00',
-      HORA == '0 days 01:00:00' ~ '01:00:00',
-      HORA == '0 days 02:00:00' ~ '02:00:00',
-      HORA == '0 days 03:00:00' ~ '03:00:00',
-      HORA == '0 days 04:00:00' ~ '04:00:00',
-      HORA == '0 days 05:00:00' ~ '05:00:00',
-      HORA == '0 days 06:00:00' ~ '06:00:00',
-      HORA == '0 days 07:00:00' ~ '07:00:00',
-      HORA == '0 days 08:00:00' ~ '08:00:00',
-      HORA == '0 days 09:00:00' ~ '09:00:00',
-      HORA == '0 days 10:00:00' ~ '10:00:00',
-      HORA == '0 days 11:00:00' ~ '11:00:00',
-      HORA == '0 days 12:00:00' ~ '12:00:00',
-      HORA == '0 days 13:00:00' ~ '13:00:00',
-      HORA == '0 days 14:00:00' ~ '14:00:00',
-      HORA == '0 days 15:00:00' ~ '15:00:00',
-      HORA == '0 days 16:00:00' ~ '16:00:00',
-      HORA == '0 days 17:00:00' ~ '17:00:00',
-      HORA == '0 days 18:00:00' ~ '18:00:00',
-      HORA == '0 days 19:00:00' ~ '19:00:00',
-      HORA == '0 days 20:00:00' ~ '20:00:00',
-      HORA == '0 days 21:00:00' ~ '21:00:00',
-      HORA == '0 days 22:00:00' ~ '22:00:00',
-      HORA == '0 days 23:00:00' ~ '23:00:00',
-      TRUE ~ as.character(HORA)
-    ),
-    end.hour = case_when(
-      HORA_FIN == '0' ~ '00:00:00',
-      HORA_FIN == '1' ~ '01:00:00',
-      HORA_FIN == '2' ~ '02:00:00',
-      HORA_FIN == '3' ~ '03:00:00',
-      HORA_FIN == '4' ~ '04:00:00',
-      HORA_FIN == '5' ~ '05:00:00',
-      HORA_FIN == '6' ~ '06:00:00',
-      HORA_FIN == '7' ~ '07:00:00',
-      HORA_FIN == '8' ~ '08:00:00',
-      HORA_FIN == '9' ~ '09:00:00',
-      HORA_FIN == '10' ~ '10:00:00',
-      HORA_FIN == '11' ~ '11:00:00',
-      HORA_FIN == '12' ~ '12:00:00',
-      HORA_FIN == '13' ~ '13:00:00',
-      HORA_FIN == '14' ~ '14:00:00',
-      HORA_FIN == '15' ~ '15:00:00',
-      HORA_FIN == '16' ~ '16:00:00',
-      HORA_FIN == '17' ~ '17:00:00',
-      HORA_FIN == '18' ~ '18:00:00',
-      HORA_FIN == '19' ~ '19:00:00',
-      HORA_FIN == '20' ~ '20:00:00',
-      HORA_FIN == '21' ~ '21:00:00',
-      HORA_FIN == '22' ~ '22:00:00',
-      HORA_FIN == '23' ~ '23:00:00',
-      HORA_FIN == '0:00:00' ~ '00:00:00',
-      HORA_FIN == '1:00:00' ~ '01:00:00',
-      HORA_FIN == '2:00:00' ~ '02:00:00',
-      HORA_FIN == '3:00:00' ~ '03:00:00',
-      HORA_FIN == '4:00:00' ~ '04:00:00',
-      HORA_FIN == '5:00:00' ~ '05:00:00',
-      HORA_FIN == '6:00:00' ~ '06:00:00',
-      HORA_FIN == '7:00:00' ~ '07:00:00',
-      HORA_FIN == '8:00:00' ~ '08:00:00',
-      HORA_FIN == '9:00:00' ~ '09:00:00',
-      HORA_FIN == '24:00:00' ~ '00:00:00',
-      HORA_FIN == '0 days 00:00:00' ~ '00:00:00',
-      HORA_FIN == '0 days 01:00:00' ~ '01:00:00',
-      HORA_FIN == '0 days 02:00:00' ~ '02:00:00',
-      HORA_FIN == '0 days 03:00:00' ~ '03:00:00',
-      HORA_FIN == '0 days 04:00:00' ~ '04:00:00',
-      HORA_FIN == '0 days 05:00:00' ~ '05:00:00',
-      HORA_FIN == '0 days 06:00:00' ~ '06:00:00',
-      HORA_FIN == '0 days 07:00:00' ~ '07:00:00',
-      HORA_FIN == '0 days 08:00:00' ~ '08:00:00',
-      HORA_FIN == '0 days 09:00:00' ~ '09:00:00',
-      HORA_FIN == '0 days 10:00:00' ~ '10:00:00',
-      HORA_FIN == '0 days 11:00:00' ~ '11:00:00',
-      HORA_FIN == '0 days 12:00:00' ~ '12:00:00',
-      HORA_FIN == '0 days 13:00:00' ~ '13:00:00',
-      HORA_FIN == '0 days 14:00:00' ~ '14:00:00',
-      HORA_FIN == '0 days 15:00:00' ~ '15:00:00',
-      HORA_FIN == '0 days 16:00:00' ~ '16:00:00',
-      HORA_FIN == '0 days 17:00:00' ~ '17:00:00',
-      HORA_FIN == '0 days 18:00:00' ~ '18:00:00',
-      HORA_FIN == '0 days 19:00:00' ~ '19:00:00',
-      HORA_FIN == '0 days 20:00:00' ~ '20:00:00',
-      HORA_FIN == '0 days 21:00:00' ~ '21:00:00',
-      HORA_FIN == '0 days 22:00:00' ~ '22:00:00',
-      HORA_FIN == '0 days 23:00:00' ~ '23:00:00',
-      TRUE ~ as.character(HORA_FIN)
     ),
     day.name = case_when(
       DIA == 'Lunes' ~ 'LUNES',
@@ -365,10 +269,15 @@ standardize.values <- function(output.file = './datasets/traffic.csv') {
     vehicle.type = as.factor(vehicle.type),
     payment.method = as.factor(FORMA_PAGO),
     toll.booth = as.factor(toll.booth),
-    start.hour = as.factor(start.hour),
-    end.hour = as.factor(end.hour),
     day.name = as.factor(day.name),
     amount = CANTIDAD_PASOS
+  )
+  
+  df <- df %>% as_tibble() %>% mutate_at(
+    c('HORA', 'HORA_FIN'), to_std_time_format)
+  df <- df %>% mutate(
+    start.hour = as.factor(HORA),
+    end.hour = as.factor(HORA_FIN)
   )
   
   df[df$PERIODO < 2014,] <- arrange(df[df$PERIODO < 2014,], FECHA)
