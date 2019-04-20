@@ -16,11 +16,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r requiredpackages, echo=FALSE}
 rm(list = ls()); gc();
 
-packages.to.include <- c(
-  'dplyr', 'ggplot2' 
-)
-
+packages.to.include <- c('dplyr', 'tidyr', 'ggplot2')
 lapply(packages.to.include, require, character.only = T)
+
+theme_set(theme_minimal())
 ```
 
 
@@ -33,18 +32,19 @@ oil <- read.csv('~/Documents/traffic/datasets/oil_prices.csv', header = T)
 
 
 ### Exploratory analysis of the oil prices dataset
-```{r pricethroughtime, echo=FALSE}
-price <- oil %>% 
-  group_by(Y) %>%
-  filter(Y != '2019') %>%
-  summarise(value = mean(premium))
+The oil prices dataset consists of monthly prices of different types of oil: super, premium, gasoil, and euro. The four of them experienced a steady increase since 2008 until 2018, which is illustrated in Figure 1 for the particular case of premium oil.
 
-ggplot(data = price, aes(x = price$Y, y = price$value)) + 
-  geom_line(linetype = 'dashed', color = 'blue') + 
+```{r pricethroughtime, echo=FALSE}
+oil_price <- oil %>% 
+  group_by(Y) %>%
+  summarise(price = max(premium))
+
+ggplot(data = oil_price, aes(x = Y, y = price)) + 
+  geom_line(linetype = 'dashed', color = '#FC4E07', alpha = 0.6, size = 0.6) + 
   geom_point() + 
-  geom_text(aes(label = round(price$value, 2)), hjust = 1, vjust = -0.48) +
+  geom_text(aes(label = round(price, 2)), hjust = 1, vjust = -0.48) +
   labs(x = NULL, y = 'ARS ($)', 
-       title = 'Price of premium oil through time', caption = 'Figure 1') +
-  theme_bw()
+       title = 'Price of premium oil through time', caption = 'Figure 1')
 ```
+
 
