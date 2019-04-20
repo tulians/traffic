@@ -37,14 +37,14 @@ This project consists on analyzing the evolution of traffic on AUSA toll booths 
 
 ### Prework
 * Unzip the `Flujo-Vehicular-por-Unidades-de-Peaje-AUSA.zip` file provided by the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. This .zip file contains eleven .csv files.
-* Run the `standardize.values()` function from `utils.R`. This function will perform certain transformations in the unzipped .csv files, and will generate a file called `traffic.csv`. This function takes some minutes to finish (approximately 5 minutes).
-* For details on how graphs were generated, please take a look at `README.Rmd` and `src/utils.R`.
+* Run the `standardize.values()` function from `wrangling.R`. This function will perform certain transformations in the unzipped .csv files, and will generate a file called `traffic.csv`. This function takes some minutes to finish (approximately 5 minutes).
+* For details on how graphs were generated, please take a look at `README.Rmd` and `src/wrangling.R`.
 
 ### Structure of the data to use
-The information provided consists of eleven files, one for each year from 2008 to 2018 (where the latter only provides information until September 30th). Among these files, there is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
+The information provided consists of eleven files, one for each year from 2008 to 2018 (where the latter only provides information until September 30th). Among these files, there is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/wrangling.R` and consist of:
 
-* `standardize.columns.and.merge_`: not all of the files have the same column names, nor the same column order. This function standardizes their format, and merges them all in a single .csv file.
-* `standardize.values`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll booth name written in all caps and then all lowers. This function standardizes that, and creates a new data set.
+* `join.traffic.files`: not all of the files have the same column names, nor the same column order. This function standardizes their format, and merges them all in a single .csv file.
+* `standardize.traffic`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll booth name written in all caps and then all lowers. This function standardizes that, and creates a new data set.
 
 Great part of the work was devoted to obtaining an homogeneous data set. The following bullets show the transformation steps followed to transform the eleven heterogeneous and non-standardized files into a single homogeneous one:
 

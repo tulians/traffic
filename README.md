@@ -5,6 +5,7 @@
 -   [Analyzing traffic as a time-series and forecasting future traffic](#analyzing-traffic-as-a-time-series-and-forecasting-future-traffic)
 -   [Conclusions and next steps](#conclusions-and-next-steps)
 
+
 ### Objective
 
 This project consists on analyzing the evolution of traffic on AUSA toll booths in Buenos Aires highways. The data being used in this project can be found in the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. In particular, the project aims to predict the amount of vehicles going through toll booths for a given date in the future. Concretely, given a week *w*<sub>*i*</sub> the model will be able to predict the traffic volume on weeks *w*<sub>*i* + 1</sub> and *w*<sub>*i* + 2</sub>.
@@ -12,15 +13,15 @@ This project consists on analyzing the evolution of traffic on AUSA toll booths 
 ### Prework
 
 -   Unzip the `Flujo-Vehicular-por-Unidades-de-Peaje-AUSA.zip` file provided by the [Buenos Aires Data](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) site. This .zip file contains eleven .csv files.
--   Run the `standardize.values()` function from `utils.R`. This function will perform certain transformations in the unzipped .csv files, and will generate a file called `traffic.csv`. This function takes some minutes to finish (approximately 5 minutes).
--   For details on how graphs were generated, please take a look at `README.Rmd` and `src/utils.R`.
+-   Run the `standardize.values()` function from `wrangling.R`. This function will perform certain transformations in the unzipped .csv files, and will generate a file called `traffic.csv`. This function takes some minutes to finish (approximately 5 minutes).
+-   For details on how graphs were generated, please take a look at `README.Rmd` and `src/wrangling.R`.
 
 ### Structure of the data to use
 
-The information provided consists of eleven files, one for each year from 2008 to 2018 (where the latter only provides information until September 30th). Among these files, there is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/utils.R` and consist of:
+The information provided consists of eleven files, one for each year from 2008 to 2018 (where the latter only provides information until September 30th). Among these files, there is no strict convention on the columns naming, neither on whether categorical values are stored with uppercase letters or a mixture of uppercase and lowercase. To standardize everything to the same criteria, several transformations were performed. Those transformations are defined in `src/wrangling.R` and consist of:
 
--   `standardize.columns.and.merge_`: not all of the files have the same column names, nor the same column order. This function standardizes their format, and merges them all in a single .csv file.
--   `standardize.values`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll booth name written in all caps and then all lowers. This function standardizes that, and creates a new data set.
+-   `join.traffic.files`: not all of the files have the same column names, nor the same column order. This function standardizes their format, and merges them all in a single .csv file.
+-   `standardize.traffic`: among categorical attributes, not all of them have the same value for the same concept, for example you could find the same toll booth name written in all caps and then all lowers. This function standardizes that, and creates a new data set.
 
 Great part of the work was devoted to obtaining an homogeneous data set. The following bullets show the transformation steps followed to transform the eleven heterogeneous and non-standardized files into a single homogeneous one:
 
@@ -75,20 +76,20 @@ In addition to the previously mentioned columns, two new columns were added to i
 
 In the end, the first rows from the data set being used look like this:
 
-    ##   toll.booth start.hour end.hour day.name vehicle.type       lat      long
-    ## 1    ALBERDI   00:00:00 01:00:00   MARTES      LIVIANO -34.64480 -58.49205
-    ## 2 AVELLANEDA   00:00:00 01:00:00   MARTES      LIVIANO -34.64827 -58.47811
-    ## 3 DELLEPIANE   00:00:00 01:00:00   MARTES      LIVIANO -34.65047 -58.46561
-    ## 4      ILLIA   00:00:00 01:00:00   MARTES      LIVIANO -34.57525 -58.39211
-    ## 5    ALBERDI   01:00:00 02:00:00   MARTES      LIVIANO -34.64480 -58.49205
-    ## 6 AVELLANEDA   01:00:00 02:00:00   MARTES      LIVIANO -34.64827 -58.47811
-    ##      Y M D payment.method amount Q
-    ## 1 2008 1 1       EFECTIVO      7 1
-    ## 2 2008 1 1       EFECTIVO     71 1
-    ## 3 2008 1 1       EFECTIVO     34 1
-    ## 4 2008 1 1       EFECTIVO     27 1
-    ## 5 2008 1 1       EFECTIVO     37 1
-    ## 6 2008 1 1       EFECTIVO    345 1
+    ##   toll.booth day.name vehicle.type       lat      long    Y M D
+    ## 1    ALBERDI   MARTES      LIVIANO -34.64480 -58.49205 2008 1 1
+    ## 2 AVELLANEDA   MARTES      LIVIANO -34.64827 -58.47811 2008 1 1
+    ## 3 DELLEPIANE   MARTES      LIVIANO -34.65047 -58.46561 2008 1 1
+    ## 4      ILLIA   MARTES      LIVIANO -34.57525 -58.39211 2008 1 1
+    ## 5    ALBERDI   MARTES      LIVIANO -34.64480 -58.49205 2008 1 1
+    ## 6 AVELLANEDA   MARTES      LIVIANO -34.64827 -58.47811 2008 1 1
+    ##   payment.method amount start.hour end.hour Q
+    ## 1       EFECTIVO      7   00:00:00 01:00:00 1
+    ## 2       EFECTIVO     71   00:00:00 01:00:00 1
+    ## 3       EFECTIVO     34   00:00:00 01:00:00 1
+    ## 4       EFECTIVO     27   00:00:00 01:00:00 1
+    ## 5       EFECTIVO     37   01:00:00 02:00:00 1
+    ## 6       EFECTIVO    345   01:00:00 02:00:00 1
 
 ### Exploratory analysis
 
@@ -103,6 +104,7 @@ The analysis to be presented in this section has the objective of getting to kno
 
 The first analysis performed right after the cleansing and wrangling of the data set was checking whether the data set was homogeneous in terms of the amount of observations per year. It would be expected to see differences among years, given that from one year to the next one there could be more vehicles on the road (more taking into account this is Buenos Aires traffic), but the actual difference in volume was far from expected.
 
+
 ![](README_files/figure-markdown_github/trend-1.png)
 
 From the graph above it's clear there's an order of magnitude of difference between the amount of vehicles in the 2008-2013 period versus the period 2014-2018. That could also be inferred from the number of rows on the files.
@@ -111,18 +113,6 @@ From the graph above it's clear there's an order of magnitude of difference betw
 cd ~/Documents/traffic/datasets/flujo-vehicular-por-unidades-de-peaje-ausa
 find . -name '*.csv' -exec wc -l {} \;
 ```
-
-    ##   140517 ./flujo-vehicular-2008.csv
-    ##   140161 ./flujo-vehicular-2009.csv
-    ##   140149 ./flujo-vehicular-2010.csv
-    ##   140157 ./flujo-vehicular-2011.csv
-    ##   140533 ./flujo-vehicular-2012.csv
-    ##   215868 ./flujo-vehicular-2013.csv
-    ##   908847 ./flujo-vehicular-2014.csv
-    ##  1048576 ./flujo-vehicular-2015.csv
-    ##  1040856 ./flujo-vehicular-2016.csv
-    ##  1030020 ./flujo-vehicular-2017.csv
-    ##   847751 ./flujo-vehicular-2018.csv
 
 This order of magnitude of difference in the number of observations can't be explained with a real increase of such amount in the number of cars going in and out the city, as that would mean and increase of ten times the amount of vehicles in the period 2012-2014. I posted a [question](http://disq.us/p/1ynoflv) on the [web site](https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-unidades-de-peaje-ausa) that provides the information, asking for clarifications.
 
@@ -218,6 +208,10 @@ The predicted values can be identified with a solid blue line surrounded by two 
 
 Figure 16 shows the behavior of traffic during the first two weeks of October, where the solid red line is the one for 2017, and the blue one consists of the forecasted values for 2018. Comparing the shape of each curve, it can be seen that the forecasted traffic looks similar to that of 2017, for the same period of time, with the exception of some days like those listed in the table below, where the similarity between the figures was less than 80%.
 
+    ## Source: local data frame [5 x 4]
+    ## Groups: <by row>
+    ## 
+    ## # A tibble: 5 x 4
     ##    date data.2017 data.2018 distance
     ##   <int>     <int>     <dbl>    <dbl>
     ## 1     1    246784   335726.     73.5
