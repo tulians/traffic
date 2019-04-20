@@ -1,0 +1,50 @@
+---
+title: "Estimation of time-spent on AUSA toll booths"
+author: "Julián Ailán"
+params:
+  date: "!r Sys.Date()"
+output:
+  md_document:
+    toc: yes
+    variant: markdown_github
+---
+
+```{r setup, include=FALSE, fig.align="center"}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r requiredpackages, echo=FALSE}
+rm(list = ls()); gc();
+
+packages.to.include <- c(
+  'dplyr', 'ggplot2' 
+)
+
+lapply(packages.to.include, require, character.only = T)
+```
+
+
+### Objective
+This project consists on estimating time-spent by drivers on AUSA toll booths in Buenos Aires highways. Currently users of these highways experience excessive amount of time waiting to go through toll booths on peak hours. In addition to estimating this metric, an analysis of whether contextual variables like toll-booth fee or oil prices have an impact on the behavior and amount of users commuting through these highways.
+
+```{r}
+oil <- read.csv('~/Documents/traffic/datasets/oil_prices.csv', header = T)
+```
+
+
+### Exploratory analysis of the oil prices dataset
+```{r pricethroughtime, echo=FALSE}
+price <- oil %>% 
+  group_by(Y) %>%
+  filter(Y != '2019') %>%
+  summarise(value = mean(premium))
+
+ggplot(data = price, aes(x = price$Y, y = price$value)) + 
+  geom_line(linetype = 'dashed', color = 'blue') + 
+  geom_point() + 
+  geom_text(aes(label = round(price$value, 2)), hjust = 1, vjust = -0.48) +
+  labs(x = NULL, y = 'ARS ($)', 
+       title = 'Price of premium oil through time', caption = 'Figure 1') +
+  theme_bw()
+```
+
