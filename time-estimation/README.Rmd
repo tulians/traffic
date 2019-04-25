@@ -37,15 +37,14 @@ The oil prices dataset consists of monthly prices of different types of oil: sup
 
 ```{r pricethroughtime, echo=FALSE}
 oil_price <- oil %>% 
-  group_by(Y) %>%
-  summarise(price = max(premium))
+  group_by(Y, oil.type) %>%
+  summarise(price = max(price))
 
-ggplot(data = oil_price, aes(x = Y, y = price)) + 
-  geom_line(linetype = 'dashed', color = '#FC4E07', alpha = 0.6, size = 0.6) + 
-  geom_point() + 
-  geom_text(aes(label = round(price, 2)), hjust = 1, vjust = -0.48) +
-  labs(x = NULL, y = 'ARS ($)', 
-       title = 'Price of premium oil through time', caption = 'Figure 1')
+ggplot(data = oil_price, aes(x = Y, y = price, group = oil.type)) +
+  geom_line(aes(color = oil.type)) +
+  geom_point(alpha = 1/5) +
+  labs(x = NULL, y = 'ARS ($)',
+       title = 'Price of oil through time', caption = 'Figure 1')
 ```
 
 

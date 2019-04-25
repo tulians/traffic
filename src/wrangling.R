@@ -56,18 +56,17 @@ join.traffic.files <- function() {
   )
 }
 
+#' Among categorical attributes, not all of them have the same value for the
+#' same concept, fox example you could find the same toll name writen in 
+#' all caps and then all lowers. This function standardizes that, and creates
+#' a new dataset.
+#' 
+#' @param output.file Path and name of the file which will result of values 
+#' transformation.
+#' @return The standardized dataframe.
 standardize.traffic <- function(
   input.file = './datasets/sources/merged.csv',
   output.file = './datasets/traffic.csv') {
-  #' Among categorical attributes, not all of them have the same value for the
-  #' same concept, fox example you could find the same toll name writen in 
-  #' all caps and then all lowers. This function standardizes that, and creates
-  #' a new dataset.
-  #' 
-  #' @param output.file Path and name of the file which will result of values 
-  #' transformation.
-  #' @return The standardized dataframe.
-
   # Adapted from `swap_if` in 
   # https://github.com/tidyverse/dplyr/issues/2149#issuecomment-258916706
   # The solution presented there has a bug in the generation of out_y, as the
@@ -108,7 +107,7 @@ standardize.traffic <- function(
   
   # Data wrangling for the traffic dataset.
   setwd('~/Documents/traffic/')
-  join.traffic.files()
+  join.traffic.files
   df <- read.csv(input.file, sep = ';', header = T, stringsAsFactors = T)
   df <- df %>% as_tibble() %>% mutate(
     toll.booth = case_when(
@@ -212,18 +211,17 @@ standardize.traffic <- function(
   file.remove(input.file)
 }
 
+#' Wrangling of dates, from YYYY-MM-DD to individual Y and M variables,
+#' in order to match the traffic's dataset Y and M variables for posterion
+#' merging.
+#' 
+#' @param input.file Path and name of the initial unmodified oil pricies file.
+#' @param output.file Path and name of the file which will result of values 
+#' transformation.
+#' @return The standardized dataframe.
 standardize.oil <- function(
   input.file = './datasets/sources/oil.csv',
   output.file = './datasets/oil_prices.csv') {
-  #' Wrangling of dates, from YYYY-MM-DD to individual Y and M variables,
-  #' in order to match the traffic's dataset Y and M variables for posterion
-  #' merging.
-  #' 
-  #' @param input.file Path and name of the initial unmodified oil pricies file.
-  #' @param output.file Path and name of the file which will result of values 
-  #' transformation.
-  #' @return The standardized dataframe.
-  
   setwd('~/Documents/traffic/')
   df <- read.csv(input.file, header = T)
   df <- df %>% as_tibble() %>% mutate(
@@ -232,5 +230,18 @@ standardize.oil <- function(
   )
   drops <- c('date')
   df <- df[, !(names(df) %in% drops)]
-  write.csv(df, file = output.file, row.names = F)
+  
+  d <- data.frame(
+    Y = integer(), M = integer(), oil.type = character(), price = double())
+  d <- d %>% 
+    rbind(d, data.frame(
+      Y = df$Y, M = df$M, oil.type = 'super', price = df$super)) %>%
+    rbind(d, data.frame(
+      Y = df$Y, M = df$M, oil.type = 'premium', price = df$premium)) %>%
+    rbind(d, data.frame(
+      Y = df$Y, M = df$M, oil.type = 'gasoil', price = df$gasoil)) %>%
+    rbind(d, data.frame(
+      Y = df$Y, M = df$M, oil.type = 'euro', price = df$euro))
+    
+  write.csv(d, file = output.file, row.names = F)
 }
