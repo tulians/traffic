@@ -107,7 +107,7 @@ standardize.traffic <- function(
   
   # Data wrangling for the traffic dataset.
   setwd('~/Documents/traffic/')
-  join.traffic.files
+  join.traffic.files()
   df <- read.csv(input.file, sep = ';', header = T, stringsAsFactors = T)
   df <- df %>% as_tibble() %>% mutate(
     toll.booth = case_when(
@@ -243,5 +243,5 @@ standardize.oil <- function(
     rbind(d, data.frame(
       Y = df$Y, M = df$M, oil.type = 'euro', price = df$euro))
     
-  write.csv(d, file = output.file, row.names = F)
+  write.csv(d, file = output.file, row.names = F); rm(d, df)
 }
