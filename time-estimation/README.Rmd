@@ -14,10 +14,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 rm(list = ls()); gc();
 
-packages.to.include <- c('dplyr', 'tidyr', 'ggplot2', 'ff')
+packages.to.include <- c('dplyr', 'tibble', 'ggplot2', 'ff')
 lapply(packages.to.include, require, character.only = T)
 
-theme_set(theme_minimal())
+rm(packages.to.include)
 ```
 
 ### Objective
@@ -29,10 +29,12 @@ The `traffic.csv` dataset previously analized [here](https://github.com/tulians/
 R requires that variables are stored in RAM in its entirety, so managing a dataframe this big could be imposible for some machines if no alternate processing is performed. For this reason is that the [`ff`](https://cran.r-project.org/web/packages/ff/index.html) package will be used.
 
 ```{r readingunifiedfile, echo=FALSE}
+# Directory where `ff` stores temporary files.
+options(fftempdir = '~/Documents/traffic/datasets/tmp')
 unified.ff <- read.csv.ffdf(file = '~/Documents/traffic/datasets/unified.csv')
 ```
 
-### Exploratory analysis of the oil prices dataset
+### Analysis of oil price behavior
 The oil prices dataset consists of monthly prices of different types of oil: super, premium, gasoil, and euro. The four of them experienced a steady increase since 2008 until 2018, which is illustrated in Figure 1.
 
 ```{r pricethroughtime, echo=FALSE}
@@ -44,5 +46,37 @@ ggplot(data = oil_price, aes(x = Y, y = price, group = oil.type)) +
   geom_line(aes(color = oil.type)) +
   geom_point(alpha = 1/5) +
   labs(x = NULL, y = 'ARS ($)',
-       title = 'Price of oil through time', caption = 'Figure 1')
+       title = 'Price of oil through time', caption = 'Figure 1') +
+  theme_minimal()
+
+rm(oil_price)
 ```
+
+```{r correlations, echo=FALSE}
+ff.df <- unified.ff %>% as_tibble() %>%
+  select(Y, M, amount, price) %>%
+  filter(Y >= 2013 & M >= 7) %>%
+  group_by(Y, M) %>%
+  summarise(
+    price = mean(price),
+    vehicles = sum(amount)
+  )
+
+pv.correlation <- cor(ff.df$price, ff.df$vehicles)
+```
+
+Building on top of the previous analysis of traffic patterns performed [here](https://github.com/tulians/traffic/blob/master/descriptive/README.md), it would be intersting to analyze whether there was a correlation between the rate at which the number of vehicles passing through toll booths [started to grow month-over-month](https://github.com/tulians/traffic/blob/master/descriptive/README_files/figure-markdown_github/trend-1.png), and the month-over-month increase in oil prices depicted in Figure 1. For this we compute differences of both time series and illustrate their relation. As seen in Figure 2, there is barely a linear relation between these two differences, which is represented by the Pearson correlation coefficient of `r pv.correlation`. This correlation, even though it's not strong, it's positive, which implies that an increase in oil prices does not necessarily result in a decrease in traffic volume.
+
+```{r correlationgraph, echo=FALSE}
+ggplot(data = ff.df, aes(x = price, y = vehicles)) +
+  geom_point(alpha = 2/5) +
+  geom_smooth(method = "lm") +
+  labs(x = 'Oil price (ARS)', 
+       y = 'Volume of vehicles',
+       title = 'Relation with oil price and amount of vehicles', 
+       caption = 'Figure 2') +
+  theme_minimal()
+
+rm(ff.df)
+```
+

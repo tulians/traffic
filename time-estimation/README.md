@@ -1,6 +1,6 @@
 -   [Objective](#objective)
 -   [Joining the traffic dataset with the oil dataset](#joining-the-traffic-dataset-with-the-oil-dataset)
--   [Exploratory analysis of the oil prices dataset](#exploratory-analysis-of-the-oil-prices-dataset)
+-   [Analysis of oil price behavior](#analysis-of-oil-price-behavior)
 
 ### Objective
 
@@ -12,8 +12,12 @@ The `traffic.csv` dataset previously analized [here](https://github.com/tulians/
 
 R requires that variables are stored in RAM in its entirety, so managing a dataframe this big could be imposible for some machines if no alternate processing is performed. For this reason is that the [`ff`](https://cran.r-project.org/web/packages/ff/index.html) package will be used.
 
-### Exploratory analysis of the oil prices dataset
+### Analysis of oil price behavior
 
 The oil prices dataset consists of monthly prices of different types of oil: super, premium, gasoil, and euro. The four of them experienced a steady increase since 2008 until 2018, which is illustrated in Figure 1.
 
 ![](README_files/figure-markdown_github/pricethroughtime-1.png)
+
+Building on top of the previous analysis of traffic patterns performed [here](https://github.com/tulians/traffic/blob/master/descriptive/README.md), it would be intersting to analyze whether there was a correlation between the rate at which the number of vehicles passing through toll booths [started to grow month-over-month](https://github.com/tulians/traffic/blob/master/descriptive/README_files/figure-markdown_github/trend-1.png), and the month-over-month increase in oil prices depicted in Figure 1. For this we compute differences of both time series and illustrate their relation. As seen in Figure 2, there is barely a linear relation between these two differences, which is represented by the Pearson correlation coefficient of 0.5510687. This correlation, even though it's not strong, it's positive, which implies that an increase in oil prices does not necessarily result in a decrease in traffic volume.
+
+![](README_files/figure-markdown_github/correlationgraph-1.png)
