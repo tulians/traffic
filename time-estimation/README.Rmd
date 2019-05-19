@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 rm(list = ls()); gc();
 
-packages.to.include <- c('dplyr', 'tibble', 'ggplot2', 'ff')
+packages.to.include <- c('dplyr', 'tibble', 'ggplot2', 'ff', 'reshape2')
 lapply(packages.to.include, require, character.only = T)
 
 rm(packages.to.include)
@@ -55,7 +55,7 @@ rm(oil_price)
 ```{r correlations, echo=FALSE}
 ff.df <- unified.ff %>% as_tibble() %>%
   select(Y, M, amount, price) %>%
-  filter(Y >= 2013 & M >= 7) %>%
+  filter(Y >= 2014) %>%
   group_by(Y, M) %>%
   summarise(
     price = mean(price),
@@ -65,18 +65,57 @@ ff.df <- unified.ff %>% as_tibble() %>%
 pv.correlation <- cor(ff.df$price, ff.df$vehicles)
 ```
 
-Building on top of the previous analysis of traffic patterns performed [here](https://github.com/tulians/traffic/blob/master/descriptive/README.md), it would be intersting to analyze whether there was a correlation between the rate at which the number of vehicles passing through toll booths [started to grow month-over-month](https://github.com/tulians/traffic/blob/master/descriptive/README_files/figure-markdown_github/trend-1.png), and the month-over-month increase in oil prices depicted in Figure 1. For this we compute differences of both time series and illustrate their relation. As seen in Figure 2, there is barely a linear relation between these two differences, which is represented by the Pearson correlation coefficient of `r pv.correlation`. This correlation, even though it's not strong, it's positive, which implies that an increase in oil prices does not necessarily result in a decrease in traffic volume.
+Building on top of the previous analysis of traffic patterns performed [here](https://github.com/tulians/traffic/blob/master/descriptive/README.md), it would be intersting to analyze whether there was a correlation between the rate at which the number of vehicles passing through toll booths [started to grow month-over-month](https://github.com/tulians/traffic/blob/master/descriptive/README_files/figure-markdown_github/trend-1.png), and the month-over-month (M-o-M) increase in oil prices depicted in Figure 1. As seen in Figure 2 (condidering only information from January 2014 onwards, after the [unexpected growth](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic)) there is barely a linear relation between these two differences, which is represented by the Pearson correlation coefficient of `r pv.correlation`. This correlation, even though it's not strong, it's positive, which implies that an increase in oil prices does not necessarily result in a decrease in traffic volume, but rather the opposite in this case.
 
 ```{r correlationgraph, echo=FALSE}
 ggplot(data = ff.df, aes(x = price, y = vehicles)) +
   geom_point(alpha = 2/5) +
-  geom_smooth(method = "lm") +
+  geom_smooth(method = 'lm') +
   labs(x = 'Oil price (ARS)', 
        y = 'Volume of vehicles',
-       title = 'Relation with oil price and amount of vehicles', 
+       title = 'Relation of oil price and amount of vehicles', 
        caption = 'Figure 2') +
   theme_minimal()
-
-rm(ff.df)
 ```
 
+```{r differences, echo=FALSE}
+ff.df.differences <- data.frame(
+  Y = diff(ff.df$Y),
+  M = diff(ff.df$M),
+  price = diff(ff.df$price / max(ff.df$price)),
+  vehicles = diff(ff.df$vehicles / max(ff.df$vehicles))
+)
+
+ff.df.differences$vehicles[which.min(ff.df.differences$vehicles)] <- 
+  mean(ff.df.differences$vehicles)
+ff.df.differences$vehicles[which.max(ff.df.differences$vehicles)] <- 
+  mean(ff.df.differences$vehicles)
+
+# Move from wide to tall format to plot multiple series in the same graph.
+ff.df.tall <- melt(
+  ff.df.differences, 
+  id.vars = c('Y', 'M'),
+  measure.vars = c('price', 'vehicles'),
+  variable.name = 'series',
+  value.name = 'measurement') %>%
+  select(series, measurement) %>%
+  group_by(series) %>%
+  mutate(id = row_number())
+
+diff.correlation <- cor(ff.df.differences$price, ff.df.differences$vehicles)
+```
+
+A more interesting approach in the search for a relation between vehicle volume and oil price would be to look at the M-o-M differences of each time series. Figure 3 shows the behavior through time of the difference of each of the variables, which was computed over the normalized series. Again, computing the correlation between both differences yields a positive number, `r diff.correlation`, which shows non-conclusive evidence that an increase in oil price could impact the volume of vehicles passing through toll booths (at least not in a month by month basis).
+
+```{r differencesgraph, echo=FALSE}
+ggplot(data = ff.df.tall, 
+       aes(x = id, y = measurement, group = series, colour = series)) +
+  geom_line() +
+  labs(x = 'index', 
+       y = 'Delta (M_i - M_{i-1})',
+       title = 'M-o-M differences for both amount of vehicles and oil prices', 
+       caption = 'Figure 3') +
+  theme_minimal()
+
+rm(ff.df.differences, ff.df.tall)
+```
