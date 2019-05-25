@@ -160,6 +160,15 @@ standardize.traffic <- function(
       toll.booth == 'SARMIENTO' ~ -58.4079902,
       toll.booth == 'SALGUERO' ~ -58.4003948
     ),
+    booths = case_when(
+      toll.booth == 'ALBERDI' ~ 2.5,
+      toll.booth == 'AVELLANEDA' ~ 16.5,
+      toll.booth == 'DELLEPIANE' ~ 8,
+      toll.booth == 'RETIRO' ~ 14.5,
+      toll.booth == 'ILLIA' ~ 14.5,
+      toll.booth == 'SARMIENTO' ~ 4,
+      toll.booth == 'SALGUERO' ~ 4
+    ),
     FECHA = case_when(
       PERIODO < 2014 ~ as.Date(
         strptime(as.character(FECHA), '%m/%d/%Y'), format = '%Y-%m-%d'),
