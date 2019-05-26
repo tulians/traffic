@@ -31,7 +31,7 @@ A more interesting approach in the search for a relation between vehicle volume 
 
 It's usual to see vehicles queuing in Buenos Aires' toll booth plazas at peak hours. More than 1.5M vehicles enter the city each day, most of which are people commuting to work. In this context toll booths regularly feature queues that extend through kilometers in highways. The objective of this section is to accurately estimate the average time a given driver waits in order go through the toll booth.
 
-In order to achieve this goal we need to have concrete figures of both the rate at which cars arrive to the toll booths *λ*, and also the rate at which cars can be serviced *μ*, meaning, the amount of cars that go through the toll booth at a given period of time. Both of the rates would be averages, as they will be considering times where there is a long queue, as well as times where there's no queue at all. The *ρ* = *λ*/*μ* ratio, known as traffic intensity, will help us identify the average behavior of the queue, given that if *ρ* &lt; 1 there is a finite probability that the queue can be handled by the booth; on the other hand if *ρ* ≥ 1 the queue length will become longer and longer without limit (at least in theoretical terms).
+In order to achieve this goal we need to have concrete figures of both the rate at which cars arrive to the toll booths *λ*, and also the rate at which cars can be serviced *μ*, meaning, the amount of cars that go through the toll booth at a given period of time. Both of the rates would be averages, as they will be considering times where there is a long queue, as well as times where there's no queue at all. The *ρ* = *λ*/*μ* ratio, known as traffic intensity, will help us identify the average behavior of the queue, given that if *ρ* &lt; 1 there is a finite probability that the queue can be handled by the booth; on the other hand if *ρ* ≥ 1 the queue length will become longer and longer without limit up to infinity (at least in theoretical terms).
 
 Given that we have information of traffic flow along several toll booths, we'll use it to derive these two coefficients, and find the value of *ρ* for each of the toll booth plazas. Depending on the dimension of this ratio, we'll need to compute waiting time one way or another. More details on this calculations will be given in future sections.
 
@@ -53,6 +53,32 @@ Up to now we've been working with the dataset without validating whether all the
 
 ##### Assumptions
 
-As you can see from the above links the amount of toll booths per lane was manually counted using Google Maps. However, these amounts are not fixed, and depend on date and time, in order to accomodate the service to the incoming volume of vehicles. The are no official communications from AUSA on how those changes are performed, so for the sake of this analysis the average amount of lanes which will be mostly active during peak hours.
+-   As you can see from the above links the amount of toll booths per lane was manually counted using Google Maps. However, these amounts are not fixed, and depend on date and time, in order to accomodate the service to the incoming volume of vehicles. The are no official communications from AUSA on how those changes are performed, so for the sake of this analysis the average amount of lanes which will be mostly active during peak hours.
 
-Building on this last point, it will be assumed the vast majority of the traffic during the morning peak hour is heading towards the city, while the traffic during the afternoon peak hour is leaving the city.
+-   Building on this last point, it will be assumed the vast majority of the traffic during the morning peak hour is heading towards the city, while the traffic during the afternoon peak hour is leaving the city.
+
+-   All toll booths in each of the plazas is considered to be the same in terms of technology and service time. The only difference that will be considered would be that of automatic and manual toll booths.
+
+-   Service time is considered independent of the length of the queue.
+
+#### Estimation of traffic intensity per toll booth
+
+In the previous section we discussed the need of computing the arrival rate *λ* and service rate *μ* in order to know the traffic intensity *ρ*. The former can be derived directly from the information provided by the dataset, given that each of its records indicates the amount of vehicles that arrived and went through the toll booths per hour. However, in order to estimate *μ* assumptions have to be raised, or a field measurement has to be performed. Both approaches will be performed during this analysis.
+
+##### Traffic intensity
+
+Going back to what was mentioned at the beginning of this section, traffic intensity was defined as the ratio between the arrival rate *λ* and the service rate *μ*, so that *λ* &lt; *μ*. Expressed that way *μ* comprises the capacity of all toll booths in a toll booth plaza, so it might be more accurate to express the traffic intensity as *λ* &lt; *S**μ*, where *S* is the amount of servers which in this case are represented by toll booths. Following the third assumption in the assumptions section, as all toll booths are considered equal, we can express the total capacity of the system by multipying an individual toll booth capacity by the amount of toll booths in a toll booth plaza.
+
+The next two subsections will be focused on the *Avellaneda* toll booth plaza given that it's the toll booth with the highest volume of vehicles, and with an average of 16.5 toll booths. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering only the information from January 2014 to December 2018, due to the [asymmetries in the dataset](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic).
+
+![](README_files/figure-markdown_github/avellanedavehiclesperhour-1.png)
+
+##### Assumption of 90% utilization
+
+An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. This is because it makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the *Avellaneda* toll booth plaza is able to serve up to 2935.7725197 vehicles in an hour. This figure comes from
+
+$$\frac{\lambda}{S\mu} \leq \rho \Longrightarrow \mu \geq \frac{\lambda}{S\rho} \Longrightarrow \mu \geq \frac{43596.2}{16.5 \cdot 0.9} = 2935.77$$
+
+where *λ* is equal to the 43596.2 vehicles per hour at 5PM shown in Figure 4, the number of servers *S* is 16.5, and the utilization/traffic intensity *ρ* is 90%. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 2935.77 vehicles per hour. Summing up each server contribution, 48440.2 vehicles can be serviced in an hour by this system.
+
+##### Deriving service rate empirically
