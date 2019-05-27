@@ -144,7 +144,7 @@ Up to now we've been working with the dataset without validating whether all the
 * `Sarmiento` and `Salguero`: these two toll booths are the most recent of all, and are completely automatic, thus don't have any kind of barriers of physical toll booths. They rely on a framework that identifies via laser and RFID whether a given car is suscribed to the automatic toll booth pay a fine. Given the fact that this system was recently implemented, and that Google Maps' most up to date photograph is from [2014](https://www.google.com/maps/@-34.5720142,-58.4003746,3a,75y,86.66h,84.34t/data=!3m6!1e1!3m4!1s4EUI6eAipzhLxajyKJyH3Q!2e0!7i13312!8i6656) there is no information on the amount of lanes the system uses, but judging for the [way it is explained in a local newspaper](https://www.clarin.com/brandstudio/autopistas-barreras-funcionan-beneficios_0_BFyjtPTT7.html) the lasers most likely take the width of the highway, which is [4 lanes](https://www.google.com/maps/@-34.572059,-58.4002728,3a,75y,89.44h,76.27t/data=!3m6!1e1!3m4!1sUBDmnfT7MIlSI-IaUNA8rg!2e0!7i13312!8i6656) to enter the city and [4 lanes](https://www.google.com/maps/@-34.5717317,-58.4002346,3a,75y,318.34h,75.16t/data=!3m7!1e1!3m5!1sB5bOs_1b8Kgeal35aCFRdw!2e0!6s%2F%2Fgeo3.ggpht.com%2Fcbk%3Fpanoid%3DB5bOs_1b8Kgeal35aCFRdw%26output%3Dthumbnail%26cb_client%3Dmaps_sv.tactile.gps%26thumb%3D2%26w%3D203%26h%3D100%26yaw%3D9.781906%26pitch%3D0%26thumbfov%3D100!7i13312!8i6656) to leave.
 
 ##### Assumptions
-* As you can see from the above links the amount of toll booths per lane was manually counted using Google Maps. However, these amounts are not fixed, and depend on date and time, in order to accomodate the service to the incoming volume of vehicles. The are no official communications from AUSA on how those changes are performed, so for the sake of this analysis the average amount of lanes which will be mostly active during peak hours.
+* As you can see from the above links the amount of toll booths per lane was manually counted using Google Maps. However, these amounts are not fixed, and depend on date and time, in order to accomodate the service to the incoming volume of vehicles. The are no official communications from AUSA on how those changes are performed, so for the sake of this analysis the amount of toll booths to use would be the sum of those going in and those going out of the city. This is due to the fact that the information provided is aggregated to a level that does not provide visibility on the direction of the vehicles.
 
 * Building on this last point, it will be assumed the vast majority of the traffic during the morning peak hour is heading towards the city, while the traffic during the afternoon peak hour is leaving the city.
 
@@ -158,11 +158,13 @@ In the previous section we discussed the need of computing the arrival rate $\la
 ##### Traffic intensity
 Going back to what was mentioned at the beginning of this section, traffic intensity was defined as the ratio between the arrival rate $\lambda$ and the service rate $\mu$, so that $\lambda < \mu$. Expressed that way $\mu$ comprises the capacity of all toll booths in a toll booth plaza, so it might be more accurate to express the traffic intensity as $\lambda < S\mu$, where $S$ is the amount of servers which in this case are represented by toll booths. Following the third assumption in the assumptions section, as all toll booths are considered equal, we can express the total capacity of the system by multipying an individual toll booth capacity by the amount of toll booths in a toll booth plaza.
 
-The next two subsections will be focused on the _Avellaneda_ toll booth plaza given that it's the toll booth with the highest volume of vehicles, and with an average of 16.5 toll booths. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering only the information from January 2014 to December 2018, due to the [asymmetries in the dataset](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic).
+The next two subsections will be focused on the _Avellaneda_ toll booth plaza given that it's the toll booth with the highest volume of vehicles, and with an average of 33 toll booths. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering only the information from January 2014 to December 2018, due to the [asymmetries in the dataset](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic).
 
 ```{r avellanedavehiclesperhour, echo=FALSE}
 avellaneda.vehicles.per.hour <- unified.ff %>% as_tibble() %>%
-  filter((Y >= 2014 & Y <= 2018) & toll.booth == 'AVELLANEDA') %>%
+  filter((Y >= 2014 & Y <= 2018) 
+         & toll.booth == 'AVELLANEDA'
+         & payment.method %in% c('AUPASS', 'EFECTIVO')) %>%
   select(start.hour, amount) %>%
   group_by(start.hour) %>%
   summarise(
@@ -170,11 +172,11 @@ avellaneda.vehicles.per.hour <- unified.ff %>% as_tibble() %>%
   )
 
 # Number of servers.
-S <- 16.5
+S <- 33
 # Utilization.
 rho <- 0.9
 # Arrival rate.
-lambda <- max(avellaneda.vehicles.per.hour$vehicles)
+lambda <- mean(avellaneda.vehicles.per.hour$vehicles)
 # Service rate per toll booth has to be greater than \lambda / (\rho * S).
 mu <- lambda / (S * rho)
 
@@ -191,10 +193,45 @@ ggplot(data = avellaneda.vehicles.per.hour,
 ```
 
 ##### Assumption of 90% utilization
-An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. This is because it makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the _Avellaneda_ toll booth plaza is able to serve up to `r mu` vehicles in an hour. This figure comes from 
+An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the _Avellaneda_ toll booth plaza is able to serve up to `r mu` vehicles in an hour. This figure comes from
 
-$$\frac{\lambda}{S\mu} \leq \rho \Longrightarrow  \mu \geq \frac{\lambda}{S\rho} \Longrightarrow \mu \geq \frac{43596.2}{16.5 \cdot 0.9} = 2935.77$$
+![](images/mu.png)
 
-where $\lambda$ is equal to the `r lambda` vehicles per hour at 5PM shown in Figure 4, the number of servers $S$ is $16.5$, and the utilization/traffic intensity $\rho$ is $90\%$. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 2935.77 vehicles per hour. Summing up each server contribution, `r S * mu` vehicles can be serviced in an hour by this system.
+where $\lambda$ is equal to the `r round(lambda, 2)` vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers $S$ is `r S`, and the utilization/traffic intensity $\rho$ is $90\%$. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least `r round(mu, 2)` vehicles per hour. Summing up each server contribution, `r round(S * mu, 2)` vehicles can be serviced in an hour by this system. Servicing `r round(mu, 2)`  vehicles in an hour means that on average `r round(mu / 60, 2)` vehicles are serviced per minute. 
+
+```{r effectofautomatictollbooths, echo=FALSE}
+avellaneda.payments.per.hour <- unified.ff %>% as_tibble() %>%
+  filter((Y >= 2014 & Y <= 2018) 
+         & toll.booth == 'AVELLANEDA'
+         & payment.method %in% c('AUPASS', 'EFECTIVO')) %>%
+  select(start.hour, payment.method, amount) %>%
+  group_by(start.hour, payment.method) %>%
+  summarise(
+    vehicles = sum(amount) / (365 * 4)
+  )
+
+automatic.payments <- avellaneda.payments.per.hour %>% 
+  group_by(start.hour) %>% 
+  summarise(
+    percentage.of.automatic = 
+      sum(vehicles[payment.method == 'AUPASS']) / sum(vehicles)
+  )
+```
+
+Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the _Avellaneda_ toll booth plaza, automatic payments constitute `r round(mean(automatic.payments$percentage.of.automatic) * 100, 2)`% of the payments volume. The specific percentages for each our are detailed in Figure 5.
+
+```{r percentagegraph, echo=FALSE}
+ggplot(data = automatic.payments,
+       aes(x = start.hour, y = percentage.of.automatic, group = 1)) +
+  geom_line(linetype = 'dashed') +
+  geom_point(color = 'red') +
+  labs(x = 'Hour of day', 
+       y = 'Percentage of automatic payments',
+       title = 'Percentage of vehicles going through automatic toll booths', 
+       caption = 'Figure 5') +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
 
 ##### Deriving service rate empirically

@@ -53,7 +53,7 @@ Up to now we've been working with the dataset without validating whether all the
 
 ##### Assumptions
 
--   As you can see from the above links the amount of toll booths per lane was manually counted using Google Maps. However, these amounts are not fixed, and depend on date and time, in order to accomodate the service to the incoming volume of vehicles. The are no official communications from AUSA on how those changes are performed, so for the sake of this analysis the average amount of lanes which will be mostly active during peak hours.
+-   As you can see from the above links the amount of toll booths per lane was manually counted using Google Maps. However, these amounts are not fixed, and depend on date and time, in order to accomodate the service to the incoming volume of vehicles. The are no official communications from AUSA on how those changes are performed, so for the sake of this analysis the amount of toll booths to use would be the sum of those going in and those going out of the city. This is due to the fact that the information provided is aggregated to a level that does not provide visibility on the direction of the vehicles.
 
 -   Building on this last point, it will be assumed the vast majority of the traffic during the morning peak hour is heading towards the city, while the traffic during the afternoon peak hour is leaving the city.
 
@@ -69,16 +69,20 @@ In the previous section we discussed the need of computing the arrival rate *λ*
 
 Going back to what was mentioned at the beginning of this section, traffic intensity was defined as the ratio between the arrival rate *λ* and the service rate *μ*, so that *λ* &lt; *μ*. Expressed that way *μ* comprises the capacity of all toll booths in a toll booth plaza, so it might be more accurate to express the traffic intensity as *λ* &lt; *S**μ*, where *S* is the amount of servers which in this case are represented by toll booths. Following the third assumption in the assumptions section, as all toll booths are considered equal, we can express the total capacity of the system by multipying an individual toll booth capacity by the amount of toll booths in a toll booth plaza.
 
-The next two subsections will be focused on the *Avellaneda* toll booth plaza given that it's the toll booth with the highest volume of vehicles, and with an average of 16.5 toll booths. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering only the information from January 2014 to December 2018, due to the [asymmetries in the dataset](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic).
+The next two subsections will be focused on the *Avellaneda* toll booth plaza given that it's the toll booth with the highest volume of vehicles, and with an average of 33 toll booths. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering only the information from January 2014 to December 2018, due to the [asymmetries in the dataset](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic).
 
 ![](README_files/figure-markdown_github/avellanedavehiclesperhour-1.png)
 
 ##### Assumption of 90% utilization
 
-An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. This is because it makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the *Avellaneda* toll booth plaza is able to serve up to 2935.7725197 vehicles in an hour. This figure comes from
+An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the *Avellaneda* toll booth plaza is able to serve up to 836.1466261 vehicles in an hour. This figure comes from
 
-$$\frac{\lambda}{S\mu} \leq \rho \Longrightarrow \mu \geq \frac{\lambda}{S\rho} \Longrightarrow \mu \geq \frac{43596.2}{16.5 \cdot 0.9} = 2935.77$$
+![](images/mu.png)
 
-where *λ* is equal to the 43596.2 vehicles per hour at 5PM shown in Figure 4, the number of servers *S* is 16.5, and the utilization/traffic intensity *ρ* is 90%. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 2935.77 vehicles per hour. Summing up each server contribution, 48440.2 vehicles can be serviced in an hour by this system.
+where *λ* is equal to the 24833.55 vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers *S* is 33, and the utilization/traffic intensity *ρ* is 90%. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 836.15 vehicles per hour. Summing up each server contribution, 27592.84 vehicles can be serviced in an hour by this system. Servicing 836.15 vehicles in an hour means that on average 13.94 vehicles are serviced per minute.
+
+Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the *Avellaneda* toll booth plaza, automatic payments constitute 34.44% of the payments volume. The specific percentages for each our are detailed in Figure 5.
+
+![](README_files/figure-markdown_github/percentagegraph-1.png)
 
 ##### Deriving service rate empirically
