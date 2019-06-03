@@ -216,9 +216,7 @@ ggplot(data = vehicles,
 ```
 
 ##### Assumption of 90% utilization
-An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the _Avellaneda_ toll booth plaza is able to serve up to `r mu` vehicles in an hour. This figure comes from
-
-![](images/mu.png)
+An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the _Avellaneda_ toll booth plaza is able to serve up to `r mu` vehicles in an hour.
 
 where $\lambda$ is equal to the `r round(lambda, 2)` vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers $S$ is `r S`, and the utilization/traffic intensity $\rho$ is $90\%$. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least `r round(mu, 2)` vehicles per hour. Summing up each server contribution, `r round(S * mu, 2)` vehicles can be serviced in an hour by this system. Servicing `r round(mu, 2)`  vehicles in an hour means that on average `r round(mu / 60, 2)` vehicles are serviced per minute. 
 
@@ -265,7 +263,7 @@ mu.manual <- lambda.manual / (S - automatic.tolls * rho)
 mu.automatic <- lambda.automatic / (automatic.tolls * rho)
 ```
 
-If we were to break down the service rate per payment method, we should expect to see faster service time for automatic toll booths, that could account for a high percentage of the almost 14 vehicles served per minute. Performing such break down yields `r mu.manual / 60` vehicles services by minute in manual payment toll booths, and `r mu.automatic / 60` vehicles services by minute in automatic payment toll booths.
+If we were to break down the service rate per payment method, we should expect to see faster service time for automatic toll booths, that could account for a high percentage of the almost `r round(mu / 60, 2)` vehicles served per minute. Performing such break down yields `r mu.manual / 60` vehicles services by minute in manual payment toll booths, and `r mu.automatic / 60` vehicles services by minute in automatic payment toll booths.
 
 
 ##### Deriving service rate empirically
