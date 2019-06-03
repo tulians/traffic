@@ -73,25 +73,23 @@ standardize.traffic <- function(
   input.file = './datasets/sources/merged.csv',
   output.file = './datasets/traffic.csv') {
   require(dplyr, data.table)
-  # Adapted from `swap_if` in 
-  # https://github.com/tidyverse/dplyr/issues/2149#issuecomment-258916706
-  # The solution presented there has a bug in the generation of out_y, as the
-  # condition should not be negated.
+  #' Adapted from `swap_if` in 
+  #' https://github.com/tidyverse/dplyr/issues/2149#issuecomment-258916706
+  #' The solution presented there has a bug in the generation of out_y, as the
+  #' condition should not be negated.
   swap_if_ <- function(cond, x, y) {
     # TODO(tulians): avoid using the dataframe.
     out_x <- ifelse(cond, y, x)
     out_y <- ifelse(cond, x, y)
     setNames(tibble(out_x, out_y), names(c('M', 'D')))
   }
-  
-  # Normalizes the format of the time columns.
+  #' Normalizes the format of the time columns.
   to_std_time_format <- function(d) {
     one.digit <- grep('^\\d$', d)
     two.digits <- grep('^\\d{2}$', d)
     five.digits <- grep('^\\d:00:00$', d)
     extra.text <- grep('0 days \\d{2}:00:00', d)
     midnight <- grep('24:00:00', d)
-    
     if(length(one.digit)) {
       d[one.digit] <- paste('0', d[one.digit], ':00:00', sep = '')
     }
@@ -107,11 +105,9 @@ standardize.traffic <- function(
     if(length(midnight)) {
       d[midnight] <- paste('00:00:00')
     }
-    
     return(d)
   }
-  
-  # Data wrangling for the traffic dataset.
+  #' Data wrangling for the traffic dataset.
   setwd('~/Documents/traffic/')
   join.traffic.files()
   df <- fread(input.file)
@@ -183,6 +179,20 @@ standardize.traffic <- function(
       toll.booth.name == 'Sarmiento' ~ 8,
       toll.booth.name == 'Salguero' ~ 8
     ),
+    payment.method = case_when(
+      FORMA_PAGO %in% c('EFECTIVO', 'Efectivo') ~ 'Cash',
+      FORMA_PAGO %in% c(
+        'MONEDERO', 
+        'TARJETA', 
+        'TARJETA DISCAPACIDAD',
+        'Tarjeta Magnética'
+      ) ~ 'Card',
+      FORMA_PAGO %in% c('AUPASS', 'Tag') ~ 'Automatic',
+      FORMA_PAGO %in% c('VIA LIBERADA', 'NO COBRADO') ~ 'No barriers',
+      FORMA_PAGO %in% c('EXENTO', 'Exento') ~ 'Exempt',
+      FORMA_PAGO %in% c('INFRACCION', 'Violación') ~ 'Infraction',
+      FORMA_PAGO %in% c('OTROS', 'Reconocimiento de Deuda') ~ 'Others'
+    ), 
     date_ = case_when(
       PERIODO < 2014 ~ as.Date(
         strptime(as.character(FECHA), '%m/%d/%Y'), format = '%Y-%m-%d'),
@@ -195,19 +205,18 @@ standardize.traffic <- function(
     month_ = lubridate::month(date_),
     day_ = lubridate::day(date_),
     vehicle.type = as.factor(vehicle.type),
-    payment.method = as.factor(FORMA_PAGO),
+    payment.method = as.factor(payment.method),
     toll.booth.name = as.factor(toll.booth.name),
     day.name = as.factor(day.name),
     amount = CANTIDAD_PASOS
   )
-  
+  #' Make sure that date formats is homogeneous across all rows.
   df <- df %>% as_tibble() %>% mutate_at(
     c('HORA', 'HORA_FIN'), to_std_time_format)
   df <- df %>% mutate(
     start.hour = as.factor(HORA),
     end.hour = as.factor(HORA_FIN)
   )
-  
   df[df$PERIODO < 2014,] <- arrange(df[df$PERIODO < 2014,], FECHA)
   df[df$PERIODO == 2018,] <- df[df$PERIODO == 2018,] %>% arrange(month_, day_)
   df[df$PERIODO == 2018, c('month_', 'day_')] <-
@@ -216,7 +225,6 @@ standardize.traffic <- function(
         df[df$PERIODO == 2018, c('month_', 'day_')]$month_ %in% c(10, 11, 12),
       df[df$PERIODO == 2018, c('month_', 'day_')]$month_,
       df[df$PERIODO == 2018, c('month_', 'day_')]$day_)
-  
   df <- df %>% mutate(
     quarter_ = case_when(
       month_ %in% c(1, 2, 3) ~ 1,
@@ -225,12 +233,12 @@ standardize.traffic <- function(
       month_ %in% c(10, 11, 12) ~ 4
     )
   )
-  
+  #' Remove unnecessary columns.
   drops <- c('FECHA', 'PERIODO', 'CANTIDAD_PASOS',
              'FORMA_PAGO', 'TIPO_VEHICULO', 'ESTACION',
              'HORA', 'HORA_FIN', 'DIA')
   df <- df[, !(names(df) %in% drops)]
-  
+  #' Write the final file.
   fwrite(
     df, 
     file = output.file
@@ -250,7 +258,7 @@ standardize.traffic <- function(
 standardize.oil <- function(
   input.file = './datasets/sources/oil.csv',
   output.file = './datasets/oil_prices.csv') {
-  
+  #' Read the oil data set ...
   setwd('~/Documents/traffic/')
   df <- fread(input.file)
   df <- df %>% as_tibble() %>% mutate(
@@ -259,7 +267,7 @@ standardize.oil <- function(
   )
   drops <- c('date')
   df <- df[, !(names(df) %in% drops)]
-  
+  #' ... and move from a horizontal to vertical format.
   d <- data.frame(
     year_ = integer(), month_ = integer(), 
     oil.type = character(), price = double())
@@ -276,7 +284,7 @@ standardize.oil <- function(
     rbind(d, data.frame(
       year_ = df$year_, month_ = df$month_, 
       oil.type = 'euro', price = df$euro))
-  
+  #' Write the final file.
   fwrite(d, file = output.file)
   rm(d, df, drops)
 }
@@ -292,18 +300,22 @@ build.unified.dataset <- function(
   oil.file.path = './datasets/oil_prices.csv',
   unified.file.path = './datasets/unified.csv'
 ) {
+  standardize.traffic()
+  standardize.oil()
   traffic <- fread(traffic.file.path)
   oil <- fread(oil.file.path)
   #' Merge both `data.table`s ...
-  unified <- merge(
+  unified <- merge (
     traffic, 
     oil, 
-    by = c('year_', 'month_')
+    by = c('year_', 'month_'),
+    allow.cartesian = TRUE
   )
   #' ... and finally write to file.
-  fwrite(
+  fwrite (
     unified,
     file = unified.file.path
   )
   rm(traffic, oil, unified)
+  file.remove(traffic.file.path, oil.file.path)
 }

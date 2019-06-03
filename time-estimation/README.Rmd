@@ -185,7 +185,7 @@ payments <- unified.ff %>% as_tibble() %>%
   filter (
     (year_ >= 2014 & year_ <= 2018) 
     & toll.booth.name == 'AVELLANEDA'
-    & payment.method %in% c('AUPASS', 'EFECTIVO')
+    & payment.method %in% c('Automatic', 'Cash')
   )
 
 vehicles <- payments %>%
@@ -227,7 +227,7 @@ automatic.payments <- payments %>%
   group_by(start.hour) %>% 
   summarise(
     percentage.of.automatic = 
-      sum(amount[payment.method == 'AUPASS']) / sum(amount)
+      sum(amount[payment.method == 'Automatic']) / sum(amount)
   )
 ```
 
@@ -254,9 +254,9 @@ payments.per.hour <- payments %>%
   )
 
 lambda.manual <- mean(
-  payments.per.hour$volume[payments.per.hour$payment.method == 'EFECTIVO'])
+  payments.per.hour$volume[payments.per.hour$payment.method == 'Cash'])
 lambda.automatic <- mean(
-  payments.per.hour$volume[payments.per.hour$payment.method == 'AUPASS'])
+  payments.per.hour$volume[payments.per.hour$payment.method == 'Automatic'])
 
 # The Avellaneda toll booth has at least 6 automatic payment toll booths.
 automatic.tolls <- 6
