@@ -77,7 +77,7 @@ The next two subsections will be focused on the *Avellaneda* toll booth plaza gi
 
 An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the *Avellaneda* toll booth plaza is able to serve up to 523.1244792 vehicles in an hour.
 
-where *λ* is equal to the 1553.681 vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers *S* is 33, and the utilization/traffic intensity *ρ* is 90%. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 523.12 vehicles per hour. Summing up each server contribution, 1726.31110 vehicles can be serviced in an hour by this system. Servicing 523.12 vehicles in an hour means that on average 8.72 vehicles are serviced per minute.
+where *λ* is equal to the 1553.6 vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers *S* is 33, and the utilization/traffic intensity *ρ* is 90%. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 523.12 vehicles per hour. Summing up each server contribution, 1726.3 vehicles can be serviced in an hour by this system. Servicing 523.12 vehicles in an hour means that on average 8.72 vehicles are serviced per minute.
 
 Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the *Avellaneda* toll booth plaza, automatic payments constitute 38.13% of the payments volume. The specific percentages for each our are detailed in Figure 5.
 
@@ -85,4 +85,28 @@ Although this number may seem high, it's important to mention that it includes t
 
 If we were to break down the service rate per payment method, we should expect to see faster service time for automatic toll booths, that could account for a high percentage of the almost 8.72 vehicles served per minute. Performing such break down yields 5.6870399 vehicles services by minute in manual payment toll booths, and 18.8859846 vehicles services by minute in automatic payment toll booths.
 
-##### Deriving service rate empirically
+###### Characterization of the M/M/S system
+
+Previously a traffic intensity *ρ* of 90% was assumed, and by doing so a realistic service rate 5.69 vehicles per minute in manual toll booths and 18.89 vehicles per minute in automatic toll booths was obtained.
+
+The system will be modeled as an M/M/S queuing model, where
+
+-   The first M stands for an exponentially distributed arrival pattern of vehicles
+-   The second M also stands for an exponential distribution, but of the service rate.
+-   And lastly, S stands for the number of servers, in this case toll booths per toll booth plaza.
+
+Traffic intensity `\rho` can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as
+
+*P*<sub>0</sub> = 1 − *ρ* ∀*ρ* &lt; 1
+
+This definition of *P*<sub>0</sub> is intuitive, given that if we assume an utilization of 90% it should be expected that the remaining 10% of the time the system is idle. *P*<sub>0</sub> can be used to define the probability of having *n* vehicles in the system
+
+$$
+  P\_n = \\frac{\\rho^n}{n!}P\_0 \\quad \\forall n \\leq N
+$$
+
+and
+
+$$
+  P\_n = \\frac{\\rho^n}{N^{n-N}N!}P\_0 \\quad \\forall n \\geq N
+$$

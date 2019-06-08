@@ -7,6 +7,8 @@ output:
   md_document:
     toc: yes
     variant: markdown_github
+  github_document:
+    pandoc_args: --webtex
 ---
 
 ```{r setupandrequiredpackages, include=FALSE, fig.align="center"}
@@ -265,5 +267,29 @@ mu.automatic <- lambda.automatic / (automatic.tolls * rho)
 
 If we were to break down the service rate per payment method, we should expect to see faster service time for automatic toll booths, that could account for a high percentage of the almost `r round(mu / 60, 2)` vehicles served per minute. Performing such break down yields `r mu.manual / 60` vehicles services by minute in manual payment toll booths, and `r mu.automatic / 60` vehicles services by minute in automatic payment toll booths.
 
+###### Characterization of the M/M/S system
+Previously a traffic intensity $\rho$ of $90\%$ was assumed, and by doing so a realistic service rate `r round(mu.manual / 60, 2)` vehicles per minute in manual toll booths and `r round(mu.automatic / 60, 2)` vehicles per minute in automatic toll booths was obtained.
 
-##### Deriving service rate empirically
+The system will be modeled as an M/M/S queuing model, where 
+
+* The first M stands for an exponentially distributed arrival pattern of vehicles
+* The second M also stands for an exponential distribution, but of the service rate.
+* And lastly, S stands for the number of servers, in this case toll booths per toll booth plaza.
+
+Traffic intensity `\rho` can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as 
+
+$$
+  P_0 = 1 - \rho \quad \forall \rho < 1
+$$
+
+This definition of $P_0$ is intuitive, given that if we assume an utilization of $90\%$ it should be expected that the remaining $10\%$ of the time the system is idle. $P_0$ can be used to define the probability of having $n$ vehicles in the system
+
+$$
+  P_n = \frac{\rho^n}{n!}P_0 \quad \forall n \leq N
+$$
+
+and 
+
+$$
+  P_n = \frac{\rho^n}{N^{n-N}N!}P_0 \quad \forall n \geq N
+$$
