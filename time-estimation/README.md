@@ -1,3 +1,7 @@
+Estimation of time-spent on AUSA toll booths
+================
+Julián Ailán
+
 -   [Objective](#objective)
 -   [Joining the traffic dataset with the oil dataset](#joining-the-traffic-dataset-with-the-oil-dataset)
 -   [Analysis of oil price behavior](#analysis-of-oil-price-behavior)
@@ -31,9 +35,9 @@ A more interesting approach in the search for a relation between vehicle volume 
 
 It's usual to see vehicles queuing in Buenos Aires' toll booth plazas at peak hours. More than 1.5M vehicles enter the city each day, most of which are people commuting to work. In this context toll booths regularly feature queues that extend through kilometers in highways. The objective of this section is to accurately estimate the average time a given driver waits in order go through the toll booth.
 
-In order to achieve this goal we need to have concrete figures of both the rate at which cars arrive to the toll booths *λ*, and also the rate at which cars can be serviced *μ*, meaning, the amount of cars that go through the toll booth at a given period of time. Both of the rates would be averages, as they will be considering times where there is a long queue, as well as times where there's no queue at all. The *ρ* = *λ*/*μ* ratio, known as traffic intensity, will help us identify the average behavior of the queue, given that if *ρ* &lt; 1 there is a finite probability that the queue can be handled by the booth; on the other hand if *ρ* ≥ 1 the queue length will become longer and longer without limit up to infinity (at least in theoretical terms).
+In order to achieve this goal we need to have concrete figures of both the rate at which cars arrive to the toll booths ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda"), and also the rate at which cars can be serviced ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu"), meaning, the amount of cars that go through the toll booth at a given period of time. Both of the rates would be averages, as they will be considering times where there is a long queue, as well as times where there's no queue at all. The ![\\rho=\\lambda/\\mu](https://latex.codecogs.com/png.latex?%5Crho%3D%5Clambda%2F%5Cmu "\rho=\lambda/\mu") ratio, known as traffic intensity, will help us identify the average behavior of the queue, given that if ![\\rho &lt; 1](https://latex.codecogs.com/png.latex?%5Crho%20%3C%201 "\rho < 1") there is a finite probability that the queue can be handled by the booth; on the other hand if ![\\rho \\geq 1](https://latex.codecogs.com/png.latex?%5Crho%20%5Cgeq%201 "\rho \geq 1") the queue length will become longer and longer without limit up to infinity (at least in theoretical terms).
 
-Given that we have information of traffic flow along several toll booths, we'll use it to derive these two coefficients, and find the value of *ρ* for each of the toll booth plazas. Depending on the dimension of this ratio, we'll need to compute waiting time one way or another. More details on this calculations will be given in future sections.
+Given that we have information of traffic flow along several toll booths, we'll use it to derive these two coefficients, and find the value of ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") for each of the toll booth plazas. Depending on the dimension of this ratio, we'll need to compute waiting time one way or another. More details on this calculations will be given in future sections.
 
 #### Important considerations
 
@@ -63,11 +67,11 @@ Up to now we've been working with the dataset without validating whether all the
 
 #### Estimation of traffic intensity per toll booth
 
-In the previous section we discussed the need of computing the arrival rate *λ* and service rate *μ* in order to know the traffic intensity *ρ*. The former can be derived directly from the information provided by the dataset, given that each of its records indicates the amount of vehicles that arrived and went through the toll booths per hour. However, in order to estimate *μ* assumptions have to be raised, or a field measurement has to be performed. Both approaches will be performed during this analysis.
+In the previous section we discussed the need of computing the arrival rate ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda") and service rate ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu") in order to know the traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho"). The former can be derived directly from the information provided by the dataset, given that each of its records indicates the amount of vehicles that arrived and went through the toll booths per hour. However, in order to estimate ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu") assumptions have to be raised, or a field measurement has to be performed. Both approaches will be performed during this analysis.
 
 ##### Traffic intensity
 
-Going back to what was mentioned at the beginning of this section, traffic intensity was defined as the ratio between the arrival rate *λ* and the service rate *μ*, so that *λ* &lt; *μ*. Expressed that way *μ* comprises the capacity of all toll booths in a toll booth plaza, so it might be more accurate to express the traffic intensity as *λ* &lt; *Sμ*, where *S* is the amount of servers which in this case are represented by toll booths. Following the third assumption in the assumptions section, as all toll booths are considered equal, we can express the total capacity of the system by multipying an individual toll booth capacity by the amount of toll booths in a toll booth plaza.
+Going back to what was mentioned at the beginning of this section, traffic intensity was defined as the ratio between the arrival rate ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda") and the service rate ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu"), so that ![\\lambda &lt; \\mu](https://latex.codecogs.com/png.latex?%5Clambda%20%3C%20%5Cmu "\lambda < \mu"). Expressed that way ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu") comprises the capacity of all toll booths in a toll booth plaza, so it might be more accurate to express the traffic intensity as ![\\lambda &lt; S\\mu](https://latex.codecogs.com/png.latex?%5Clambda%20%3C%20S%5Cmu "\lambda < S\mu"), where ![S](https://latex.codecogs.com/png.latex?S "S") is the amount of servers which in this case are represented by toll booths. Following the third assumption in the assumptions section, as all toll booths are considered equal, we can express the total capacity of the system by multipying an individual toll booth capacity by the amount of toll booths in a toll booth plaza.
 
 The next two subsections will be focused on the *Avellaneda* toll booth plaza given that it's the toll booth with the highest volume of vehicles, and with an average of 33 toll booths. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering only the information from January 2014 to December 2018, due to the [asymmetries in the dataset](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic).
 
@@ -77,7 +81,7 @@ The next two subsections will be focused on the *Avellaneda* toll booth plaza gi
 
 An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the *Avellaneda* toll booth plaza is able to serve up to 523.1244792 vehicles in an hour.
 
-where *λ* is equal to the 1553.6 vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers *S* is 33, and the utilization/traffic intensity *ρ* is 90%. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 523.12 vehicles per hour. Summing up each server contribution, 1726.3 vehicles can be serviced in an hour by this system. Servicing 523.12 vehicles in an hour means that on average 8.72 vehicles are serviced per minute.
+where ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda") is equal to the 1.5536810^{4} vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers ![S](https://latex.codecogs.com/png.latex?S "S") is 33, and the utilization/traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") is ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%"). This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 523.12 vehicles per hour. Summing up each server contribution, 1.72631110^{4} vehicles can be serviced in an hour by this system. Servicing 523.12 vehicles in an hour means that on average 8.72 vehicles are serviced per minute.
 
 Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the *Avellaneda* toll booth plaza, automatic payments constitute 38.13% of the payments volume. The specific percentages for each our are detailed in Figure 5.
 
@@ -87,7 +91,7 @@ If we were to break down the service rate per payment method, we should expect t
 
 ###### Characterization of the M/M/S system
 
-Previously a traffic intensity *ρ* of 90% was assumed, and by doing so a realistic service rate 5.69 vehicles per minute in manual toll booths and 18.89 vehicles per minute in automatic toll booths was obtained.
+Previously a traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") of ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%") was assumed, and by doing so a realistic service rate 5.69 vehicles per minute in manual toll booths and 18.89 vehicles per minute in automatic toll booths was obtained.
 
 The system will be modeled as an M/M/S queuing model, where
 
@@ -95,18 +99,26 @@ The system will be modeled as an M/M/S queuing model, where
 -   The second M also stands for an exponential distribution, but of the service rate.
 -   And lastly, S stands for the number of servers, in this case toll booths per toll booth plaza.
 
-Traffic intensity `\rho` can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as
+Traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as
 
-*P*<sub>0</sub> = 1 − *ρ* ∀*ρ* &lt; 1
+![
+  P\_0 = 1 - \\rho \\; \\forall \\rho &lt; 1
+](https://latex.codecogs.com/png.latex?%0A%20%20P_0%20%3D%201%20-%20%5Crho%20%5C%3B%20%5Cforall%20%5Crho%20%3C%201%0A "
+  P_0 = 1 - \rho \; \forall \rho < 1
+")
 
-This definition of *P*<sub>0</sub> is intuitive, given that if we assume an utilization of 90% it should be expected that the remaining 10% of the time the system is idle. *P*<sub>0</sub> can be used to define the probability of having *n* vehicles in the system
+This definition of ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") is intuitive, given that if we assume an utilization of ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%") it should be expected that the remaining ![10\\%](https://latex.codecogs.com/png.latex?10%5C%25 "10\%") of the time the system is idle. ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") can be used to define the probability of having ![n](https://latex.codecogs.com/png.latex?n "n") vehicles in the system
 
-$$
-  P\_n = \\frac{\\rho^n}{n!}P\_0 \\quad \\forall n \\leq N
-$$
+![
+  P\_n = \\frac{\\rho^n}{n!}P\_0 \\; \\forall n \\leq N
+](https://latex.codecogs.com/png.latex?%0A%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7Bn%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cleq%20N%0A "
+  P_n = \frac{\rho^n}{n!}P_0 \; \forall n \leq N
+")
 
 and
 
-$$
-  P\_n = \\frac{\\rho^n}{N^{n-N}N!}P\_0 \\quad \\forall n \\geq N
-$$
+![
+  P\_n = \\frac{\\rho^n}{N^{n-N}N!}P\_0 \\; \\forall n \\geq N
+](https://latex.codecogs.com/png.latex?%0A%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7BN%5E%7Bn-N%7DN%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cgeq%20N%0A "
+  P_n = \frac{\rho^n}{N^{n-N}N!}P_0 \; \forall n \geq N
+")
