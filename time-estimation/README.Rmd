@@ -4,9 +4,6 @@ author: "Julián Ailán"
 params:
   date: "!r Sys.Date()"
 output:
-#  md_document:
-#    toc: yes
-#    variant: markdown_github
   github_document:
     toc: yes
     pandoc_args: --webtex
@@ -280,17 +277,23 @@ The system will be modeled as an M/M/S queuing model, where
 Traffic intensity $\rho$ can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as 
 
 $$
-  P_0 = 1 - \rho \; \forall \rho < 1
+  \begin{aligned}
+    P_0 = 1 - \rho \; \forall \rho < 1
+  \end{aligned}
 $$
 
 This definition of $P_0$ is intuitive, given that if we assume an utilization of $90\%$ it should be expected that the remaining $10\%$ of the time the system is idle. $P_0$ can be used to define the probability of having $n$ vehicles in the system
 
 $$
-  P_n = \frac{\rho^n}{n!}P_0 \; \forall n \leq N
+  \begin{aligned}
+    P_n = \frac{\rho^n}{n!}P_0 \; \forall n \leq N
+  \end{aligned}
 $$
 
 and 
 
 $$
-  P_n = \frac{\rho^n}{N^{n-N}N!}P_0 \; \forall n \geq N
+  \begin{aligned}
+    P_n = \frac{\rho^n}{N^{n-N}N!}P_0 \; \forall n \geq N
+  \end{aligned}
 $$

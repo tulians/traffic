@@ -102,23 +102,35 @@ The system will be modeled as an M/M/S queuing model, where
 Traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as
 
 ![
-  P\_0 = 1 - \\rho \\; \\forall \\rho &lt; 1
-](https://latex.codecogs.com/png.latex?%0A%20%20P_0%20%3D%201%20-%20%5Crho%20%5C%3B%20%5Cforall%20%5Crho%20%3C%201%0A "
-  P_0 = 1 - \rho \; \forall \rho < 1
+  \\begin{aligned}
+    P\_0 = 1 - \\rho \\; \\forall \\rho &lt; 1
+  \\end{aligned}
+](https://latex.codecogs.com/png.latex?%0A%20%20%5Cbegin%7Baligned%7D%0A%20%20%20%20P_0%20%3D%201%20-%20%5Crho%20%5C%3B%20%5Cforall%20%5Crho%20%3C%201%0A%20%20%5Cend%7Baligned%7D%0A "
+  \begin{aligned}
+    P_0 = 1 - \rho \; \forall \rho < 1
+  \end{aligned}
 ")
 
 This definition of ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") is intuitive, given that if we assume an utilization of ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%") it should be expected that the remaining ![10\\%](https://latex.codecogs.com/png.latex?10%5C%25 "10\%") of the time the system is idle. ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") can be used to define the probability of having ![n](https://latex.codecogs.com/png.latex?n "n") vehicles in the system
 
 ![
-  P\_n = \\frac{\\rho^n}{n!}P\_0 \\; \\forall n \\leq N
-](https://latex.codecogs.com/png.latex?%0A%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7Bn%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cleq%20N%0A "
-  P_n = \frac{\rho^n}{n!}P_0 \; \forall n \leq N
+  \\begin{aligned}
+    P\_n = \\frac{\\rho^n}{n!}P\_0 \\; \\forall n \\leq N
+  \\end{aligned}
+](https://latex.codecogs.com/png.latex?%0A%20%20%5Cbegin%7Baligned%7D%0A%20%20%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7Bn%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cleq%20N%0A%20%20%5Cend%7Baligned%7D%0A "
+  \begin{aligned}
+    P_n = \frac{\rho^n}{n!}P_0 \; \forall n \leq N
+  \end{aligned}
 ")
 
 and
 
 ![
-  P\_n = \\frac{\\rho^n}{N^{n-N}N!}P\_0 \\; \\forall n \\geq N
-](https://latex.codecogs.com/png.latex?%0A%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7BN%5E%7Bn-N%7DN%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cgeq%20N%0A "
-  P_n = \frac{\rho^n}{N^{n-N}N!}P_0 \; \forall n \geq N
+  \\begin{aligned}
+    P\_n = \\frac{\\rho^n}{N^{n-N}N!}P\_0 \\; \\forall n \\geq N
+  \\end{aligned}
+](https://latex.codecogs.com/png.latex?%0A%20%20%5Cbegin%7Baligned%7D%0A%20%20%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7BN%5E%7Bn-N%7DN%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cgeq%20N%0A%20%20%5Cend%7Baligned%7D%0A "
+  \begin{aligned}
+    P_n = \frac{\rho^n}{N^{n-N}N!}P_0 \; \forall n \geq N
+  \end{aligned}
 ")
