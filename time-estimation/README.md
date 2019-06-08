@@ -81,7 +81,7 @@ The next two subsections will be focused on the *Avellaneda* toll booth plaza gi
 
 An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the *Avellaneda* toll booth plaza is able to serve up to 523.1244792 vehicles in an hour.
 
-where ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda") is equal to the 1.5536810^{4} vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers ![S](https://latex.codecogs.com/png.latex?S "S") is 33, and the utilization/traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") is ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%"). This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 523.12 vehicles per hour. Summing up each server contribution, 1.72631110^{4} vehicles can be serviced in an hour by this system. Servicing 523.12 vehicles in an hour means that on average 8.72 vehicles are serviced per minute.
+where ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda") is equal to the 1553.681 vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers ![S](https://latex.codecogs.com/png.latex?S "S") is 33, and the utilization/traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") is ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%"). This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 523.12 vehicles per hour. Summing up each server contribution, 1726.3111 vehicles can be serviced in an hour by this system. Servicing 523.12 vehicles in an hour means that on average 8.72 vehicles are serviced per minute.
 
 Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the *Avellaneda* toll booth plaza, automatic payments constitute 38.13% of the payments volume. The specific percentages for each our are detailed in Figure 5.
 
@@ -102,23 +102,35 @@ The system will be modeled as an M/M/S queuing model, where
 Traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as
 
 ![
-  P\_0 = 1 - \\rho \\; \\forall \\rho &lt; 1
-](https://latex.codecogs.com/png.latex?%0A%20%20P_0%20%3D%201%20-%20%5Crho%20%5C%3B%20%5Cforall%20%5Crho%20%3C%201%0A "
-  P_0 = 1 - \rho \; \forall \rho < 1
+  \\begin{aligned}
+    P\_0 = 1 - \\rho \\; \\forall \\rho &lt; 1
+  \\end{aligned}
+](https://latex.codecogs.com/png.latex?%0A%20%20%5Cbegin%7Baligned%7D%0A%20%20%20%20P_0%20%3D%201%20-%20%5Crho%20%5C%3B%20%5Cforall%20%5Crho%20%3C%201%0A%20%20%5Cend%7Baligned%7D%0A "
+  \begin{aligned}
+    P_0 = 1 - \rho \; \forall \rho < 1
+  \end{aligned}
 ")
 
 This definition of ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") is intuitive, given that if we assume an utilization of ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%") it should be expected that the remaining ![10\\%](https://latex.codecogs.com/png.latex?10%5C%25 "10\%") of the time the system is idle. ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") can be used to define the probability of having ![n](https://latex.codecogs.com/png.latex?n "n") vehicles in the system
 
 ![
-  P\_n = \\frac{\\rho^n}{n!}P\_0 \\; \\forall n \\leq N
-](https://latex.codecogs.com/png.latex?%0A%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7Bn%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cleq%20N%0A "
-  P_n = \frac{\rho^n}{n!}P_0 \; \forall n \leq N
+  \\begin{aligned}
+    P\_n = \\frac{\\rho^n}{n!}P\_0 \\; \\forall n \\leq N
+  \\end{aligned}
+](https://latex.codecogs.com/png.latex?%0A%20%20%5Cbegin%7Baligned%7D%0A%20%20%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7Bn%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cleq%20N%0A%20%20%5Cend%7Baligned%7D%0A "
+  \begin{aligned}
+    P_n = \frac{\rho^n}{n!}P_0 \; \forall n \leq N
+  \end{aligned}
 ")
 
 and
 
 ![
-  P\_n = \\frac{\\rho^n}{N^{n-N}N!}P\_0 \\; \\forall n \\geq N
-](https://latex.codecogs.com/png.latex?%0A%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7BN%5E%7Bn-N%7DN%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cgeq%20N%0A "
-  P_n = \frac{\rho^n}{N^{n-N}N!}P_0 \; \forall n \geq N
+  \\begin{aligned}
+    P\_n = \\frac{\\rho^n}{N^{n-N}N!}P\_0 \\; \\forall n \\geq N
+  \\end{aligned}
+](https://latex.codecogs.com/png.latex?%0A%20%20%5Cbegin%7Baligned%7D%0A%20%20%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7BN%5E%7Bn-N%7DN%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cgeq%20N%0A%20%20%5Cend%7Baligned%7D%0A "
+  \begin{aligned}
+    P_n = \frac{\rho^n}{N^{n-N}N!}P_0 \; \forall n \geq N
+  \end{aligned}
 ")
