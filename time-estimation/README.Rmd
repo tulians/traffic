@@ -14,17 +14,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 rm(list = ls()); gc();
 
-packages.to.include <- c(
-  'dplyr', 'tibble', 'ggplot2', 'ff', 'reshape2'
+packages_to_include <- c(
+  "dplyr", "tibble", "ggplot2", "ff", "reshape2"
 )
 
 lapply(
-  packages.to.include, # From this list ...
+  packages_to_include, # From this list ...
   require, # ... include them as packages.
   character.only = T
 )
 
-rm(packages.to.include)
+rm(packages_to_include)
 ```
 
 ### Objective
@@ -36,45 +36,45 @@ The `traffic.csv` dataset previously analized [here](https://github.com/tulians/
 R requires that variables are stored in RAM in its entirety, so managing a dataframe this big could be imposible for some machines if no alternate processing is performed. For this reason is that the [`ff`](https://cran.r-project.org/web/packages/ff/index.html) package will be used.
 
 ```{r readingunifiedfile, echo=FALSE}
-datasets.dir <- '~/Documents/traffic/datasets'
+datasets_dir <- "../datasets"
 # Directory where `ff` stores temporary files. Take into account temporary files
 # will fill up this directory through time. Make sure to delete them once in a
 # while.
 options(
-  fftempdir = file.path(datasets.dir, 'tmp')
+  fftempdir = file.path(datasets_dir, "tmp")
 )
-unified.ff <- read.csv.ffdf(
-  file = file.path(datasets.dir, 'unified.csv')
+unified_ff <- read.csv.ffdf(
+  file = file.path(datasets_dir, "unified.csv")
 )
-rm(datasets.dir)
+rm(datasets_dir)
 ```
 
 ### Analysis of oil price behavior
 The oil prices dataset consists of monthly prices of different types of oil: super, premium, gasoil, and euro. The four of them experienced a steady increase since 2008 until 2018, which is illustrated in Figure 1.
 
 ```{r pricethroughtime, echo=FALSE}
-oil_price <- unified.ff %>% as_tibble() %>%
+oil_price <- unified_ff %>% as_tibble() %>%
   group_by(
-    year_, 
-    oil.type
+    year_,
+    oil_type
   ) %>%
   summarise(
     price = max(price)
   )
 
-ggplot(data = oil_price, 
-       aes(x = year_, y = price, group = oil.type)) +
-  geom_line(aes(color = oil.type)) +
-  geom_point(alpha = 1/5) +
-  labs(x = NULL, y = 'ARS ($)',
-       title = 'Price of oil through time', caption = 'Figure 1') +
+ggplot(data = oil_price,
+       aes(x = year_, y = price, group = oil_type)) +
+  geom_line(aes(color = oil_type)) +
+  geom_point(alpha = 1 / 5) +
+  labs(x = NULL, y = "ARS ($)",
+       title = "Price of oil through time", caption = "Figure 1") +
   theme_minimal()
 
 rm(oil_price)
 ```
 
 ```{r correlations, echo=FALSE}
-ff.df <- unified.ff %>% as_tibble() %>%
+ff_df <- unified_ff %>% as_tibble() %>%
   select(year_, month_, amount, price) %>%
   filter(year_ >= 2014) %>%
   group_by(year_, month_) %>%
@@ -83,63 +83,63 @@ ff.df <- unified.ff %>% as_tibble() %>%
     vehicles = sum(amount)
   )
 
-pv.correlation <- cor(ff.df$price, ff.df$vehicles)
+pv_correlation <- cor(ff_df$price, ff_df$vehicles)
 ```
 
-Building on top of the previous analysis of traffic patterns performed [here](https://github.com/tulians/traffic/blob/master/descriptive/README.md), it would be intersting to analyze whether there was a correlation between the rate at which the number of vehicles passing through toll booths [started to grow month-over-month](https://github.com/tulians/traffic/blob/master/descriptive/README_files/figure-markdown_github/trend-1.png), and the month-over-month (M-o-M) increase in oil prices depicted in Figure 1. As seen in Figure 2 (condidering only information from January 2014 onwards, after the [unexpected growth](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic)) there is barely a linear relation between these two differences, which is represented by the Pearson correlation coefficient of `r pv.correlation`. This correlation, even though it's not strong, it's positive, which implies that an increase in oil prices does not necessarily result in a decrease in traffic volume, but rather the opposite in this case.
+Building on top of the previous analysis of traffic patterns performed [here](https://github.com/tulians/traffic/blob/master/descriptive/README.md), it would be intersting to analyze whether there was a correlation between the rate at which the number of vehicles passing through toll booths [started to grow month-over-month](https://github.com/tulians/traffic/blob/master/descriptive/README_files/figure-markdown_github/trend-1.png), and the month-over-month (M-o-M) increase in oil prices depicted in Figure 1. As seen in Figure 2 (condidering only information from January 2014 onwards, after the [unexpected growth](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic)) there is barely a linear relation between these two differences, which is represented by the Pearson correlation coefficient of `r pv_correlation`. This correlation, even though it's not strong, it's positive, which implies that an increase in oil prices does not necessarily result in a decrease in traffic volume, but rather the opposite in this case.
 
 ```{r correlationgraph, echo=FALSE}
-ggplot(data = ff.df, 
+ggplot(data = ff_df,
        aes(x = price, y = vehicles)) +
-  geom_point(alpha = 2/5) +
-  geom_smooth(method = 'lm') +
-  labs(x = 'Oil price (ARS)', 
-       y = 'Volume of vehicles',
-       title = 'Relation of oil price and amount of vehicles', 
-       caption = 'Figure 2') +
+  geom_point(alpha = 2 / 5) +
+  geom_smooth(method = "lm") +
+  labs(x = "Oil price (ARS)",
+       y = "Volume of vehicles",
+       title = "Relation of oil price and amount of vehicles",
+       caption = "Figure 2") +
   theme_minimal()
 ```
 
 ```{r differences, echo=FALSE}
-ff.df.differences <- data.frame(
-  year_ = diff(ff.df$year_),
-  month_ = diff(ff.df$month_),
-  price = diff(ff.df$price / max(ff.df$price)),
-  vehicles = diff(ff.df$vehicles / max(ff.df$vehicles))
+ff_df_differences <- data.frame(
+  year_ = diff(ff_df$year_),
+  month_ = diff(ff_df$month_),
+  price = diff(ff_df$price / max(ff_df$price)),
+  vehicles = diff(ff_df$vehicles / max(ff_df$vehicles))
 )
 
-ff.df.differences$vehicles[which.min(ff.df.differences$vehicles)] <- 
-  mean(ff.df.differences$vehicles)
-ff.df.differences$vehicles[which.max(ff.df.differences$vehicles)] <- 
-  mean(ff.df.differences$vehicles)
+ff_df_differences$vehicles[which.min(ff_df_differences$vehicles)] <-
+  mean(ff_df_differences$vehicles)
+ff_df_differences$vehicles[which.max(ff_df_differences$vehicles)] <-
+  mean(ff_df_differences$vehicles)
 
 # Move from wide to tall format to plot multiple series in the same graph.
-ff.df.tall <- melt(
-  ff.df.differences, 
-  id.vars = c('year_', 'month_'),
-  measure.vars = c('price', 'vehicles'),
-  variable.name = 'series',
-  value.name = 'measurement') %>%
+ff_df_tall <- melt(
+  ff_df_differences,
+  id.vars = c("year_", "month_"),
+  measure.vars = c("price", "vehicles"),
+  variable.name = "series",
+  value.name = "measurement") %>%
   select(series, measurement) %>%
   group_by(series) %>%
   mutate(id = row_number())
 
-diff.correlation <- cor(ff.df.differences$price, ff.df.differences$vehicles)
+diff_correlation <- cor(ff_df_differences$price, ff_df_differences$vehicles)
 ```
 
-A more interesting approach in the search for a relation between vehicle volume and oil price would be to look at the M-o-M differences of each time series. Figure 3 shows the behavior through time of the difference of each of the variables, which was computed over the normalized series. Again, computing the correlation between both differences yields a positive number, `r diff.correlation`, which shows non-conclusive evidence that an increase in oil price could impact the volume of vehicles passing through toll booths (at least not in a month by month basis).
+A more interesting approach in the search for a relation between vehicle volume and oil price would be to look at the M-o-M differences of each time series. Figure 3 shows the behavior through time of the difference of each of the variables, which was computed over the normalized series. Again, computing the correlation between both differences yields a positive number, `r diff_correlation`, which shows non-conclusive evidence that an increase in oil price could impact the volume of vehicles passing through toll booths (at least not in a month by month basis).
 
 ```{r differencesgraph, echo=FALSE}
-ggplot(data = ff.df.tall, 
+ggplot(data = ff_df_tall,
        aes(x = id, y = measurement, group = series, colour = series)) +
   geom_line() +
-  labs(x = 'index', 
-       y = 'Delta (M_i - M_{i-1})',
-       title = 'M-o-M differences for both amount of vehicles and oil prices', 
-       caption = 'Figure 3') +
+  labs(x = "index",
+       y = "Delta (M_i - M_{i-1})",
+       title = "M-o-M differences for both amount of vehicles and oil prices",
+       caption = "Figure 3") +
   theme_minimal()
 
-rm(ff.df.differences, ff.df.tall, pv.correlation, diff.correlation, ff.df)
+rm(ff_df_differences, ff_df_tall, pv_correlation, diff_correlation, ff_df)
 ```
 
 ### Time spent waiting on queues estimation
@@ -181,17 +181,17 @@ Going back to what was mentioned at the beginning of this section, traffic inten
 The next two subsections will be focused on the _Avellaneda_ toll booth plaza given that it's the toll booth with the highest volume of vehicles, and with an average of 33 toll booths. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering only the information from January 2014 to December 2018, due to the [asymmetries in the dataset](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic).
 
 ```{r avellanedavehiclesperhour, echo=FALSE}
-payments <- unified.ff %>% as_tibble() %>%
+payments <- unified_ff %>% as_tibble() %>%
   filter (
-    (year_ >= 2014 & year_ <= 2018) 
-    & toll.booth.name == 'AVELLANEDA'
-    & payment.method %in% c('Automatic', 'Cash')
+    (year_ >= 2014 & year_ <= 2018)
+    & toll_booth_name == "AVELLANEDA"
+    & payment_method %in% c("Automatic", "Cash")
   )
 
 vehicles <- payments %>%
-  group_by (start.hour) %>%
+  group_by (start_hour) %>%
   summarise (
-    volume.per.hour = sum(amount) / (365 * 4)
+    volume_per_hour = sum(amount) / (365 * 4)
   )
 
 # Number of servers.
@@ -199,18 +199,18 @@ S <- 33
 # System utilization.
 rho <- 0.9
 # Arrival rate.
-lambda <- mean(vehicles$volume.per.hour)
+lambda <- mean(vehicles$volume_per_hour)
 # Service rate per toll booth has to be greater than \lambda / (S * \rho).
 mu <- lambda / (S * rho)
 
-ggplot(data = vehicles, 
-       aes(x = start.hour, y = volume.per.hour, group = 1)) +
-  geom_line(linetype = 'dashed') +
-  geom_point(color = 'blue') +
-  labs(x = 'Hour of day', 
-       y = 'Volume of vehicles',
-       title = 'Amount of vehicles per hour in the Avellaneda toll booth plaza', 
-       caption = 'Figure 4') +
+ggplot(data = vehicles,
+       aes(x = start_hour, y = volume_per_hour, group = 1)) +
+  geom_line(linetype = "dashed") +
+  geom_point(color = "blue") +
+  labs(x = "Hour of day",
+       y = "Volume of vehicles",
+       title = "Amount of vehicles per hour in the Avellaneda toll booth plaza",
+       caption = "Figure 4") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
@@ -221,40 +221,40 @@ An initial approach to the estimation of time-spent on queues would be to assume
 where $\lambda$ is equal to the `r round(lambda, 2)` vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers $S$ is `r S`, and the utilization/traffic intensity $\rho$ is $90\%$. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least `r round(mu, 2)` vehicles per hour. Summing up each server contribution, `r round(S * mu, 2)` vehicles can be serviced in an hour by this system. Servicing `r round(mu, 2)`  vehicles in an hour means that on average `r round(mu / 60, 2)` vehicles are serviced per minute. 
 
 ```{r effectofautomatictollbooths, echo=FALSE}
-automatic.payments <- payments %>% 
-  group_by(start.hour) %>% 
+automatic_payments <- payments %>%
+  group_by(start_hour) %>%
   summarise(
-    percentage.of.automatic = 
-      sum(amount[payment.method == 'Automatic']) / sum(amount)
+    percentage_of_automatic =
+      sum(amount[payment_method == "Automatic"]) / sum(amount)
   )
 ```
 
-Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the _Avellaneda_ toll booth plaza, automatic payments constitute `r round(mean(automatic.payments$percentage.of.automatic) * 100, 2)`% of the payments volume. The specific percentages for each our are detailed in Figure 5.
+Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the _Avellaneda_ toll booth plaza, automatic payments constitute `r round(mean(automatic_payments$percentage_of_automatic) * 100, 2)`% of the payments volume. The specific percentages for each our are detailed in Figure 5.
 
 ```{r percentagegraph, echo=FALSE}
-ggplot(data = automatic.payments,
-       aes(x = start.hour, y = percentage.of.automatic, group = 1)) +
-  geom_line(linetype = 'dashed') +
-  geom_point(color = 'red') +
-  labs(x = 'Hour of day', 
-       y = 'Percentage of automatic payments',
-       title = 'Percentage of vehicles going through automatic toll booths', 
-       caption = 'Figure 5') +
+ggplot(data = automatic_payments,
+       aes(x = start_hour, y = percentage_of_automatic, group = 1)) +
+  geom_line(linetype = "dashed") +
+  geom_point(color = "red") +
+  labs(x = "Hour of day",
+       y = "Percentage of automatic payments",
+       title = "Percentage of vehicles going through automatic toll booths",
+       caption = "Figure 5") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
 ```{r breakdownperpaymentmethod, echo=FALSE}
-payments.per.hour <- payments %>%
-  group_by(start.hour, payment.method) %>%
+payments_per_hour <- payments %>%
+  group_by(start_hour, payment_method) %>%
   summarise(
     volume = sum(amount) / (365 * 4)
   )
 
 lambda.manual <- mean(
-  payments.per.hour$volume[payments.per.hour$payment.method == 'Cash'])
+  payments_per_hour$volume[payments_per_hour$payment_method == "Cash"])
 lambda.automatic <- mean(
-  payments.per.hour$volume[payments.per.hour$payment.method == 'Automatic'])
+  payments_per_hour$volume[payments_per_hour$payment_method == "Automatic"])
 
 # The Avellaneda toll booth has at least 6 automatic payment toll booths.
 automatic.tolls <- 6
