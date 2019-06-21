@@ -18,7 +18,7 @@ packages_to_include <- c(
   "dplyr", "tibble", "ggplot2", "ff", "reshape2"
 )
 
-lapply(
+lapply (
   packages_to_include, # From this list ...
   require, # ... include them as packages.
   character.only = T
@@ -43,7 +43,7 @@ datasets_dir <- "../datasets"
 options(
   fftempdir = file.path(datasets_dir, "tmp")
 )
-unified_ff <- read.csv.ffdf(
+unified_ff <- read.csv.ffdf (
   file = file.path(datasets_dir, "unified.csv")
 )
 rm(datasets_dir)
@@ -200,8 +200,8 @@ S <- 33
 rho <- 0.9
 # Arrival rate.
 lambda <- mean(vehicles$volume_per_hour)
-# Service rate per toll booth has to be greater than \lambda / (S * \rho).
-mu <- lambda / (S * rho)
+# Compute service rate from the utilization assumption and the arrival rate.
+mu <- S * lambda / rho
 
 ggplot(data = vehicles,
        aes(x = start_hour, y = volume_per_hour, group = 1)) +
@@ -272,28 +272,25 @@ The system will be modeled as an M/M/S queuing model, where
 
 * The first M stands for an exponentially distributed arrival pattern of vehicles
 * The second M also stands for an exponential distribution, but of the service rate.
-* And lastly, S stands for the number of servers, in this case toll booths per toll booth plaza.
+* And lastly, S stands for the number of servers, in this case toll booths per toll booth plaza. 
 
-Traffic intensity $\rho$ can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as 
+Traffic intensity $\rho$ can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as $P_0 = 1 - \rho \; \forall \rho < 1$. This definition of $P_0$ is intuitive, given that if we assume an utilization of $90\%$ it should be expected that the remaining $10\%$ of the time the system is idle.
 
-$$
-  \begin{aligned}
-    P_0 = 1 - \rho \; \forall \rho < 1
-  \end{aligned}
-$$
+Given this definition of $P_0$, the probability of having $n$ units in the system would be $P_n = \frac{\rho^n}{n!}P_0$ when $n \leq N$, where $n$ is the amount of vehicles and $N = S$, the amount of servers/toll booths. On the other hand $P_n = \frac{\rho^n}{N^{n-N}N!}P_0$ when $n \geq N$. Depending on the amount of vehicles arriving at the toll booth plaza, one would use the first $P_n$ formula or the latter.
 
-This definition of $P_0$ is intuitive, given that if we assume an utilization of $90\%$ it should be expected that the remaining $10\%$ of the time the system is idle. $P_0$ can be used to define the probability of having $n$ vehicles in the system
+```{r characteristics, echo=FALSE}
+n <- 22
+N <- 33
 
-$$
-  \begin{aligned}
-    P_n = \frac{\rho^n}{n!}P_0 \; \forall n \leq N
-  \end{aligned}
-$$
+# Probability of having n units in the system.
+prob_n <- function(n, N, rho) {
+  P_0 <- 1 - rho
+  if (n < N) {
+    P_n <- P_0 * (rho^n / factorial(n))
+  } else {
+    P_n <- P_0 * (rho^n / (N^(n - N) * factorial(N)))
+  }
+  return(P_n)
+}
 
-and 
-
-$$
-  \begin{aligned}
-    P_n = \frac{\rho^n}{N^{n-N}N!}P_0 \; \forall n \geq N
-  \end{aligned}
-$$
+```

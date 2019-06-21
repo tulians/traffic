@@ -49,8 +49,8 @@ join_traffic_files <- function(
              tolower(names(f)) %in% tolower(columns),
              with = FALSE]
       setnames(f,
-               old = names(f),
-               new = underscores)
+               old = sort(names(f)),
+               new = sort(underscores))
     }
   )
   #' Generate a unified intermediate file with standardized header names.
@@ -86,14 +86,16 @@ standardize_traffic <- function(
   #' https://github.com/tidyverse/dplyr/issues/2149#issuecomment-258916706
   #' The solution presented there has a bug in the generation of out_y, as the
   #' condition should not be negated.
-  swap_if_ <- function(cond, x, y) {
+  swap_if_ <- function(cond, x, y) 
+  {
     # TODO(tulians): avoid using the dataframe.
     out_x <- ifelse(cond, y, x)
     out_y <- ifelse(cond, x, y)
     setNames(tibble(out_x, out_y), names(c("M", "D")))
   }
   #' Normalizes the format of the time columns.
-  to_std_time_format <- function(d) {
+  to_std_time_format <- function(d) 
+  {
     one.digit <- grep("^\\d$", d)
     two.digits <- grep("^\\d{2}$", d)
     five.digits <- grep("^\\d:00:00$", d)
@@ -116,6 +118,12 @@ standardize_traffic <- function(
     }
     return(d)
   }
+  #' Helper function to extend %like% to a list of elements.
+  "%like any%" <- function(vector, pattern)
+  {
+    like(vector, paste(pattern, collapse = "|"))
+  }
+  
   #' Data wrangling for the traffic dataset.
   join_traffic_files()
   wd <- getwd()
@@ -127,46 +135,39 @@ standardize_traffic <- function(
   df <- fread(input_file)
   df <- df %>% as_tibble() %>% mutate(
     toll_booth_name = case_when(
-      ESTACION %in% c("ALB", "Alberdi") ~ "Alberti",
-      ESTACION %in% c("AVE", "Avellaneda") ~ "Avellaneda",
-      ESTACION %in% c(
-        "DEC",
-        "DEL",
-        "DELLEPIANE CENTRO",
-        "DELLEPIANE LINIERS",
-        "Dellepiane Centro",
-        "Dellepiane Liniers",
-        "DELLEPIANE LINIERSLEPIANE CENTRO"
+      tolower(ESTACION) %like% "alb" ~ "Alberti",
+      tolower(ESTACION) %like% "ave" ~ "Avellaneda",
+      tolower(ESTACION) %like any% c (
+        "dec",
+        "del"
       ) ~ "Dellepiane",
-      ESTACION %in% c(
-        "ILL",
-        "Illia",
-        "RET",
-        "Retiro"
+      tolower(ESTACION) %like any% c (
+        "ill",
+        "ret"
       ) ~ "Retiro",
-      ESTACION %in% c("SAL", "Salguero") ~ "Salguero",
-      ESTACION %in% c("SAR", "Sarmiento") ~ "Sarmiento",
+      tolower(ESTACION) %like% "sal" ~ "Salguero",
+      tolower(ESTACION) %like% "sar" ~ "Sarmiento",
       TRUE ~ as.character(ESTACION)
     ),
     day_name = case_when(
-      DIA == "Lunes" ~ "Monday",
-      DIA == "Martes" ~ "Tuesday",
-      DIA == "Miercoles" ~ "Wednesday",
-      DIA == "Jueves" ~ "Thursday",
-      DIA == "Viernes" ~ "Friday",
-      DIA == "Sabado" ~ "Saturday",
-      DIA == "Domingo" ~ "Sunday",
+      tolower(DIA) == "lunes" ~ "Monday",
+      tolower(DIA) == "martes" ~ "Tuesday",
+      tolower(DIA) %like% "rcoles" ~ "Wednesday",
+      tolower(DIA) == "jueves" ~ "Thursday",
+      tolower(DIA) == "viernes" ~ "Friday",
+      tolower(DIA) %like% "bado" ~ "Saturday",
+      tolower(DIA) == "domingo" ~ "Sunday",
       TRUE ~ as.character(DIA)
     ),
     vehicle_type = case_when(
-      TIPO_VEHICULO == "Motos" ~ "Motorbike",
-      TIPO_VEHICULO %like% "Liviano%" ~ "Car",
-      TIPO_VEHICULO %like% "Pesado%" ~ "Truck",
-      TIPO_VEHICULO %in% c(
+      tolower(TIPO_VEHICULO) == "motos" ~ "Motorbike",
+      tolower(TIPO_VEHICULO) %like% "liviano" ~ "Car",
+      tolower(TIPO_VEHICULO) %like% "pesado" ~ "Truck",
+      tolower(TIPO_VEHICULO) %in% c(
         "N/D",
         "ND"
       ) ~ "Non-determined",
-      TIPO_VEHICULO %like% "Cobro doble para%" ~ "Non-frequent",
+      tolower(TIPO_VEHICULO) %like% "cobro doble para" ~ "Non-frequent",
       TRUE ~ as.character(TIPO_VEHICULO)
     ),
     lat = case_when(
@@ -194,7 +195,7 @@ standardize_traffic <- function(
       toll_booth_name == "Salguero" ~ 8
     ),
     payment_method = case_when(
-      FORMA_PAGO %in% c("EFECTIVO", "Efectivo") ~ "Cash",
+      tolower(FORMA_PAGO) == "efectivo" ~ "Cash",
       FORMA_PAGO %in% c(
         "MONEDERO",
         "TARJETA",
@@ -203,7 +204,7 @@ standardize_traffic <- function(
       ) ~ "Card",
       FORMA_PAGO %in% c("AUPASS", "Tag") ~ "Automatic",
       FORMA_PAGO %in% c("VIA LIBERADA", "NO COBRADO") ~ "No barriers",
-      FORMA_PAGO %in% c("EXENTO", "Exento") ~ "Exempt",
+      tolower(FORMA_PAGO) == "exento" ~ "Exempt",
       FORMA_PAGO %in% c("INFRACCION", "Violación") ~ "Infraction",
       FORMA_PAGO %in% c("OTROS", "Reconocimiento de Deuda") ~ "Others"
     ),
