@@ -298,16 +298,9 @@ The system will be modeled as an M/M/S queuing model, where
 
 * The first M stands for an exponentially distributed arrival pattern of vehicles
 * The second M also stands for an exponential distribution, but of the service rate.
-* And lastly, S stands for the number of servers, in this case toll booths per toll booth plaza. 
-
-Traffic intensity $\rho$ can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as $P_0 = 1 - \rho \; \forall \rho < 1$. This definition of $P_0$ is intuitive, given that if we assume an utilization of $90\%$ it should be expected that the remaining $10\%$ of the time the system is idle.
-
-Given this definition of $P_0$, the probability of having $n$ units in the system would be $P_n = \frac{\rho^n}{n!}P_0$ when $n \leq N$, where $n$ is the amount of vehicles and $N = S$, the amount of servers/toll booths. On the other hand $P_n = \frac{\rho^n}{N^{n-N}N!}P_0$ when $n \geq N$. Depending on the amount of vehicles arriving at the toll booth plaza, one would use the first $P_n$ formula or the latter.
+* And lastly, S stands for the number of servers, in this case toll booths per toll booth plaza.
 
 ```{r characteristics, echo=FALSE}
-rm(automatic_payments, avellaneda_ff, payment_methods_lambdas, payments,
-   payments_per_hour, amount_of_days, automatic_tolls, lambda, mu,
-   mu_automatic, mu_manual, years_to_filter_by)
 n <- 1:S
 rho <- 0.9
 
@@ -329,6 +322,58 @@ pn <- function(
   N, # Number of servers.
   rho # Utilization of the system.
 ) {
-  (rho / n) * p0_(N, rho)
+  if(!n) {
+    p0_(N, rho)
+  } else if((n - 1) == 0) {
+    (rho / n) * p0_(N, rho) 
+  } else {
+    pn(n - 1, N, rho)
+  }
+}
+
+#' Average number of units in the queue.
+Uq <- function (
+  N, # Number of servers.
+  rho # Utilization of the system.
+) {
+  p0_(N, rho) * ((rho^N) / factorial(N)) * (rho / N) / (1 - (rho / N))^2
+}
+
+#' Average number of units in the system.
+Us <- function (
+  N, # Number of servers.
+  rho # Utilization of the system.
+) {
+  rho + Uq(N, rho)
+}
+
+#' Average time waiting in a queue.
+Wq <- function (
+  N, # Number of servers.
+  rho, # Utilization of the system.
+  lambda # Arrival rate.
+) {
+  Uq(N, rho) / lambda
+}
+
+#' Average time waiting in the system.
+Ws <- function (
+  N, # Number of servers.
+  rho, # Utilization of the system.
+  lambda, # Arrival rate.
+  mu # Service rate.
+) {
+  Wq(N, rho, lambda) + (1 / mu)
 }
 ```
+
+Traffic intensity $\rho$ can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as $P_0 = \frac{1}{\sum_{n = 0}^{N - 1}\frac{\rho^n}{n!}+\frac{\rho^N}{N!(1-\frac{\rho}{N})}}$, where $N$ is the number of toll booths $S$. Given this definition of $P_0$, the analogoues $P_n$, which would be the probability of having $n$ units in the system, is defined as $P_n = \left ( \frac{\rho}{n} \right ) P_{n-1}$. With our assumption of $90\%$ utilization the probability of having no vehicles in the system is `r round(100 * pn(0, S, rho), 2)`, while the probability of having $S$ vehicles arriving at the $S$ toll booths at the exact same time to be served is `r round(100 * pn(S, S, rho), 2)`. 
+
+The average length of a non-empty queue is computed as $E(m|m > 0) = \frac{1}{1 - \frac{\rho}{N}}$, and for the _Avellaneda_ toll booth plaza would yield an average length of `r round(em_gt0(S, rho), 2)` cars. By using this expression we can know the average number of units in the system, which results from $E(n) = \rho + E(m) = 0.9 + 1.03 = 1.93$ cars. 
+
+```{r finalremovals, echo=FALSE}
+rm(automatic_payments, avellaneda_ff, payment_methods_lambdas, payments,
+   payments_per_hour, amount_of_days, automatic_tolls, lambda, mu,
+   mu_automatic, mu_manual, years_to_filter_by)
+```
+
