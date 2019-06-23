@@ -71,27 +71,25 @@ In the previous section we discussed the need of computing the arrival rate ![\\
 
 ##### Traffic intensity
 
-Going back to what was mentioned at the beginning of this section, traffic intensity was defined as the ratio between the arrival rate ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda") and the service rate ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu"), so that ![\\lambda &lt; \\mu](https://latex.codecogs.com/png.latex?%5Clambda%20%3C%20%5Cmu "\lambda < \mu"). Expressed that way ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu") comprises the capacity of all toll booths in a toll booth plaza, so it might be more accurate to express the traffic intensity as ![\\lambda &lt; S\\mu](https://latex.codecogs.com/png.latex?%5Clambda%20%3C%20S%5Cmu "\lambda < S\mu"), where ![S](https://latex.codecogs.com/png.latex?S "S") is the amount of servers which in this case are represented by toll booths. Following the third assumption in the assumptions section, as all toll booths are considered equal, we can express the total capacity of the system by multipying an individual toll booth capacity by the amount of toll booths in a toll booth plaza.
+Going back to what was mentioned at the beginning of this section, traffic intensity was defined as the ratio between the arrival rate ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda") and the service rate ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu"), so that ![\\lambda &lt; \\mu](https://latex.codecogs.com/png.latex?%5Clambda%20%3C%20%5Cmu "\lambda < \mu"). That condition ensures the system is stable. However, it only accounts for the case of a single server, while in this case we have ![S](https://latex.codecogs.com/png.latex?S "S") toll booths per plaza. This yields a system stability condition of ![\\lambda &lt; S\\mu](https://latex.codecogs.com/png.latex?%5Clambda%20%3C%20S%5Cmu "\lambda < S\mu"), thus defining ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") as ![\\rho = \\frac{\\lambda}{S\\mu}](https://latex.codecogs.com/png.latex?%5Crho%20%3D%20%5Cfrac%7B%5Clambda%7D%7BS%5Cmu%7D "\rho = \frac{\lambda}{S\mu}"). Following the third assumption in the assumptions section, as all toll booths are considered equal, we can express the total capacity of the system by multipying an individual toll booth capacity by the amount of toll booths in a toll booth plaza.
 
-The next two subsections will be focused on the *Avellaneda* toll booth plaza given that it's the toll booth with the highest volume of vehicles, and with an average of 33 toll booths. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering only the information from January 2014 to December 2018, due to the [asymmetries in the dataset](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic).
+The next two subsections will be focused on the *Avellaneda* toll booth plaza given that it's the toll booth with the highest volume of vehicles, and with an average of 33 toll booths. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering only the information from January 2014 onwards, due to the [asymmetries in the dataset](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic). Additionally, only the *cars* volume will be considered for the mentioned sections, as the analysis can be then extended to the least frequent vehicle types.
 
 ![](README_files/figure-markdown_github/avellanedavehiclesperhour-1.png)
 
 ##### Assumption of 90% utilization
 
-An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the *Avellaneda* toll booth plaza is able to serve up to 523.1244792 vehicles in an hour.
+An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the *Avellaneda* toll booth plaza is able to serve up to 400.901984 vehicles in an hour. This figure comes from computing ![\\mu = \\frac{\\lambda}{S\\rho}](https://latex.codecogs.com/png.latex?%5Cmu%20%3D%20%5Cfrac%7B%5Clambda%7D%7BS%5Crho%7D "\mu = \frac{\lambda}{S\rho}") where ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda") is equal to the 11906.791 vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers ![S](https://latex.codecogs.com/png.latex?S "S") is 33, and the utilization/traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") is ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%"). This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity, each server (toll booth) needs to service at least 400.9 vehicles per hour. Summing up each server contribution, 13229.771 vehicles can be serviced in an hour by this system. Servicing 13229.771 vehicles in an hour means that on average 220.5 vehicles are serviced per minute in a toll booth plaza, regardless of the toll booth payment method.
 
-where ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda") is equal to the 1553.681 vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers ![S](https://latex.codecogs.com/png.latex?S "S") is 33, and the utilization/traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") is ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%"). This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity each server (toll booth) needs to service at least 523.12 vehicles per hour. Summing up each server contribution, 1726.3111 vehicles can be serviced in an hour by this system. Servicing 523.12 vehicles in an hour means that on average 8.72 vehicles are serviced per minute.
+Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the *Avellaneda* toll booth plaza, automatic payments constitute 36.64% of the payments volume. The specific percentages for each our are detailed in Figure 5.
 
-Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the *Avellaneda* toll booth plaza, automatic payments constitute 38.13% of the payments volume. The specific percentages for each our are detailed in Figure 5.
+![](README_files/figure-markdown_github/utilizationbreakdown-1.png)
 
-![](README_files/figure-markdown_github/percentagegraph-1.png)
-
-If we were to break down the service rate per payment method, we should expect to see faster service time for automatic toll booths, that could account for a high percentage of the almost 8.72 vehicles served per minute. Performing such break down yields 5.6870399 vehicles services by minute in manual payment toll booths, and 18.8859846 vehicles services by minute in automatic payment toll booths.
+If we were to break down the service rate per payment method, we should expect to see faster service time for automatic toll booths, that could account for a high percentage of the almost 220.5 vehicles served per minute. Performing such break down yields 136.4215925 vehicles services by minute in manual payment toll booths, and 84.0744987 vehicles services by minute in automatic payment toll booths. Even though the service rate for manual toll booths is higher than that of automatic toll booths, it must be taken into account that there are more toll booths with manual payment methods that booths with automatic ones. For the particular case of the *Avellaneda* toll booth plaza, an approximate of 6 toll booths are automatic, from a total of 33. This shows that even with just 18.18% of the toll booths being automatic in this plaza, you can service 36.64% of the incoming traffic, as it was mentioned previously.
 
 ###### Characterization of the M/M/S system
 
-Previously a traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") of ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%") was assumed, and by doing so a realistic service rate 5.69 vehicles per minute in manual toll booths and 18.89 vehicles per minute in automatic toll booths was obtained.
+Previously a traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") of ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%") was assumed, and by doing so a realistic service rate 136.42 vehicles per minute in manual toll booths and 84.07 vehicles per minute in automatic toll booths was obtained.
 
 The system will be modeled as an M/M/S queuing model, where
 
@@ -99,38 +97,6 @@ The system will be modeled as an M/M/S queuing model, where
 -   The second M also stands for an exponential distribution, but of the service rate.
 -   And lastly, S stands for the number of servers, in this case toll booths per toll booth plaza.
 
-Traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as
+Traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") can be used to determine the probability of having no vehicles queuing in the system at a given moment of time, and is written as ![P\_0 = 1 - \\rho \\; \\forall \\rho &lt; 1](https://latex.codecogs.com/png.latex?P_0%20%3D%201%20-%20%5Crho%20%5C%3B%20%5Cforall%20%5Crho%20%3C%201 "P_0 = 1 - \rho \; \forall \rho < 1"). This definition of ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") is intuitive, given that if we assume an utilization of ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%") it should be expected that the remaining ![10\\%](https://latex.codecogs.com/png.latex?10%5C%25 "10\%") of the time the system is idle.
 
-![
-  \\begin{aligned}
-    P\_0 = 1 - \\rho \\; \\forall \\rho &lt; 1
-  \\end{aligned}
-](https://latex.codecogs.com/png.latex?%0A%20%20%5Cbegin%7Baligned%7D%0A%20%20%20%20P_0%20%3D%201%20-%20%5Crho%20%5C%3B%20%5Cforall%20%5Crho%20%3C%201%0A%20%20%5Cend%7Baligned%7D%0A "
-  \begin{aligned}
-    P_0 = 1 - \rho \; \forall \rho < 1
-  \end{aligned}
-")
-
-This definition of ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") is intuitive, given that if we assume an utilization of ![90\\%](https://latex.codecogs.com/png.latex?90%5C%25 "90\%") it should be expected that the remaining ![10\\%](https://latex.codecogs.com/png.latex?10%5C%25 "10\%") of the time the system is idle. ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") can be used to define the probability of having ![n](https://latex.codecogs.com/png.latex?n "n") vehicles in the system
-
-![
-  \\begin{aligned}
-    P\_n = \\frac{\\rho^n}{n!}P\_0 \\; \\forall n \\leq N
-  \\end{aligned}
-](https://latex.codecogs.com/png.latex?%0A%20%20%5Cbegin%7Baligned%7D%0A%20%20%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7Bn%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cleq%20N%0A%20%20%5Cend%7Baligned%7D%0A "
-  \begin{aligned}
-    P_n = \frac{\rho^n}{n!}P_0 \; \forall n \leq N
-  \end{aligned}
-")
-
-and
-
-![
-  \\begin{aligned}
-    P\_n = \\frac{\\rho^n}{N^{n-N}N!}P\_0 \\; \\forall n \\geq N
-  \\end{aligned}
-](https://latex.codecogs.com/png.latex?%0A%20%20%5Cbegin%7Baligned%7D%0A%20%20%20%20P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7BN%5E%7Bn-N%7DN%21%7DP_0%20%5C%3B%20%5Cforall%20n%20%5Cgeq%20N%0A%20%20%5Cend%7Baligned%7D%0A "
-  \begin{aligned}
-    P_n = \frac{\rho^n}{N^{n-N}N!}P_0 \; \forall n \geq N
-  \end{aligned}
-")
+Given this definition of ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0"), the probability of having ![n](https://latex.codecogs.com/png.latex?n "n") units in the system would be ![P\_n = \\frac{\\rho^n}{n!}P\_0](https://latex.codecogs.com/png.latex?P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7Bn%21%7DP_0 "P_n = \frac{\rho^n}{n!}P_0") when ![n \\leq N](https://latex.codecogs.com/png.latex?n%20%5Cleq%20N "n \leq N"), where ![n](https://latex.codecogs.com/png.latex?n "n") is the amount of vehicles and ![N = S](https://latex.codecogs.com/png.latex?N%20%3D%20S "N = S"), the amount of servers/toll booths. On the other hand ![P\_n = \\frac{\\rho^n}{N^{n-N}N!}P\_0](https://latex.codecogs.com/png.latex?P_n%20%3D%20%5Cfrac%7B%5Crho%5En%7D%7BN%5E%7Bn-N%7DN%21%7DP_0 "P_n = \frac{\rho^n}{N^{n-N}N!}P_0") when ![n \\geq N](https://latex.codecogs.com/png.latex?n%20%5Cgeq%20N "n \geq N"). Depending on the amount of vehicles arriving at the toll booth plaza, one would use the first ![P\_n](https://latex.codecogs.com/png.latex?P_n "P_n") formula or the latter.
