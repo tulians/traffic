@@ -289,7 +289,7 @@ mu_automatic <- payment_methods_lambdas[
   (automatic_tolls * rho)
 ```
 
-If we were to break down the service rate per payment method, we should expect to see faster service time for automatic toll booths, that could account for a high percentage of the almost `r round(S * mu / 60, 2)` vehicles served per minute. Performing such break down yields `r (S - automatic_tolls) * mu_manual / 60` vehicles services by minute in manual payment toll booths, and `r automatic_tolls * mu_automatic / 60` vehicles services by minute in automatic payment toll booths. Even though the service rate for manual toll booths is higher than that of automatic toll booths, it must be taken into account that there are more toll booths with manual payment methods that booths with automatic ones. For the particular case of the _Avellaneda_ toll booth plaza, an approximate of `r automatic_tolls` toll booths are automatic, from a total of `r S`. This shows that even with just `r round(100 * automatic_tolls / S, 2)`% of the toll booths being automatic in this plaza, you can service `r round(mean(automatic_payments$percentage_of_automatic) * 100, 2)`% of the incoming traffic, as it was mentioned previously.
+If we were to break down the service rate per payment method, we should expect to see faster service time for automatic toll booths, that could account for a high percentage of the almost `r round(S * mu / 60, 2)` vehicles served per minute. Performing such break down yields `r round((S - automatic_tolls) * mu_manual / 60, 2)` vehicles services by minute in manual payment toll booths, and `r round(automatic_tolls * mu_automatic / 60, 2)` vehicles services by minute in automatic payment toll booths. Even though the service rate for manual toll booths is higher than that of automatic toll booths, it must be taken into account that there are more toll booths with manual payment methods that booths with automatic ones. For the particular case of the _Avellaneda_ toll booth plaza, an approximate of `r automatic_tolls` toll booths are automatic, from a total of `r S`. This shows that even with just `r round(100 * automatic_tolls / S, 2)`% of the toll booths being automatic in this plaza, you can service `r round(mean(automatic_payments$percentage_of_automatic) * 100, 2)`% of the incoming traffic, as it was mentioned previously.
 
 ###### Characterization of the M/M/S system
 Previously a traffic intensity $\rho$ of $90\%$ was assumed, and by doing so a realistic service rate `r round((S - automatic_tolls)* mu_manual / 60, 2)` vehicles per minute in manual toll booths and `r round(automatic_tolls * mu_automatic / 60, 2)` vehicles per minute in automatic toll booths was obtained.
@@ -305,18 +305,30 @@ Traffic intensity $\rho$ can be used to determine the probability of having no v
 Given this definition of $P_0$, the probability of having $n$ units in the system would be $P_n = \frac{\rho^n}{n!}P_0$ when $n \leq N$, where $n$ is the amount of vehicles and $N = S$, the amount of servers/toll booths. On the other hand $P_n = \frac{\rho^n}{N^{n-N}N!}P_0$ when $n \geq N$. Depending on the amount of vehicles arriving at the toll booth plaza, one would use the first $P_n$ formula or the latter.
 
 ```{r characteristics, echo=FALSE}
-n <- 22
-N <- 33
+rm(automatic_payments, avellaneda_ff, payment_methods_lambdas, payments,
+   payments_per_hour, amount_of_days, automatic_tolls, lambda, mu,
+   mu_automatic, mu_manual, years_to_filter_by)
+n <- 1:S
+rho <- 0.9
 
-# Probability of having n units in the system.
-prob_n <- function(n, N, rho) {
-  P_0 <- 1 - rho
-  if (n < N) {
-    P_n <- P_0 * (rho^n / factorial(n))
-  } else {
-    P_n <- P_0 * (rho^n / (N^(n - N) * factorial(N)))
-  }
-  return(P_n)
+#' Probability of having no units in the system (idle system).
+p0_ <- function(
+  N, # Number of servers.
+  rho # Utilization of the system.
+) {
+  n <- 0:(N-1)
+  1 / (
+    sum((rho)^n / factorial(n)) + (rho^N) / (factorial(N) * (1 - (rho / N)))
+  )
 }
 
+#' Probability of having n units in the system. This means having `n` vehicles
+#' arriving at the same time, one to each toll booth. 
+pn <- function(
+  n, # Amount of vehicles in the system.
+  N, # Number of servers.
+  rho # Utilization of the system.
+) {
+  (rho / n) * p0_(N, rho)
+}
 ```
