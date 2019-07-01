@@ -133,8 +133,8 @@ standardize_traffic <- function(
     merged
   )
   df <- fread(input_file)
-  df <- df %>% as_tibble() %>% mutate(
-    toll_booth_name = case_when(
+  df <- df %>% as_tibble() %>% mutate (
+    toll_booth_name = case_when (
       tolower(ESTACION) %like% "alb" ~ "Alberti",
       tolower(ESTACION) %like% "ave" ~ "Avellaneda",
       tolower(ESTACION) %like any% c (
@@ -149,7 +149,7 @@ standardize_traffic <- function(
       tolower(ESTACION) %like% "sar" ~ "Sarmiento",
       TRUE ~ as.character(ESTACION)
     ),
-    day_name = case_when(
+    day_name = case_when (
       tolower(DIA) == "lunes" ~ "Monday",
       tolower(DIA) == "martes" ~ "Tuesday",
       tolower(DIA) %like% "rcoles" ~ "Wednesday",
@@ -159,18 +159,18 @@ standardize_traffic <- function(
       tolower(DIA) == "domingo" ~ "Sunday",
       TRUE ~ as.character(DIA)
     ),
-    vehicle_type = case_when(
+    vehicle_type = case_when (
       tolower(TIPO_VEHICULO) == "motos" ~ "Motorbike",
       tolower(TIPO_VEHICULO) %like% "liviano" ~ "Car",
       tolower(TIPO_VEHICULO) %like% "pesado" ~ "Truck",
-      tolower(TIPO_VEHICULO) %in% c(
+      tolower(TIPO_VEHICULO) %in% c (
         "N/D",
         "ND"
       ) ~ "Non-determined",
       tolower(TIPO_VEHICULO) %like% "cobro doble para" ~ "Non-frequent",
       TRUE ~ as.character(TIPO_VEHICULO)
     ),
-    lat = case_when(
+    lat = case_when (
       toll_booth_name == "Alberti" ~ -34.6448027,
       toll_booth_name == "Avellaneda" ~ -34.6482732,
       toll_booth_name == "Dellepiane" ~ -34.6504678,
@@ -178,7 +178,7 @@ standardize_traffic <- function(
       toll_booth_name == "Sarmiento" ~ -34.5674364,
       toll_booth_name == "Salguero" ~ -34.5717106
     ),
-    long = case_when(
+    long = case_when (
       toll_booth_name == "Alberti" ~ -58.4920542,
       toll_booth_name == "Avellaneda" ~ -58.4781064,
       toll_booth_name == "Dellepiane" ~ -58.4656122,
@@ -186,15 +186,23 @@ standardize_traffic <- function(
       toll_booth_name == "Sarmiento" ~ -58.4079902,
       toll_booth_name == "Salguero" ~ -58.4003948
     ),
-    booths = case_when(
+    manual_booths = case_when (
       toll_booth_name == "Alberti" ~ 5,
-      toll_booth_name == "Avellaneda" ~ 33,
-      toll_booth_name == "Dellepiane" ~ 16,
-      toll_booth_name == "Retiro" ~ 29,
+      toll_booth_name == "Avellaneda" ~ 26,
+      toll_booth_name == "Dellepiane" ~ 8,
+      toll_booth_name == "Retiro" ~ 24,
+      toll_booth_name == "Sarmiento" ~ 0,
+      toll_booth_name == "Salguero" ~ 0
+    ),
+    automatic_booths = case_when (
+      toll_booth_name == "Alberti" ~ 5,
+      toll_booth_name == "Avellaneda" ~ 32,
+      toll_booth_name == "Dellepiane" ~ 6,
+      toll_booth_name == "Retiro" ~ 32,
       toll_booth_name == "Sarmiento" ~ 8,
       toll_booth_name == "Salguero" ~ 8
     ),
-    payment_method = case_when(
+    payment_method = case_when (
       tolower(FORMA_PAGO) == "efectivo" ~ "Cash",
       FORMA_PAGO %in% c(
         "MONEDERO",
@@ -208,7 +216,7 @@ standardize_traffic <- function(
       FORMA_PAGO %in% c("INFRACCION", "Violación") ~ "Infraction",
       FORMA_PAGO %in% c("OTROS", "Reconocimiento de Deuda") ~ "Others"
     ),
-    date_ = case_when(
+    date_ = case_when (
       PERIODO < 2014 ~ as.Date(
         strptime(as.character(FECHA), "%m/%d/%Y"), format = "%Y-%m-%d"),
       PERIODO >= 2014 & PERIODO < 2016 ~ as.Date(
@@ -228,7 +236,7 @@ standardize_traffic <- function(
   #' Make sure that date formats is homogeneous across all rows.
   df <- df %>% as_tibble() %>% mutate_at(
     c("HORA", "HORA_FIN"), to_std_time_format)
-  df <- df %>% mutate(
+  df <- df %>% mutate (
     start_hour = as.factor(HORA),
     end.hour = as.factor(HORA_FIN)
   )
@@ -240,8 +248,8 @@ standardize_traffic <- function(
         df[df$PERIODO == 2018, c("month_", "day_")]$month_ %in% c(10, 11, 12),
       df[df$PERIODO == 2018, c("month_", "day_")]$month_,
       df[df$PERIODO == 2018, c("month_", "day_")]$day_)
-  df <- df %>% mutate(
-    quarter_ = case_when(
+  df <- df %>% mutate (
+    quarter_ = case_when (
       month_ %in% c(1, 2, 3) ~ 1,
       month_ %in% c(4, 5, 6) ~ 2,
       month_ %in% c(7, 8, 9) ~ 3,
@@ -286,27 +294,27 @@ standardize_oil <- function(
     oil
   )
   df <- fread(input_file)
-  df <- df %>% as_tibble() %>% mutate(
+  df <- df %>% as_tibble() %>% mutate (
     year_ = lubridate::year(df$date),
     month_ = lubridate::month(df$date)
   )
   drops <- c("date")
   df <- df[, !(names(df) %in% drops)]
   #' ... and move from a horizontal to vertical format.
-  d <- data.frame(
+  d <- data.frame (
     year_ = integer(), month_ = integer(),
     oil_type = character(), price = double())
   d <- d %>%
-    rbind(d, data.frame(
+    rbind(d, data.frame (
       year_ = df$year_, month_ = df$month_,
       oil_type = "super", price = df$super)) %>%
-    rbind(d, data.frame(
+    rbind(d, data.frame (
       year_ = df$year_, month_ = df$month_,
       oil_type = "premium", price = df$premium)) %>%
-    rbind(d, data.frame(
+    rbind(d, data.frame (
       year_ = df$year_, month_ = df$month_,
       oil_type = "gasoil", price = df$gasoil)) %>%
-    rbind(d, data.frame(
+    rbind(d, data.frame (
       year_ = df$year_, month_ = df$month_,
       oil_type = "euro", price = df$euro))
   #' Write the final file.

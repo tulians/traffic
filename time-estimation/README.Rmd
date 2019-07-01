@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 rm(list = ls()); gc();
 
 packages_to_include <- c(
-  "dplyr", "tibble", "ggplot2", "ff", "reshape2"
+  "dplyr", "tibble", "ggplot2", "ff", "reshape2", "tseries"
 )
 
 lapply (
@@ -71,9 +71,7 @@ ggplot(data = oil_price,
   theme_minimal()
 
 rm(oil_price)
-```
 
-```{r correlations, echo=FALSE}
 ff_df <- unified_ff %>% as_tibble() %>%
   select(year_, month_, amount, price) %>%
   filter(year_ >= 2014) %>%
@@ -98,10 +96,8 @@ ggplot(data = ff_df,
        title = "Relation of oil price and amount of vehicles",
        caption = "Figure 2") +
   theme_minimal()
-```
 
-```{r differences, echo=FALSE}
-ff_df_differences <- data.frame(
+ff_df_differences <- data.frame (
   year_ = diff(ff_df$year_),
   month_ = diff(ff_df$month_),
   price = diff(ff_df$price / max(ff_df$price)),
@@ -114,7 +110,7 @@ ff_df_differences$vehicles[which.max(ff_df_differences$vehicles)] <-
   mean(ff_df_differences$vehicles)
 
 # Move from wide to tall format to plot multiple series in the same graph.
-ff_df_tall <- melt(
+ff_df_tall <- melt (
   ff_df_differences,
   id.vars = c("year_", "month_"),
   measure.vars = c("price", "vehicles"),
@@ -122,7 +118,8 @@ ff_df_tall <- melt(
   value.name = "measurement") %>%
   select(series, measurement) %>%
   group_by(series) %>%
-  mutate(id = row_number())
+  mutate(id = row_number()
+)
 
 diff_correlation <- cor(ff_df_differences$price, ff_df_differences$vehicles)
 ```
@@ -178,24 +175,25 @@ In the previous section we discussed the need of computing the arrival rate $\la
 ##### Traffic intensity
 Going back to what was mentioned at the beginning of this section, traffic intensity was defined as the ratio between the arrival rate $\lambda$ and the service rate $\mu$, so that $\lambda < \mu$. That condition ensures the system is stable. However, it only accounts for the case of a single server, while in this case  we have $S$ toll booths per plaza. This yields a system stability condition of $\lambda < S\mu$, thus defining $\rho$ as $\rho = \frac{\lambda}{S\mu}$. Following the third assumption in the assumptions section, as all toll booths are considered equal, we can express the total capacity of the system by multipying an individual toll booth capacity by the amount of toll booths in a toll booth plaza.
 
-The next two subsections will be focused on the _Avellaneda_ toll booth plaza given that it's the toll booth with the highest volume of vehicles, and with an average of 33 toll booths. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering only the information from January 2014 onwards, due to the [asymmetries in the dataset](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic). Additionally, only the _cars_ volume will be considered for the mentioned sections, as the analysis can be then extended to the least frequent vehicle types.
+The next two subsections will be focused on the _Alberti_ toll booth plaza given that it's a toll booth from which we count with real information about service time $\mu$. The amount of vehicles that arrive on each hour to the toll booth, as shown in Figure 4, is computed considering recent information from year 2019. Additionally, only the _cars_ volume will be considered for the mentioned sections, as the analysis can be then extended to the least frequent vehicle types.
 
-```{r avellanedavehiclesperhour, echo=FALSE}
-years_to_filter_by <- 2014:2019
-#' Filtering only for Avellaneda information, on the years where there is more
-#' concrete information (which are from 2014 onwards), and only for the top 2
-#' most frequent payment methods.
-avellaneda_ff <- unified_ff %>% as_tibble() %>%
+```{r albertivehiclesperhour, echo=FALSE}
+years_to_filter_by <- c(2019) # 2014:2019
+# Filtering only for Alberti information, on the years where there is more
+# recent information (which is from 2019 onwards), and only for the top 2
+# most frequent payment methods.
+toll_booth_ff <- unified_ff %>% as_tibble() %>%
   filter (
     year_ %in% years_to_filter_by
-    & toll_booth_name == "Avellaneda"
+    & toll_booth_name == "Alberti"
     & payment_method %in% c("Automatic", "Cash")
     & vehicle_type == "Car"
+    & day_name == "Saturday"
   )
-#' We'll need to know the amount of days that our dataset contains, as further
-#' below it will be used to compute the amount of vehicles per hour, and each
-#' hour is present in every day.
-amount_of_days <- avellaneda_ff %>%
+# We'll need to know the amount of days that our dataset contains, as further
+# below it will be used to compute the amount of vehicles per hour, and each
+# hour is present in every day.
+amount_of_days <- toll_booth_ff %>%
   distinct (
     year_,
     month_,
@@ -203,7 +201,7 @@ amount_of_days <- avellaneda_ff %>%
   ) %>%
   nrow()
 
-payments <- avellaneda_ff %>%
+payments <- toll_booth_ff %>%
   group_by (
     payment_method,
     start_hour
@@ -212,22 +210,14 @@ payments <- avellaneda_ff %>%
     amount = sum(amount) / amount_of_days
   )
 
-#' Average hourly payments performed by vehicles that arrive at toll booths.
+# Average hourly payments performed by vehicles that arrive at toll booths.
 payments_per_hour <- payments %>%
-  group_by (start_hour) %>%
+  group_by (
+    start_hour
+  ) %>%
   summarise (
     amount = sum(amount)
   )
-
-#' Number of servers.
-S <- 33
-#' System utilization.
-rho <- 0.9
-#' Arrival rate.
-lambda <- mean(payments_per_hour$amount)
-#' Compute service rate from the utilization assumption and the arrival rate,
-#' for an individual toll booth.
-mu <- lambda / (S * rho)
 
 ggplot(data = payments_per_hour,
        aes(x = substr(start_hour, 1, 2), y = amount, group = 1)) +
@@ -236,29 +226,40 @@ ggplot(data = payments_per_hour,
   labs(x = "Hour of day",
        y = "Volume of vehicles",
        title = 
-         "Hourly average volume of cars in the Avellaneda toll booth plaza",
+         "Hourly average volume of cars in the Alberti toll booth plaza",
        caption = "Figure 4") +
   theme_minimal()
+
+# Number of servers.
+S <- 5
+# System utilization.
+rho <- 0.9
+# Arrival rate.
+lambda <- mean(payments_per_hour$amount)
+# Compute service rate from the utilization assumption and the arrival rate,
+# for an individual toll booth.
+mu <- lambda / (S * rho)
 ```
 
 ##### Assumption of 90% utilization
-An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the _Avellaneda_ toll booth plaza is able to serve up to `r mu` vehicles in an hour. This figure comes from computing $\mu = \frac{\lambda}{S\rho}$ where $\lambda$ is equal to the `r round(lambda, 2)` vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers $S$ is `r S`, and the utilization/traffic intensity $\rho$ is $90\%$. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity, each server (toll booth) needs to service at least `r round(mu, 2)` vehicles per hour. Summing up each server contribution, `r round(S * mu, 2)` vehicles can be serviced in an hour by this system. Servicing `r round(S * mu, 2)`  vehicles in an hour means that on average `r round(S * mu / 60, 2)` vehicles are serviced per minute in a toll booth plaza, regardless of the toll booth payment method. 
+An initial approach to the estimation of time-spent on queues would be to assume that toll booths are operating at 90% of their capacity. It actually makes sense to think that toll booth plazas were designed to be a stable system, due to the fact that even though long queues happen, and frequently during peak hours, they are eventually served up to the point that there's no queue left. In this scenario, each toll booth at the _Alberti_ toll booth plaza is able to serve up to `r mu` vehicles in an hour. This figure comes from computing $\mu = \frac{\lambda}{S\rho}$ where $\lambda$ is equal to the `r round(lambda, 2)` vehicles per hour, the average of the amount of vehicles per hour shown in Figure 4, the number of servers $S$ is `r S`, and the utilization/traffic intensity $\rho$ is $90\%$. This result means that in order for the system (toll booth plaza) to be operating at 90% of its capacity, each server (toll booth) needs to service at least `r round(mu, 2)` vehicles per hour. Summing up each server contribution, `r round(S * mu, 2)` vehicles can be serviced in an hour by this system. Servicing `r round(S * mu, 2)`  vehicles in an hour means that on average `r round(S * mu / 60, 2)` vehicles are serviced per minute in a toll booth plaza, regardless of the toll booth payment method. 
 
 ```{r effectofautomatictollbooths, echo=FALSE}
 automatic_payments <- payments %>%
-  group_by(start_hour) %>%
-  summarise(
-    percentage_of_automatic =
-      sum(amount[payment_method == "Automatic"]) / sum(amount)
+  group_by (
+    start_hour
+  ) %>%
+  summarise (
+    percentage = sum(amount[payment_method == "Automatic"]) / sum(amount)
   )
 ```
 
-Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the _Avellaneda_ toll booth plaza, automatic payments constitute `r round(mean(automatic_payments$percentage_of_automatic) * 100, 2)`% of the payments volume. The specific percentages for each our are detailed in Figure 5.
+Although this number may seem high, it's important to mention that it includes the impact from automatic toll booths, which can service more vehicles that manual toll booths. For the concrete case of the _Alberti_ toll booth plaza, automatic payments constitute `r round(mean(automatic_payments$percentage) * 100, 2)`% of the payments volume. The specific percentages for each our are detailed in Figure 5.
 
 ```{r utilizationbreakdown, echo=FALSE}
 ggplot(data = automatic_payments,
        aes(x = substr(start_hour, 1, 2), 
-           y = percentage_of_automatic, 
+           y = percentage, 
            group = 1)) +
   geom_line(linetype = "dashed") +
   geom_point(color = "red") +
@@ -269,17 +270,23 @@ ggplot(data = automatic_payments,
   theme_minimal()
 
 payments_per_hour <- payments %>%
-  group_by (start_hour, payment_method) %>%
+  group_by (
+    start_hour, 
+    payment_method
+  ) %>%
   summarise (
     amount = sum(amount)
   )
 
 payment_methods_lambdas <- payments %>%
-  group_by(payment_method) %>%
-  summarise(lambda = mean(amount))
+  group_by (
+    payment_method
+  ) %>%
+  summarise (
+    lambda = mean(amount)
+  )
 
-#' The Avellaneda toll booth has at least 6 automatic payment toll booths.
-automatic_tolls <- 6
+automatic_tolls <- 5
 
 mu_manual <- payment_methods_lambdas[
   payment_methods_lambdas$payment_method == "Cash", ]$lambda / 
@@ -289,7 +296,7 @@ mu_automatic <- payment_methods_lambdas[
   (automatic_tolls * rho)
 ```
 
-If we were to break down the service rate per payment method, we should expect to see faster service time for automatic toll booths, that could account for a high percentage of the almost `r round(S * mu / 60, 2)` vehicles served per minute. Performing such break down yields `r round((S - automatic_tolls) * mu_manual / 60, 2)` vehicles services by minute in manual payment toll booths, and `r round(automatic_tolls * mu_automatic / 60, 2)` vehicles services by minute in automatic payment toll booths. Even though the service rate for manual toll booths is higher than that of automatic toll booths, it must be taken into account that there are more toll booths with manual payment methods that booths with automatic ones. For the particular case of the _Avellaneda_ toll booth plaza, an approximate of `r automatic_tolls` toll booths are automatic, from a total of `r S`. This shows that even with just `r round(100 * automatic_tolls / S, 2)`% of the toll booths being automatic in this plaza, you can service `r round(mean(automatic_payments$percentage_of_automatic) * 100, 2)`% of the incoming traffic, as it was mentioned previously.
+If we were to break down the service rate per payment method, we should expect to see faster service time for automatic toll booths, that could account for a high percentage of the almost `r round(S * mu / 60, 2)` vehicles served per minute. Performing such break down yields `r round((S - automatic_tolls) * mu_manual / 60, 2)` vehicles services by minute in manual payment toll booths, and `r round(automatic_tolls * mu_automatic / 60, 2)` vehicles services by minute in automatic payment toll booths. Even though the service rate for manual toll booths is higher than that of automatic toll booths, it must be taken into account that there are more toll booths with manual payment methods that booths with automatic ones. For the particular case of the _Alberti_ toll booth plaza, an approximate of `r automatic_tolls` toll booths are automatic, from a total of `r S`. This shows that even with just `r round(100 * automatic_tolls / S, 2)`% of the toll booths being automatic in this plaza, you can service `r round(mean(automatic_payments$percentage) * 100, 2)`% of the incoming traffic, as it was mentioned previously.
 
 ###### Characterization of the M/M/S system
 Previously a traffic intensity $\rho$ of $90\%$ was assumed, and by doing so a realistic service rate `r round((S - automatic_tolls)* mu_manual / 60, 2)` vehicles per minute in manual toll booths and `r round(automatic_tolls * mu_automatic / 60, 2)` vehicles per minute in automatic toll booths was obtained.
@@ -297,7 +304,7 @@ Previously a traffic intensity $\rho$ of $90\%$ was assumed, and by doing so a r
 The system will be modeled as an M/M/S queuing model, where the first *M* stands for a Poisson distributed arrival pattern of vehicles. From here is that we derive $\lambda$, the mean of such distribution. The second *M* stands for an exponential distribution of the service rate $\mu$. Lastly, S stands for the number of servers, in this case toll booths per toll booth plaza, with a First In - First Out discipline. Summing everything together, the system will be considered stable if $\lambda < S\mu$, as previously mentioned.
 
 ```{r characteristics, echo=FALSE}
-#' Probability of having no units in the system (idle system).
+# Probability of having no units in the system (idle system).
 p0_ <- function(
   N, # Number of servers.
   rho # Utilization of the system.
@@ -308,8 +315,8 @@ p0_ <- function(
   )
 }
 
-#' Probability of having n units in the system. This means having `n` vehicles
-#' arriving at the same time, one to each toll booth. 
+# Probability of having n units in the system. This means having `n` vehicles
+# arriving at the same time, one to each toll booth. 
 pn <- function(
   n, # Amount of vehicles in the system.
   N, # Number of servers.
@@ -324,7 +331,7 @@ pn <- function(
   }
 }
 
-#' Average number of units in the queue.
+# Average number of units in the queue.
 Uq <- function (
   N, # Number of servers.
   rho # Utilization of the system.
@@ -332,7 +339,7 @@ Uq <- function (
   p0_(N, rho) * ((rho^N) / factorial(N)) * (rho / N) / (1 - (rho / N))^2
 }
 
-#' Average number of units in the system.
+# Average number of units in the system.
 Us <- function (
   N, # Number of servers.
   rho # Utilization of the system.
@@ -340,7 +347,7 @@ Us <- function (
   rho + Uq(N, rho)
 }
 
-#' Average time waiting in a queue.
+# Average time waiting in a queue.
 Wq <- function (
   N, # Number of servers.
   rho, # Utilization of the system.
@@ -349,7 +356,7 @@ Wq <- function (
   Uq(N, rho) / lambda
 }
 
-#' Average time waiting in the system.
+# Average time waiting in the system.
 Ws <- function (
   N, # Number of servers.
   rho, # Utilization of the system.
@@ -369,26 +376,64 @@ Using the probability of having an empty queue $P_0$ we can derive the average q
 ###### Average waiting time for units in queues
 The $U_q(N,\rho)$ metric can be reused to define the time spent waiting on queues as $W_q(N,\rho,\lambda) = U_q/\lambda$. The units of this metric are hours, and for this particular case it's value is `r Wq(S, rho, lambda)`, again very close to $0$. This result goes in tandem with the results from the average number of vehicles per queue, as not having to queue behind other vehicles means not spending that time on queues.
 
-#### Estimation of service rate from empiric measurements
-In the previoys section the value of $\mu$ derived after assuming 90% utilization of the system. In order to know if the system is actually performing at such percentage or if it's actually a higher or lower one, empiric measurements in real toll booths were performed.
+###### Partial conclusions for this analysis
+The two previous calculations of average number of units in queues and average waiting time in queues shown that on average vehicles shouldn't wait for going through toll booths. However, there are moments of time during the day (peak hours) were it's a fact that's not the case.
 
-```{r realsample, echo=FALSE}
-#' Observations were measured in seconds. This is the time in hours it takes to
-#' service one vehicle.
-avg_service_time <- mean(runif(100, 5, 20) / 3600)# mean(c(7.5, 6.75) / 3600)
-#' 1 / mu is the amount of vehicles that can be served in one hour.
-mu_emp <- 1 / avg_service_time
-#' Using the empirically computed service rate, the utilization is recomputed.
-rho_emp <- lambda / (S * mu_emp)
+```{r timeseries, echo=FALSE}
+avellaneda_ts <- toll_booth_ff %>%
+  filter (
+    year_ > 2015
+  ) %>%
+  group_by (
+    year_,
+    month_,
+    day_,
+    start_hour
+  ) %>%
+  summarise (
+    x = sum(amount)
+  )
+
+y <- avellaneda_ts$x / max(avellaneda_ts$x)
+adf.test(y, alternative = "stationary")
+# The p-value is smaller than 0.01, thus smaller then 0.05. The p-value is a
+# conditional probability that the mean of the sample is greater different than
+# the one in the null hypothesis H0, which in this case is the series is not
+# stationary. More context on the warning:
+# https://stackoverflow.com/questions/22031954/how-to-make-adf-test-print-more-precise-p-value-in-r
 ```
 
+#### Estimation of service rate from empiric measurements
+In the previous section the value of $\mu$ derived after assuming 90% utilization of the system. In order to know if the system is actually performing at such percentage or if it's actually a higher or lower one, empiric measurements in real toll booths were performed.
 
-```{r finalremovals, echo=FALSE}
-rm (
-  automatic_payments, avellaneda_ff, payment_methods_lambdas, payments,
-  payments_per_hour, amount_of_days, automatic_tolls, lambda, mu, mu_automatic, 
-  mu_manual, years_to_filter_by, S, rho, Uq, Us, Wq, Ws, p0_, pn, unified_ff,
-  avg_service_time, mu_emp, rho_emp
+```{r realsample, echo=FALSE}
+datasets_dir <- "../datasets/sources"
+attention <- data.frame (
+  read.csv (
+    file = file.path(datasets_dir, "attention.csv"), 
+    header = T, 
+    dec = ".",
+    stringsAsFactors = T
+  )
 )
+
+# Observations were measured in seconds. Given that the volume of vehicles
+# paying with cash is not the exact same volume as those paying automatically,
+# a weighted average of both payments methods is used to compute both the 
+# arrival and service rate.
+p <- mean(automatic_payments$percentage)
+# Arrival rate.
+lambda_automatic <- mean(
+  payments$amount[payments$payment_method == "Automatic"])
+lambda_manual <- mean(payments$amount[payments$payment_method == "Cash"])
+lambda <- lambda_automatic + lambda_manual
+# Service rate. Given that the volume of vehicles paying with cash is not the 
+# exact same volume as those paying automatically, a weighted average of 
+# payments methods is used to compute the service rate.
+mu_automatic <- 1 / (mean(attention$time[attention$type == "automatic"]) / 3600)
+mu_manual <- 1 / (mean(attention$time[attention$type == "manual"]) / 3600)
+mu <- p * mu_automatic + (1 - p) * mu_manual
+# Using the empirically computed service rate, the utilization is recomputed.
+rho <- lambda / (S * mu)
 ```
 
