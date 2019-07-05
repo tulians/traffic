@@ -238,7 +238,7 @@ standardize_traffic <- function(
     c("HORA", "HORA_FIN"), to_std_time_format)
   df <- df %>% mutate (
     start_hour = as.factor(HORA),
-    end.hour = as.factor(HORA_FIN)
+    end_hour = as.factor(HORA_FIN)
   )
   df[df$PERIODO < 2014, ] <- arrange(df[df$PERIODO < 2014, ], FECHA)
   df[df$PERIODO == 2018, ] <- df[df$PERIODO == 2018, ] %>% arrange(month_, day_)
