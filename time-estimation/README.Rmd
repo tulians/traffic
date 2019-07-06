@@ -349,18 +349,16 @@ Traffic intensity $\rho$ can be used to determine the probability of having no v
 The average queue length can be derived using the probability of having an empty queue $P_0$. For the general case of $S$ servers, the average queue length is defined as $L_q(S, \rho) = P_0\frac{\rho^{S+1}}{S!S}\left [ \frac{1}{\left (1 - \frac{\rho}{S} \right )^2} \right ]$.
 
 ###### Average waiting time for units in queues
-The $L_q(S,\rho)$ metric can be reused to define the time spent waiting on queues as $W_q(S,\rho,\lambda) = L_q/\lambda$, and it units are hours, given that $\lambda$ is defined in hours for this particular analysis.
+The $L_q(S,\rho)$ metric can be reused to define the time spent waiting on queues as $W_q(S,\rho,\lambda) = L_q(S, \rho)/\lambda$, and it units are hours, given that $\lambda$ is defined in hours for this particular analysis.
 
 ###### Example application for the 10am peak hour
-In a previous section it was shown that the highest utilization of the _Alberti_ toll booth plaza happens during the interval of time between 10am and 11am, with a percentage of utilization $\rho$ of 73.5%. That number was obtained from $\rho = \frac{\lambda}{S\mu} = \frac{838.45161}{5 * 228.1761} = 0.73491616$. For this particular set of metric values, the metrics above would be:
-
 ```{r metricsat10am, echo=FALSE}
 index <- which(rho == max(rho))
 lambda_max <- lambda[index]
 mu_max <- mu[index]
 S <- 5
 
-data.frame (
+metrics <- data.frame (
   Lq = Lq(S, lambda_max, mu_max),
   Wq = Wq(S, lambda_max, mu_max) * 3600,
   P0 = p0_(S, lambda_max, mu_max) * 100,
@@ -368,5 +366,4 @@ data.frame (
   rho = lambda_max / mu_max / S * 100
 )
 ```
-
-where the average length of the queue $L_q$ is 1.2 vehicles, the average time spent in a queue $W_q$ is 5.18 seconds, the probability of arriving at an empty queue $P_0$ is 2.06%, the probability of having to wait to go throught he toll booth $P_d$ is 43.5%, for the mentioned utilization of 73.5$.
+In a previous section it was shown that the highest utilization of the _Alberti_ toll booth plaza happens during the interval of time between 10am and 11am, with a percentage of utilization $\rho$ of 73.5%. That number was obtained from $\rho = \frac{\lambda}{S\mu} = \frac{838.45161}{5 * 228.1761} = 0.73491616$. For this particular set of metric values, the average length of the queue $L_q$ would be `r round(metrics$Lq, 2)` vehicles, the average time spent in a queue $W_q$ would be `r round(metrics$Wq, 2)` seconds, the probability of arriving at an empty queue $P_0$ would be `r round(metrics$P0, 2)`%, and the probability of having to wait to go throught he toll booth $P_d$ would be `r round(metrics$PD, 2)`%, for the mentioned utilization of 73.5%.
