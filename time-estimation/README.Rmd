@@ -140,6 +140,8 @@ ggplot(data = payments_per_hour,
          "Hourly average volume of cars in the Alberti toll booth plaza",
        caption = "Figure 4") +
   theme_minimal()
+
+rm(payments_per_hour, amount_of_days, toll_booth_ff)
 ```
 
 The previous figure presents two peaks which correspond to the timeframes of 9am to 11am and 6pm to 8pm. It would be expected that the utilization of the system, length of the queues, and the time spent on them increases when approaching a peak hour. Figure 5 ilustrates the breakdown of the previously shown volume per payment method, which clearly indicates the peaks are mostly driven by users leaning towards the use of the automatic payment method.
@@ -158,11 +160,14 @@ ggplot(data = payments,
          "Hourly vehicle volume breakdown per payment method",
        caption = "Figure 5") +
   theme_minimal()
+
+rm(lambda_manual, lambda_automatic)
 ```
 
 
 ##### Service time
 The _Alberti_ toll booth plaza has a total of 5 toll booths, 2 of them for accessing the _25 de Mayo_ highway, and other 3 for leaving it. A sample of 70 observations of vehicles being serviced on this toll booth was taken on a Saturday, which yielded the distribution presenteed in Figure 6.
+
 ```{r attentionsample, echo=FALSE}
 datasets_dir <- "../datasets/sources"
 attention <- data.frame (
@@ -185,7 +190,7 @@ ggplot(data = attention, aes(x = time, fill = type)) +
 
 The density function for the automatic payment method is more narrow than its manual counter part given that the latter could be impacted by many factors like the driver not having exact change prepared to pay, or the toll booth employee taking more or less time to service different clients. The average service time for the automatic payment method is `r mean(attention$time[attention$type == "automatic"])` seconds, while the average service time for manual payments is `r mean(attention$time[attention$type == "manual"])` seconds.
 
-One characteristic of _Alberti_'s toll booths is that they are both automatic and manual, so depending on the payment method of choosing of the driver, they can pay with cash or with an electronic tag. In summary, Figure 5 tells us there are moments of the day where automatic payments have more impact, while Figure 6 illustrates the densities of each payment method, and how service time differs between them. Such difference has to be taken into account when computing the service rate $\mu$ for the estimation of the traffic intensity $\rho$.
+One characteristic of _Alberti_'s toll booths is they are both automatic and manual, so depending on the payment method of choosing of the driver, they can pay with cash or with an electronic tag. In summary, Figure 5 tells us there are moments of the day where automatic payments have more impact, while Figure 6 illustrates the densities of each payment method, and how service time differs between them. Such difference has to be taken into account when computing the service rate $\mu$ for the estimation of the traffic intensity $\rho$.
 
 ```{r servicerate, echo=FALSE}
 # Observations were measured in seconds. Given that the volume of vehicles
@@ -206,32 +211,60 @@ share <- payments %>%
 t_automatic <- mean(attention$time[attention$type == "automatic"]) / 3600
 t_manual <- mean(attention$time[attention$type == "manual"]) / 3600
 mu <- 1 / (share$automatic * t_automatic + share$manual * t_manual)
+
+rm(t_automatic, t_manual, share)
 ```
 
 For this reason the service rate has to be expressed as a weighted sum which is function of the mean service times and its relative hourly weight. Such relation can be expressed as $\mu = \frac{1}{\alpha_it_a + \beta_it_m}$ where $\alpha_i$ indicates the percentage of vehicles paying with the automatic payment method at the hour $i$, and $\beta_i$ indicates the percentage of vehicles paying manually at the hour $i$, or $\beta = 1 - \alpha$. The resulting hourly values of $\mu$ are presented in Figure 7
 
 ```{r graph, echo=FALSE}
-ggplot(data = mu, aes(x = mu)) + 
-  geom_line() +
-  labs(x = "Service time (s)", 
-       y = "Density",
-       title = "Density of each payment method",
+# Adds the hour of the day to each of the hourly service rate values.
+mu_df <- data.frame (
+  time = 0:23,
+  mu = mu
+)
+
+ggplot(data = mu_df, aes(x = time, y = mu)) +
+  geom_line(linetype = "dashed") +
+  geom_point(color = "blue") +
+  labs(x = "Hour of the day", 
+       y = "Amount of vehicles",
+       title = "Vehicles served per hour per toll booth",
        caption = "Figure 7") +
   theme_minimal()
+
+rm(mu_df)
 ```
 
 ##### Traffic intensity
-Going back to what was mentioned at the beginning of this section, traffic intensity was defined as the ratio between the arrival rate $\lambda$ and the service rate $\mu$, so that $\lambda < \mu$. That condition ensures the system is stable. However, it only accounts for the case of a single server, while in this case  we have $S$ toll booths per plaza. This yields a system stability condition of $\lambda < S\mu$, thus defining $\rho$ as $\rho = \frac{\lambda}{S\mu}$. Following the third assumption in the assumptions section, as all toll booths are considered equal, we can express the total capacity of the system by multipying an individual toll booth capacity by the amount of toll booths in a toll booth plaza.
+Traffic intensity is defined as the ratio between the arrival rate $\lambda$ and the service rate $\mu$, so that $\lambda < \mu$. That condition ensures the system is stable. However, it only accounts for the case of a single server, while in this case  we have $S$ toll booths per plaza. This yields a system stability condition of $\lambda < S\mu$, thus defining $\rho$ as $\rho = \frac{\lambda}{S\mu}$. Following the third assumption in the assumptions section, as all toll booths are considered equal, we can express the total capacity of the system by multipying an individual toll booth capacity by the amount of toll booths in a toll booth plaza.
+
+Given the definitions of $\lambda$ and $\mu$ in the prior two sections, the utilization of the _Alberti_ toll booth plaza can be described by Figure 8, which presents the percentage of utilization of the 5 toll booths in such plaza. The moments where the toll booth plaza is mostly used are peak hours, with 10am having a 73.5% utilization, and 6pm with 72% utilization.
 
 ```{r realsample, echo=FALSE}
 # Using the empirically computed service rate, the utilization is recomputed.
 S <- 5
 rho <- lambda / (S * mu)
+
+# Adds the hour of the day to each of the hourly service rate values.
+rho_df <- data.frame (
+  time = 0:23,
+  rho = rho
+)
+
+ggplot(data = rho_df, aes(x = time, y = 100 * rho)) +
+  geom_line(linetype = "dashed") +
+  geom_point(color = "blue") +
+  labs(x = "Hour of the day", 
+       y = "Percentage of toll booth plaza utilization",
+       title = "Hourly utilization of Alberti toll booth plaza",
+       caption = "Figure 8") +
+  theme_minimal()
+
+rm(rho_df)
 ```
 
 ##### Characterization of the M/M/S system
-Previously a traffic intensity $\rho$ of $90\%$ was assumed, and by doing so a realistic service rate `r round((S - automatic_tolls)* mu_manual / 60, 2)` vehicles per minute in manual toll booths and `r round(automatic_tolls * mu_automatic / 60, 2)` vehicles per minute in automatic toll booths was obtained.
-
 The system will be modeled as an M/M/S queuing model, where the first *M* stands for a Poisson distributed arrival pattern of vehicles. From here is that we derive $\lambda$, the mean of such distribution. The second *M* stands for an exponential distribution of the service rate $\mu$. Lastly, S stands for the number of servers, in this case toll booths per toll booth plaza, with a First In - First Out discipline. Summing everything together, the system will be considered stable if $\lambda < S\mu$, as previously mentioned.
 
 ```{r characteristics, echo=FALSE}
