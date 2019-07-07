@@ -110,7 +110,7 @@ The ![L\_q(S,\\rho)](https://latex.codecogs.com/png.latex?L_q%28S%2C%5Crho%29 "L
 
 In a previous section it was shown that the highest utilization of the *Alberti* toll booth plaza happens during the interval of time between 11 and 12, with a percentage of utilization ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") of 0.73%. That number is obtained by computing ![\\rho = \\frac{\\lambda}{S\\mu}](https://latex.codecogs.com/png.latex?%5Crho%20%3D%20%5Cfrac%7B%5Clambda%7D%7BS%5Cmu%7D "\rho = \frac{\lambda}{S\mu}"). For this particular set of metric values, the average length of the queue ![L\_q](https://latex.codecogs.com/png.latex?L_q "L_q") would be 1.21 vehicles, the average time spent in a queue ![W\_q](https://latex.codecogs.com/png.latex?W_q "W_q") would be 5.18 seconds, the probability of arriving at an empty queue ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") would be 2.07%, and the probability of having to wait to go throught he toll booth ![P\_d](https://latex.codecogs.com/png.latex?P_d "P_d") would be 43.56%, for the mentioned utilization of 0.73%.
 
-###### Variable servers number
+###### Variable servers number for a fixed point in time
 
 The previous example has such performance metrics with the assumption that the *Alberti* toll booth plaza is servicing users with 5 toll booths. The table shown below exemplifies the behavior of the toll booth plaza on its entirety for scenarios where the amount of servers is different than 5.
 
@@ -129,3 +129,11 @@ The previous example has such performance metrics with the assumption that the *
 As shown in the table above, any amount of servers lower than 4 toll booths will result in an infinite queue, as both ![L\_q](https://latex.codecogs.com/png.latex?L_q "L_q") and ![W\_q](https://latex.codecogs.com/png.latex?W_q "W_q") are infinite due to the fact ![rho \\geq 1](https://latex.codecogs.com/png.latex?rho%20%5Cgeq%201 "rho \geq 1"). Looking at the values of ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho"), the biggest step in diminishing utilization appears when moving from 4 servers to 5 servers. As shown in Figure 9, there is a drop of 18.4 percentual points in utilization when a fifth toll booth is added to the plaza. This is the same amount of servers the *Alberti* toll booth plaza has today, and is a critical step in the design of a toll booth plaza.
 
 ![](README_files/figure-markdown_github/serversdiff-1.png)
+
+###### Minimum amount of servers needed per hour of day
+
+The previous section illustrated the importance of having a minimum amount of servers available for the system to be stable (meaning ![\\lambda/\\mu &lt; 1](https://latex.codecogs.com/png.latex?%5Clambda%2F%5Cmu%20%3C%201 "\lambda/\mu < 1")). As that section was specific for the 10am - 11am time period, this section extends it to the remaning intervals of time during the day.
+
+![](README_files/figure-markdown_github/utilizationperhour-1.png)
+
+Figure 10 describes the amount of servers needed for the *Alberti* toll booth in order to avoid infinite queues. Around 10am a recommended amount of 4 toll booths is indicated, which is consistent with the results shown in the table above, where the change from 3 to 4 servers droped the length of the queue and waiting time from infinite to a concrete number. Having said that, the amount of servers displayed in Figure 10 is only the minimum amount required to have a stable system, but not one that minimizes queue length or waiting times.
