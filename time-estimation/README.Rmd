@@ -375,7 +375,7 @@ metrics <- data.frame (
 ```
 In a previous section it was shown that the highest utilization of the _Alberti_ toll booth plaza happens during the interval of time between `r index` and `r index + 1`, with a percentage of utilization $\rho$ of `r round(max(rho), 2)`%. That number is obtained by computing $\rho = \frac{\lambda}{S\mu}$. For this particular set of metric values, the average length of the queue $L_q$ would be `r round(metrics$Lq, 2)` vehicles, the average time spent in a queue $W_q$ would be `r round(metrics$Wq, 2)` seconds, the probability of arriving at an empty queue $P_0$ would be `r round(metrics$P0, 2)`%, and the probability of having to wait to go throught he toll booth $P_d$ would be `r round(metrics$PD, 2)`%, for the mentioned utilization of `r round(max(rho), 2)`%.
 
-###### Variable servers number
+###### Variable servers number for a fixed point in time
 The previous example has such performance metrics with the assumption that the _Alberti_ toll booth plaza is servicing users with 5 toll booths. The table shown below exemplifies the behavior of the toll booth plaza on its entirety for scenarios where the amount of servers is different than 5. 
 
 ```{r moreexamples, echo=FALSE}
@@ -422,4 +422,26 @@ ggplot(data = rho_diff,
 rm(rho_diff, metrics)
 ```
 
+###### Minimum amount of servers needed per hour of day
+The previous section illustrated the importance of having a minimum amount of servers available for the system to be stable (meaning $\lambda/\mu < 1$). As that section was specific for the 10am - 11am time period, this section extends it to the remaning intervals of time during the day.
 
+```{r utilizationperhour, echo=FALSE}
+metrics <- data.frame (
+  hour = 0:23,
+  lambda = lambda,
+  mu = mu,
+  servers_req = ceiling(lambda / mu)
+)
+
+ggplot(data = metrics, 
+       aes(x = hour, y = servers_req)) +
+  geom_line(linetype = "dashed") +
+  geom_point(color = "blue") +
+  labs(x = "Hour of day", 
+       y = "Amount of servers",
+       title = "Minimal amount of servers to avoid infinite queues",
+       caption = "Figure 10") +
+  theme_minimal()
+```
+
+Figure 10 describes the amount of servers needed for the _Alberti_ toll booth in order to avoid infinite queues. Around 10am a recommended amount of 4 toll booths is indicated, which is consistent with the results shown in the table above, where the change from 3 to 4 servers droped the length of the queue and waiting time from infinite to a concrete number. Having said that, the amount of servers displayed in Figure 10 is only the minimum amount required to have a stable system, but not one that minimizes queue length or waiting times. 
