@@ -50,6 +50,8 @@ Up to now we've been working with the dataset without validating whether all the
 
 -   Service time is considered independent of the length of the queue.
 
+-   As the maximum dataset granularity is an interval of one hour, all transit for that hour will be considered from that hour only, meaning, it is assumed that no queues carry on from a previous time interval to the following one.
+
 #### Estimation of traffic intensity per toll booth
 
 In the previous section we discussed the need of computing the arrival rate ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda "\lambda") and service rate ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu") in order to know the traffic intensity ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho"). The former can be derived directly from the information provided by the dataset, given that each of its records indicates the amount of vehicles that arrived and went through the toll booths per hour. In order to estimate ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu") a sample toll booth service time was taken from the *Alberti* toll booth plaza. Additionally, only *cars* volume will be taken into account, as sample consists only on cars measurements.
@@ -106,4 +108,24 @@ The ![L\_q(S,\\rho)](https://latex.codecogs.com/png.latex?L_q%28S%2C%5Crho%29 "L
 
 ###### Example application for the 10am peak hour
 
-In a previous section it was shown that the highest utilization of the *Alberti* toll booth plaza happens during the interval of time between 10am and 11am, with a percentage of utilization ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") of 73.5%. That number was obtained from ![\\rho = \\frac{\\lambda}{S\\mu} = \\frac{838.45161}{5 \* 228.1761} = 0.73491616](https://latex.codecogs.com/png.latex?%5Crho%20%3D%20%5Cfrac%7B%5Clambda%7D%7BS%5Cmu%7D%20%3D%20%5Cfrac%7B838.45161%7D%7B5%20%2A%20228.1761%7D%20%3D%200.73491616 "\rho = \frac{\lambda}{S\mu} = \frac{838.45161}{5 * 228.1761} = 0.73491616"). For this particular set of metric values, the average length of the queue ![L\_q](https://latex.codecogs.com/png.latex?L_q "L_q") would be 1.21 vehicles, the average time spent in a queue ![W\_q](https://latex.codecogs.com/png.latex?W_q "W_q") would be 5.18 seconds, the probability of arriving at an empty queue ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") would be 2.07%, and the probability of having to wait to go throught he toll booth ![P\_d](https://latex.codecogs.com/png.latex?P_d "P_d") would be 43.56%, for the mentioned utilization of 73.5%.
+In a previous section it was shown that the highest utilization of the *Alberti* toll booth plaza happens during the interval of time between 11 and 12, with a percentage of utilization ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") of 0.73%. That number is obtained by computing ![\\rho = \\frac{\\lambda}{S\\mu}](https://latex.codecogs.com/png.latex?%5Crho%20%3D%20%5Cfrac%7B%5Clambda%7D%7BS%5Cmu%7D "\rho = \frac{\lambda}{S\mu}"). For this particular set of metric values, the average length of the queue ![L\_q](https://latex.codecogs.com/png.latex?L_q "L_q") would be 1.21 vehicles, the average time spent in a queue ![W\_q](https://latex.codecogs.com/png.latex?W_q "W_q") would be 5.18 seconds, the probability of arriving at an empty queue ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") would be 2.07%, and the probability of having to wait to go throught he toll booth ![P\_d](https://latex.codecogs.com/png.latex?P_d "P_d") would be 43.56%, for the mentioned utilization of 0.73%.
+
+###### Variable servers number
+
+The previous example has such performance metrics with the assumption that the *Alberti* toll booth plaza is servicing users with 5 toll booths. The table shown below exemplifies the behavior of the toll booth plaza on its entirety for scenarios where the amount of servers is different than 5.
+
+    ##     S          Lq          Wq        P0          PD       rho
+    ## 1   1         Inf         Inf 0.0000000 100.0000000 100.00000
+    ## 2   2         Inf         Inf 0.0000000 100.0000000 100.00000
+    ## 3   3         Inf         Inf 0.0000000 100.0000000 100.00000
+    ## 4   4 9.324984572 40.03802240 0.8843958  82.5816329  91.86452
+    ## 5   5 1.207561118  5.18481920 2.0681405  43.5566598  73.49162
+    ## 6   6 0.334325677  1.43547036 2.3982743  21.1574430  61.24301
+    ## 7   7 0.104182970  0.44732300 2.4955116   9.4283420  52.49401
+    ## 8   8 0.032699484  0.14039945 2.5243968   3.8491187  45.93226
+    ## 9   9 0.009941496  0.04268509 2.5328054   1.4407802  40.82868
+    ## 10 10 0.002879719  0.01236444 2.5351631   0.4957145  36.74581
+
+As shown in the table above, any amount of servers lower than 4 toll booths will result in an infinite queue, as both ![L\_q](https://latex.codecogs.com/png.latex?L_q "L_q") and ![W\_q](https://latex.codecogs.com/png.latex?W_q "W_q") are infinite due to the fact ![rho \\geq 1](https://latex.codecogs.com/png.latex?rho%20%5Cgeq%201 "rho \geq 1"). Looking at the values of ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho"), the biggest step in diminishing utilization appears when moving from 4 servers to 5 servers. As shown in Figure 9, there is a drop of 18.4 percentual points in utilization when a fifth toll booth is added to the plaza. This is the same amount of servers the *Alberti* toll booth plaza has today, and is a critical step in the design of a toll booth plaza.
+
+![](README_files/figure-markdown_github/serversdiff-1.png)

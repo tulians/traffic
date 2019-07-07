@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 rm(list = ls()); gc();
 
-packages_to_include <- c(
+packages_to_include <- c (
   "dplyr", "tibble", "ggplot2", "ff", "reshape2", "tseries"
 )
 
@@ -40,7 +40,7 @@ datasets_dir <- "../datasets"
 # Directory where `ff` stores temporary files. Take into account temporary files
 # will fill up this directory through time. Make sure to delete them once in a
 # while.
-options(
+options (
   fftempdir = file.path(datasets_dir, "tmp")
 )
 unified_ff <- read.csv.ffdf (
@@ -78,6 +78,8 @@ Up to now we've been working with the dataset without validating whether all the
 * All toll booths in each of the plazas is considered to be the same in terms of technology and service time. The only difference that will be considered would be that of automatic and manual toll booths.
 
 * Service time is considered independent of the length of the queue.
+
+* As the maximum dataset granularity is an interval of one hour, all transit for that hour will be considered from that hour only, meaning, it is assumed that no queues carry on from a previous time interval to the following one.
 
 #### Estimation of traffic intensity per toll booth
 In the previous section we discussed the need of computing the arrival rate $\lambda$ and service rate $\mu$ in order to know the traffic intensity $\rho$. The former can be derived directly from the information provided by the dataset, given that each of its records indicates the amount of vehicles that arrived and went through the toll booths per hour. In order to estimate $\mu$ a sample toll booth service time was taken from the _Alberti_ toll booth plaza. Additionally, only _cars_ volume will be taken into account, as sample consists only on cars measurements.
@@ -212,7 +214,7 @@ t_automatic <- mean(attention$time[attention$type == "automatic"]) / 3600
 t_manual <- mean(attention$time[attention$type == "manual"]) / 3600
 mu <- 1 / (share$automatic * t_automatic + share$manual * t_manual)
 
-rm(t_automatic, t_manual, share)
+rm(t_automatic, t_manual, share, attention)
 ```
 
 For this reason the service rate has to be expressed as a weighted sum which is function of the mean service times and its relative hourly weight. Such relation can be expressed as $\mu = \frac{1}{\alpha_it_a + \beta_it_m}$ where $\alpha_i$ indicates the percentage of vehicles paying with the automatic payment method at the hour $i$, and $\beta_i$ indicates the percentage of vehicles paying manually at the hour $i$, or $\beta = 1 - \alpha$. The resulting hourly values of $\mu$ are presented in Figure 7
@@ -284,7 +286,12 @@ p0_ <- function (
   mu # System service rate.
 ) {
   r <- rho_(0:S, lambda, mu)
-  max(1 / (sum(r[1:(S-1)]) + (r[S] / (1 - (lambda / mu) / S))), 0)
+  p0 <- 1 / (sum(r[1:(S-1)]) + (r[S] / (1 - (lambda / mu) / S)))
+  ifelse (
+    (p0 > 1) | (p0 < 0), 
+    0, 
+    p0
+  )
 }
 
 # Probability of waiting for an arriving customer.
@@ -293,11 +300,11 @@ pd <- function (
   lambda, # Arrivals to the system.
   mu # System service rate.
 ) {
-  if (lambda / mu / S > 1) {
-    1
-  } else {
-    1 - p0_(S, lambda, mu) * sum(rho_(0:(S-1), lambda, mu)) 
-  }
+  ifelse (
+    (lambda / mu / S) > 1, 
+    1, 
+    1 - p0_(S, lambda, mu) * sum(rho_(0:(S-1), lambda, mu))
+  )
 }
 
 # Average number of units in the queue.
@@ -306,12 +313,12 @@ Lq <- function (
   lambda, # Arrivals to the system.
   mu # System service rate.
 ) {
-  if (lambda / mu / S > 1) {
-    Inf
-  } else {
-    r <- lambda / mu / S
+  r <- lambda / mu / S
+  ifelse (
+    r > 1,
+    Inf,
     p0_(S, lambda, mu) * rho_(S, lambda, mu) * r / (1 - r)^2
-  }
+  )
 }
 
 # Average number of units in the system.
@@ -352,7 +359,7 @@ The average queue length can be derived using the probability of having an empty
 The $L_q(S,\rho)$ metric can be reused to define the time spent waiting on queues as $W_q(S,\rho,\lambda) = L_q(S, \rho)/\lambda$, and it units are hours, given that $\lambda$ is defined in hours for this particular analysis.
 
 ###### Example application for the 10am peak hour
-```{r metricsat10am, echo=FALSE}
+```{r metricsatpeak, echo=FALSE}
 index <- which(rho == max(rho))
 lambda_max <- lambda[index]
 mu_max <- mu[index]
@@ -366,4 +373,53 @@ metrics <- data.frame (
   rho = lambda_max / mu_max / S * 100
 )
 ```
-In a previous section it was shown that the highest utilization of the _Alberti_ toll booth plaza happens during the interval of time between 10am and 11am, with a percentage of utilization $\rho$ of 73.5%. That number was obtained from $\rho = \frac{\lambda}{S\mu} = \frac{838.45161}{5 * 228.1761} = 0.73491616$. For this particular set of metric values, the average length of the queue $L_q$ would be `r round(metrics$Lq, 2)` vehicles, the average time spent in a queue $W_q$ would be `r round(metrics$Wq, 2)` seconds, the probability of arriving at an empty queue $P_0$ would be `r round(metrics$P0, 2)`%, and the probability of having to wait to go throught he toll booth $P_d$ would be `r round(metrics$PD, 2)`%, for the mentioned utilization of 73.5%.
+In a previous section it was shown that the highest utilization of the _Alberti_ toll booth plaza happens during the interval of time between `r index` and `r index + 1`, with a percentage of utilization $\rho$ of `r round(max(rho), 2)`%. That number is obtained by computing $\rho = \frac{\lambda}{S\mu}$. For this particular set of metric values, the average length of the queue $L_q$ would be `r round(metrics$Lq, 2)` vehicles, the average time spent in a queue $W_q$ would be `r round(metrics$Wq, 2)` seconds, the probability of arriving at an empty queue $P_0$ would be `r round(metrics$P0, 2)`%, and the probability of having to wait to go throught he toll booth $P_d$ would be `r round(metrics$PD, 2)`%, for the mentioned utilization of `r round(max(rho), 2)`%.
+
+###### Variable servers number
+The previous example has such performance metrics with the assumption that the _Alberti_ toll booth plaza is servicing users with 5 toll booths. The table shown below exemplifies the behavior of the toll booth plaza on its entirety for scenarios where the amount of servers is different than 5. 
+
+```{r moreexamples, echo=FALSE}
+characteristics <- function (
+  S, # Number of servers.
+  lambda, # Arrivals to the system.
+  mu # System service rate.
+) {
+  c (
+    S = S,
+    Lq = Lq(S, lambda_max, mu_max),
+    Wq = Wq(S, lambda_max, mu_max) * 3600,
+    P0 = p0_(S, lambda_max, mu_max) * 100,
+    PD = pd(S, lambda_max, mu_max) * 100,
+    rho = min(lambda_max / mu_max / S, 1) * 100
+  )
+}
+
+metrics <- data.frame (
+  do.call("rbind", lapply(1:10, characteristics, lambda_max, mu_max))
+)
+metrics
+```
+
+As shown in the table above, any amount of servers lower than 4 toll booths will result in an infinite queue, as both $L_q$ and $W_q$ are infinite due to the fact $rho \geq 1$. Looking at the values of $\rho$, the biggest step in diminishing utilization appears when moving from 4 servers to 5 servers. As shown in Figure 9, there is a drop of 18.4 percentual points in utilization when a fifth toll booth is added to the plaza. This is the same amount of servers the _Alberti_ toll booth plaza has today, and is a critical step in the design of a toll booth plaza.
+
+```{r serversdiff, echo=FALSE}
+rho_diff <- data.frame (
+  servers = 2:nrow(metrics),
+  step = abs(diff(metrics$rho))
+)
+
+ggplot(data = rho_diff, 
+       aes(x = servers, y = step, label = round(step, 1))) +
+  geom_line(linetype = "dashed") +
+  geom_point(color = "blue") +
+  geom_text(vjust = 0.6, hjust = -0.3) +
+  labs(x = "Amount of servers", 
+       y = "Percentual points difference in utilization",
+       title = "Impact on utilization of adding extra servers",
+       caption = "Figure 9") +
+  theme_minimal()
+
+rm(rho_diff, metrics)
+```
+
+
