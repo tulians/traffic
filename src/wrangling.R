@@ -186,21 +186,13 @@ standardize_traffic <- function(
       toll_booth_name == "Sarmiento" ~ -58.4079902,
       toll_booth_name == "Salguero" ~ -58.4003948
     ),
-    manual_booths = case_when (
-      toll_booth_name == "Alberti" ~ 5,
-      toll_booth_name == "Avellaneda" ~ 26,
-      toll_booth_name == "Dellepiane" ~ 8,
-      toll_booth_name == "Retiro" ~ 24,
-      toll_booth_name == "Sarmiento" ~ 0,
-      toll_booth_name == "Salguero" ~ 0
-    ),
-    automatic_booths = case_when (
+    booths = case_when (
       toll_booth_name == "Alberti" ~ 5,
       toll_booth_name == "Avellaneda" ~ 32,
-      toll_booth_name == "Dellepiane" ~ 6,
+      toll_booth_name == "Dellepiane" ~ 23,
       toll_booth_name == "Retiro" ~ 32,
-      toll_booth_name == "Sarmiento" ~ 8,
-      toll_booth_name == "Salguero" ~ 8
+      toll_booth_name == "Sarmiento" ~ 2,
+      toll_booth_name == "Salguero" ~ 2
     ),
     payment_method = case_when (
       tolower(FORMA_PAGO) == "efectivo" ~ "Cash",
@@ -341,7 +333,14 @@ build_unified_dataset <- function(
   oil = "oil_prices.csv",
   unified = "unified.csv"
 ) {
-  require(dplyr, data.table)
+  packages_to_include <- c (
+    "dplyr", "data.table"
+  )
+  lapply (
+    packages_to_include, # From this list ...
+    require, # ... include them as packages.
+    character.only = T
+  )
   #' Prepare the two data sources for merging.
   standardize_traffic()
   standardize_oil()

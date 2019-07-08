@@ -24,6 +24,8 @@ lapply (
   character.only = T
 )
 
+theme_set(theme_minimal() + theme(legend.position = 'bottom'))
+
 rm(packages_to_include)
 ```
 
@@ -64,11 +66,11 @@ Up to now we've been working with the dataset without validating whether all the
 
 * `Avellaneda`: the _Parque Avellaneda_ toll booth is located at [(-34.6483842,-58.4782827)](https://www.google.com/maps/place/Toll+Parque+Avellaneda/@-34.6483842,-58.4782827,15z/data=!4m5!3m4!1s0x95bcc976fa19271d:0x114032996c02ca46!8m2!3d-34.6478475!4d-58.477942) in the _Perito Moreno_ highway. This geolocation matches the location provided in the [map](https://www.ausa.com.ar/documentos/AUSA-Mapa-Autopistas.pdf). This toll booth is much bigger than the one of _Peaje Alberti_, as it's right in the highway, and consists of [16 lanes](https://www.google.com/maps/@-34.6485245,-58.4775302,3a,82.3y,306.63h,84.59t/data=!3m6!1e1!3m4!1s0t2jEnNc2pbxYu3mgSMYiw!2e0!7i13312!8i6656) to enter the city and [17 lanes](https://www.google.com/maps/@-34.6473728,-58.4783124,3a,70.3y,140.7h,90.17t/data=!3m6!1e1!3m4!1s8HtLVelrUWM_-Lq3uKhZJw!2e0!7i13312!8i6656) to leave.
 
-* `Dellepiane`: the _Dellepiane_ toll booth is located at [(-34.6476526,-58.4642902)](https://www.google.com/maps/@-34.6476526,-58.4642902,3a,75y,183.74h,83.19t/data=!3m7!1e1!3m5!1sAJy89f4OeGWzUY4j5jP_kA!2e0!6s%2F%2Fgeo2.ggpht.com%2Fcbk%3Fpanoid%3DAJy89f4OeGWzUY4j5jP_kA%26output%3Dthumbnail%26cb_client%3Dmaps_sv.tactile.gps%26thumb%3D2%26w%3D203%26h%3D100%26yaw%3D278.81256%26pitch%3D0%26thumbfov%3D100!7i13312!8i6656) in the _25 de Mayo_ highway. Just like with `Avellaneda`, it's geolocation matches the locationprovided in the [map](https://www.ausa.com.ar/documentos/AUSA-Mapa-Autopistas.pdf). What's particular about this toll booth is that it only consists of [8 lanes](https://www.google.com/maps/@-34.6476526,-58.4642902,3a,75y,183.74h,83.19t/data=!3m7!1e1!3m5!1sAJy89f4OeGWzUY4j5jP_kA!2e0!6s%2F%2Fgeo2.ggpht.com%2Fcbk%3Fpanoid%3DAJy89f4OeGWzUY4j5jP_kA%26output%3Dthumbnail%26cb_client%3Dmaps_sv.tactile.gps%26thumb%3D2%26w%3D203%26h%3D100%26yaw%3D278.81256%26pitch%3D0%26thumbfov%3D100!7i13312!8i6656) to leave the city, but none to enter, most likely due to its proximity to the Avellaneda toll booth.
+* `Dellepiane`: the _Dellepiane_ toll booth is located at [(-34.6476526,-58.4642902)](https://www.google.com/maps/@-34.6476526,-58.4642902,3a,75y,183.74h,83.19t/data=!3m7!1e1!3m5!1sAJy89f4OeGWzUY4j5jP_kA!2e0!6s%2F%2Fgeo2.ggpht.com%2Fcbk%3Fpanoid%3DAJy89f4OeGWzUY4j5jP_kA%26output%3Dthumbnail%26cb_client%3Dmaps_sv.tactile.gps%26thumb%3D2%26w%3D203%26h%3D100%26yaw%3D278.81256%26pitch%3D0%26thumbfov%3D100!7i13312!8i6656) in the _25 de Mayo_ highway. Just like with `Avellaneda`, it's geolocation matches the locationprovided in the [map](https://www.ausa.com.ar/documentos/AUSA-Mapa-Autopistas.pdf). This toll booth is that it only consists of [8 lanes](https://www.google.com/maps/@-34.6476526,-58.4642902,3a,75y,183.74h,83.19t/data=!3m7!1e1!3m5!1sAJy89f4OeGWzUY4j5jP_kA!2e0!6s%2F%2Fgeo2.ggpht.com%2Fcbk%3Fpanoid%3DAJy89f4OeGWzUY4j5jP_kA%26output%3Dthumbnail%26cb_client%3Dmaps_sv.tactile.gps%26thumb%3D2%26w%3D203%26h%3D100%26yaw%3D278.81256%26pitch%3D0%26thumbfov%3D100!7i13312!8i6656) to leave the city, and [15 lanes](https://www.google.com/maps/@-34.6496524,-58.4653365,3a,75y,227.71h,85.06t/data=!3m6!1e1!3m4!1sHLTRXcFyEzF3xV6j9GIvRg!2e0!7i13312!8i6656) to enter.
 
 * `Illia` and `Retiro`: as per the [map](https://www.ausa.com.ar/documentos/AUSA-Mapa-Autopistas.pdf), the _Retiro_ toll booth is located in the _President Arturo Umberto Illia_ highway. Contrary to what was mentioned about this two toll booths in the the [previous analysis](https://github.com/tulians/traffic/tree/master/descriptive#increment-in-traffic), given that there is no distinction between those two labels in the official map, they will be considered to be the same toll booth in this analysis. This toll booth has [16 lanes](https://www.google.com/maps/@-34.5752154,-58.3939207,3a,75y,97.32h,90.8t/data=!3m6!1e1!3m4!1sgu6cZza2fn1MaGwSQDCN8Q!2e0!7i13312!8i6656) to enter the city, and [13 lanes](https://www.google.com/maps/@-34.5753211,-58.3920502,3a,60y,297.07h,84.14t/data=!3m6!1e1!3m4!1syPX2FmTEXJDiDXbKJ_60lw!2e0!7i13312!8i6656) to leave.
 
-* `Sarmiento` and `Salguero`: these two toll booths are the most recent of all, and are completely automatic, thus don't have any kind of barriers of physical toll booths. They rely on a framework that identifies via laser and RFID whether a given car is suscribed to the automatic toll booth pay a fine. Given the fact that this system was recently implemented, and that Google Maps' most up to date photograph is from [2014](https://www.google.com/maps/@-34.5720142,-58.4003746,3a,75y,86.66h,84.34t/data=!3m6!1e1!3m4!1s4EUI6eAipzhLxajyKJyH3Q!2e0!7i13312!8i6656) there is no information on the amount of lanes the system uses, but judging for the [way it is explained in a local newspaper](https://www.clarin.com/brandstudio/autopistas-barreras-funcionan-beneficios_0_BFyjtPTT7.html) the lasers most likely take the width of the highway, which is [4 lanes](https://www.google.com/maps/@-34.572059,-58.4002728,3a,75y,89.44h,76.27t/data=!3m6!1e1!3m4!1sUBDmnfT7MIlSI-IaUNA8rg!2e0!7i13312!8i6656) to enter the city and [4 lanes](https://www.google.com/maps/@-34.5717317,-58.4002346,3a,75y,318.34h,75.16t/data=!3m7!1e1!3m5!1sB5bOs_1b8Kgeal35aCFRdw!2e0!6s%2F%2Fgeo3.ggpht.com%2Fcbk%3Fpanoid%3DB5bOs_1b8Kgeal35aCFRdw%26output%3Dthumbnail%26cb_client%3Dmaps_sv.tactile.gps%26thumb%3D2%26w%3D203%26h%3D100%26yaw%3D9.781906%26pitch%3D0%26thumbfov%3D100!7i13312!8i6656) to leave.
+* `Sarmiento` and `Salguero`: these two toll booths are the most recent of all, and are completely automatic, thus don't have any kind of barriers of physical toll booths. They rely on a framework that identifies via laser and RFID whether a given car is suscribed to the automatic toll booth pay a fine. Given the fact that this system was recently implemented, and that Google Maps' most up to date photograph is from [2014](https://www.google.com/maps/@-34.5720142,-58.4003746,3a,75y,86.66h,84.34t/data=!3m6!1e1!3m4!1s4EUI6eAipzhLxajyKJyH3Q!2e0!7i13312!8i6656) there is no information on the amount of lanes the system uses, but judging for the [way it is explained in a local newspaper](https://www.clarin.com/brandstudio/autopistas-barreras-funcionan-beneficios_0_BFyjtPTT7.html) the lasers most likely take the width of the lane drivers have to use to enter or leave the highway, this is, 2 lanes in total.
 
 ##### Assumptions
 * As you can see from the above links the amount of toll booths per lane was manually counted using Google Maps. However, these amounts are not fixed, and depend on date and time, in order to accomodate the service to the incoming volume of vehicles. The are no official communications from AUSA on how those changes are performed, so for the sake of this analysis the amount of toll booths to use would be the sum of those going in and those going out of the city. This is due to the fact that the information provided is aggregated to a level that does not provide visibility on the direction of the vehicles.
@@ -140,8 +142,7 @@ ggplot(data = payments_per_hour,
        y = "Volume of vehicles",
        title = 
          "Hourly average volume of cars in the Alberti toll booth plaza",
-       caption = "Figure 4") +
-  theme_minimal()
+       caption = "Figure 4")
 
 rm(payments_per_hour, amount_of_days, toll_booth_ff)
 ```
@@ -160,8 +161,7 @@ ggplot(data = payments,
        y = "Volume of vehicles",
        title = 
          "Hourly vehicle volume breakdown per payment method",
-       caption = "Figure 5") +
-  theme_minimal()
+       caption = "Figure 5")
 
 rm(lambda_manual, lambda_automatic)
 ```
@@ -186,8 +186,7 @@ ggplot(data = attention, aes(x = time, fill = type)) +
   labs(x = "Service time (s)", 
        y = "Density",
        title = "Density of each payment method",
-       caption = "Figure 6") +
-  theme_minimal()
+       caption = "Figure 6")
 ```
 
 The density function for the automatic payment method is more narrow than its manual counter part given that the latter could be impacted by many factors like the driver not having exact change prepared to pay, or the toll booth employee taking more or less time to service different clients. The average service time for the automatic payment method is `r mean(attention$time[attention$type == "automatic"])` seconds, while the average service time for manual payments is `r mean(attention$time[attention$type == "manual"])` seconds.
@@ -214,7 +213,7 @@ t_automatic <- mean(attention$time[attention$type == "automatic"]) / 3600
 t_manual <- mean(attention$time[attention$type == "manual"]) / 3600
 mu <- 1 / (share$automatic * t_automatic + share$manual * t_manual)
 
-rm(t_automatic, t_manual, share, attention)
+rm(t_automatic, t_manual, share)
 ```
 
 For this reason the service rate has to be expressed as a weighted sum which is function of the mean service times and its relative hourly weight. Such relation can be expressed as $\mu = \frac{1}{\alpha_it_a + \beta_it_m}$ where $\alpha_i$ indicates the percentage of vehicles paying with the automatic payment method at the hour $i$, and $\beta_i$ indicates the percentage of vehicles paying manually at the hour $i$, or $\beta = 1 - \alpha$. The resulting hourly values of $\mu$ are presented in Figure 7
@@ -232,8 +231,7 @@ ggplot(data = mu_df, aes(x = time, y = mu)) +
   labs(x = "Hour of the day", 
        y = "Amount of vehicles",
        title = "Vehicles served per hour per toll booth",
-       caption = "Figure 7") +
-  theme_minimal()
+       caption = "Figure 7")
 
 rm(mu_df)
 ```
@@ -260,8 +258,7 @@ ggplot(data = rho_df, aes(x = time, y = 100 * rho)) +
   labs(x = "Hour of the day", 
        y = "Percentage of toll booth plaza utilization",
        title = "Hourly utilization of Alberti toll booth plaza",
-       caption = "Figure 8") +
-  theme_minimal()
+       caption = "Figure 8")
 
 rm(rho_df)
 ```
@@ -416,8 +413,7 @@ ggplot(data = rho_diff,
   labs(x = "Amount of servers", 
        y = "Percentual points difference in utilization",
        title = "Impact on utilization of adding extra servers",
-       caption = "Figure 9") +
-  theme_minimal()
+       caption = "Figure 9")
 
 rm(rho_diff, metrics)
 ```
@@ -428,8 +424,6 @@ The previous section illustrated the importance of having a minimum amount of se
 ```{r utilizationperhour, echo=FALSE}
 metrics <- data.frame (
   hour = 0:23,
-  lambda = lambda,
-  mu = mu,
   servers_req = ceiling(lambda / mu)
 )
 
@@ -444,4 +438,172 @@ ggplot(data = metrics,
   theme_minimal()
 ```
 
-Figure 10 describes the amount of servers needed for the _Alberti_ toll booth in order to avoid infinite queues. Around 10am a recommended amount of 4 toll booths is indicated, which is consistent with the results shown in the table above, where the change from 3 to 4 servers droped the length of the queue and waiting time from infinite to a concrete number. Having said that, the amount of servers displayed in Figure 10 is only the minimum amount required to have a stable system, but not one that minimizes queue length or waiting times. 
+Figure 10 describes the amount of servers needed for the _Alberti_ toll booth in order to avoid infinite queues. Around 10am a recommended amount of 4 toll booths is indicated, which is consistent with the results shown in the table above, where the change from 3 to 4 servers droped the length of the queue and waiting time from infinite to a concrete number. Having said that, the amount of servers displayed in Figure 10 is only the minimum amount required to have a stable system, but not one that minimizes queue length or waiting times.
+
+### Characterization of each AUSA's toll booth plazas
+Building on the methodologies and calculation of traffic intensity and time spent on queues, this section is going to extend such analysis to the whole of AUSA toll booth plazas.
+
+#### Volume of vehicles going through each toll booth plaza
+The amount of vehicles that each toll booth plaza services is the building block for futher design decisions with respect to amount of toll booths, and thus average time-spent on queues. Figure 11 describes the traffic evolution during the day for each toll booth plaza. In terms of behavior, each of the toll booth plazas is subject to the same trend, but with different orders of magnitude.
+
+```{r trafficperbooth, echo=FALSE}
+years_to_filter_by <- c(2019)
+
+toll_booth_ff <- unified_ff %>% as_tibble() %>%
+  filter (
+    year_ %in% years_to_filter_by
+    & payment_method %in% c("Automatic", "Cash")
+    & vehicle_type == "Car"
+  )
+
+amount_of_days <- toll_booth_ff %>%
+  distinct (
+    year_,
+    month_,
+    day_
+  ) %>%
+  nrow()
+
+payments <- toll_booth_ff %>%
+  group_by (
+    toll_booth_name,
+    payment_method,
+    start_hour,
+    booths
+  ) %>% 
+  summarise (
+    amount = 0.25 * sum(amount) / amount_of_days
+  )
+
+payments_per_hour <- payments %>%
+  group_by (
+    toll_booth_name,
+    start_hour
+  ) %>%
+  summarise (
+    amount = sum(amount)
+  )
+
+ggplot(data = payments_per_hour,
+       aes(x = substr(start_hour, 1, 2), y = amount, group = toll_booth_name)) +
+  geom_line(aes(color = toll_booth_name)) +
+  labs(x = "Hour of day",
+       y = "Volume of vehicles",
+       title = 
+         "Hourly average volume of cars in the Alberti toll booth plaza",
+       caption = "Figure 11") +
+  scale_y_continuous(trans = "log10")
+```
+
+#### Utilization of each toll booth plaza throughout the day
+Interpreting the arrivals information on Figure 11 as the arrival rate $\lambda$, and reusing the service rate information obtained empirically, an estimation of the hourly utilization $\rho$ of each toll booth plaza is presented in Figure 12. The top 3 more utilized toll booth plazas are: Avellaneda with a maximum average utilization of 81.5%, Alberti with a maximum average utilization of 73.4%, and lastly Dellepiane with a  maximum average utilization of, again, 73.4%.
+```{r utilization, echo=FALSE}
+lambda <- payments %>%
+  group_by (
+    toll_booth_name,
+    start_hour,
+    booths
+  ) %>%
+  summarise (
+    amount = sum(amount),
+    booths_number = mean(booths)
+  )
+
+share <- payments %>%
+  group_by (
+    toll_booth_name,
+    start_hour
+  ) %>%
+  summarise (
+    manual = sum(amount[payment_method == "Cash"]) / sum(amount),
+    automatic = sum(amount[payment_method == "Automatic"]) / sum(amount)
+  )
+
+t_automatic <- mean(attention$time[attention$type == "automatic"]) / 3600
+t_manual <- mean(attention$time[attention$type == "manual"]) / 3600
+
+mu <- share %>%
+  group_by (
+    toll_booth_name,
+    start_hour
+  ) %>%
+  summarise (
+    amount = 1 / (automatic * t_automatic + manual * t_manual)
+  )
+
+rho <- data.frame (
+  toll_booth_name = lambda$toll_booth_name,
+  start_hour = lambda$start_hour,
+  lambda = lambda$amount,
+  mu = mu$amount,
+  booths = lambda$booths,
+  rho = lambda$amount / (lambda$booths_number * mu$amount)
+)
+
+ggplot(data = rho,
+       aes(x = substr(start_hour, 1, 2), 
+           y = 100 * rho, 
+           group = toll_booth_name)) +
+  geom_line(aes(color = toll_booth_name)) +
+  labs(x = "Hour of day",
+       y = "Percentage of utilization",
+       title = 
+         "Hourly utilization for all toll booth plazas",
+       caption = "Figure 12")
+```
+
+#### Minimum average number of toll booths required for each plaza
+The average utilization presented in Figure 13 uses the amount of servers that can be found in Google Maps. However, those amounts are actually higher than what is theoretically needed to avoid infinite queues. However, these additional toll booths are needed, since the theoretical values are averages, which means there can be situations where the traffic is higher than expected and may require an additional toll booth to cater for it. 
+```{r minimumamount, echo=FALSE}
+metrics <- rho %>%
+  group_by (
+    toll_booth_name,
+    start_hour
+  ) %>%
+  summarise (
+    servers_req = ceiling(lambda / mu) 
+  )
+
+ggplot(data = metrics, 
+       aes(x = substr(start_hour, 1, 2), 
+           y = servers_req, 
+           group = toll_booth_name)) +
+  geom_line(aes(color = toll_booth_name)) +
+  labs(x = "Hour of day", 
+       y = "Amount of servers",
+       title = "Minimal amount of servers to avoid infinite queues",
+       caption = "Figure 13")
+```
+
+The table below shows the difference between the actual number of toll booths in each toll booth plaza and the minimum amount required to avoid infinite queues. The greatest difference appears for the Retiro toll booth plaza, where the minimum amount of required toll booths is around 59.4% of the existing toll booths, while for other plazas with high vehicle volumes such ratio is  84.4%.
+
+```{r differencebetweenrealandaverage, echo=FALSE}
+toll_booth_max_req <- metrics %>%
+  group_by (
+    toll_booth_name
+  ) %>%
+  summarise (
+    amount = max(servers_req)
+  )
+
+toll_booth_actual <- rho %>%
+  group_by (
+    toll_booth_name
+  ) %>%
+  summarise (
+    amount = mean(booths)
+  )
+
+data.frame (
+  name = toll_booth_actual$toll_booth_name,
+  actual = toll_booth_actual$amount,
+  minimum = toll_booth_max_req$amount,
+  difference = toll_booth_actual$amount - toll_booth_max_req$amount
+)
+```
+
+
+```{r removeall, echo=FALSE}
+rm(list = ls()); gc();
+```
+
