@@ -92,14 +92,14 @@ The next three section will consist on a detailed explanation of each of the thr
 At the moment of writing the most recent information the dataset holds is from January 2019. The rationale for using the most recent information to define the arrival rate is that the volume of vehicles going through toll booths steadily increased through the years, so using information from prior years can lower the average arrival volumes. Figure 4 shows the average amount of vehicles that arrive to the _Alberti_ toll booth per hour.
 
 ```{r albertivehiclesperhour, echo=FALSE}
-years_to_filter_by <- c(2019) # 2014:2019
-# Filtering only for Alberti information, on the years where there is more
-# recent information (which is from 2019 onwards), and only for the top 2
-# most frequent payment methods.
+years_to_filter_by <- c(2019)
+
+# Filtering only for recent information (which is from 2019 onwards), and only 
+# for the top 2 most frequent payment methods. The global information will be
+# used in the next section.
 toll_booth_ff <- unified_ff %>% as_tibble() %>%
   filter (
     year_ %in% years_to_filter_by
-    & toll_booth_name == "Alberti"
     & payment_method %in% c("Automatic", "Cash")
     & vehicle_type == "Car"
   )
@@ -117,9 +117,11 @@ amount_of_days <- toll_booth_ff %>%
 
 payments <- toll_booth_ff %>%
   group_by (
+    toll_booth_name,
     payment_method,
-    start_hour
-  ) %>% 
+    start_hour,
+    booths
+  ) %>%
   summarise (
     # Divide by 4 as each row is repeated 4 times due to the oil dataset join.
     amount = 0.25 * sum(amount) / amount_of_days
@@ -128,13 +130,33 @@ payments <- toll_booth_ff %>%
 # Average hourly payments performed by vehicles that arrive at toll booths.
 payments_per_hour <- payments %>%
   group_by (
+    toll_booth_name,
     start_hour
   ) %>%
   summarise (
     amount = sum(amount)
   )
 
-ggplot(data = payments_per_hour,
+# Filtering only for Alberti information.
+toll_booth_alberti <- toll_booth_ff %>% as_tibble() %>%
+  filter (
+    toll_booth_name == "Alberti"
+  )
+
+payments_alberti <- payments %>%
+  filter (
+    toll_booth_name == "Alberti"
+  )
+
+payments_per_hour_alberti <- payments_alberti %>%
+  group_by (
+    start_hour
+  ) %>%
+  summarise (
+    amount = sum(amount)
+  )
+
+ggplot(data = payments_per_hour_alberti,
        aes(x = substr(start_hour, 1, 2), y = amount, group = 1)) +
   geom_line(linetype = "dashed") +
   geom_point(color = "blue") +
@@ -143,27 +165,36 @@ ggplot(data = payments_per_hour,
        title = 
          "Hourly average volume of cars in the Alberti toll booth plaza",
        caption = "Figure 4")
-
-rm(payments_per_hour, amount_of_days, toll_booth_ff)
 ```
 
 The previous figure presents two peaks which correspond to the timeframes of 9am to 11am and 6pm to 8pm. It would be expected that the utilization of the system, length of the queues, and the time spent on them increases when approaching a peak hour. Figure 5 ilustrates the breakdown of the previously shown volume per payment method, which clearly indicates the peaks are mostly driven by users leaning towards the use of the automatic payment method.
 
 ```{r arrivalrate, echo=FALSE}
 # Arrival rate.
-lambda_manual <- payments$amount[payments$payment_method == "Cash"]
-lambda_automatic <- payments$amount[payments$payment_method == "Automatic"]
-lambda <- lambda_automatic + lambda_manual
-ggplot(data = payments,
+lambda <- payments %>%
+  group_by (
+    toll_booth_name,
+    start_hour,
+    booths
+  ) %>%
+  summarise (
+    arrival = sum(amount)
+  )
+
+lambda_alberti <- lambda %>%
+  filter (
+    toll_booth_name == "Alberti"
+  )
+
+S_alberti <- mean(lambda_alberti$booths)
+
+ggplot(data = payments_alberti,
        aes(x = substr(start_hour, 1, 2), y = amount, group = payment_method)) +
   geom_line(aes(color = payment_method)) +
   labs(x = "Hour of day",
        y = "Volume of vehicles",
-       title = 
-         "Hourly vehicle volume breakdown per payment method",
+       title = "Hourly vehicle volume breakdown per payment method",
        caption = "Figure 5")
-
-rm(lambda_manual, lambda_automatic)
 ```
 
 
@@ -181,7 +212,8 @@ attention <- data.frame (
   )
 )
 
-ggplot(data = attention, aes(x = time, fill = type)) + 
+ggplot(data = attention, 
+       aes(x = time, fill = type)) + 
   geom_density(alpha = .3) +
   labs(x = "Service time (s)", 
        y = "Density",
@@ -200,40 +232,65 @@ One characteristic of _Alberti_'s toll booths is they are both automatic and man
 # arrival and service rate.
 share <- payments %>%
   group_by (
+    toll_booth_name,
     start_hour
   ) %>%
   summarise (
     manual = sum(amount[payment_method == "Cash"]) / sum(amount),
     automatic = sum(amount[payment_method == "Automatic"]) / sum(amount)
   )
+
+share_alberti <- share %>%
+  filter (
+    toll_booth_name == "Alberti"
+  )
+
 # Service rate. Given that the volume of vehicles paying with cash is not the 
 # exact same volume as those paying automatically, a weighted average of 
 # payments methods is used to compute the service rate.
-t_automatic <- mean(attention$time[attention$type == "automatic"]) / 3600
-t_manual <- mean(attention$time[attention$type == "manual"]) / 3600
-mu <- 1 / (share$automatic * t_automatic + share$manual * t_manual)
+avg_serving_time_automatic <- attention %>%
+  filter (
+    type == "automatic"
+  ) %>%
+  summarise (
+    service = mean(time) / 3600
+  )
 
-rm(t_automatic, t_manual, share)
+avg_serving_time_manual <- attention %>%
+  filter (
+    type == "manual"
+  ) %>%
+  summarise (
+    service = mean(time) / 3600
+  )
+
+mu <- share %>%
+  group_by (
+    toll_booth_name,
+    start_hour
+  ) %>%
+  summarise (
+    service = (avg_serving_time_automatic[[1]] * automatic +
+                 avg_serving_time_manual[[1]] * manual)^-1
+  )
+
+mu_alberti <- mu %>%
+  filter (
+    toll_booth_name == "Alberti"
+  )
 ```
 
 For this reason the service rate has to be expressed as a weighted sum which is function of the mean service times and its relative hourly weight. Such relation can be expressed as $\mu = \frac{1}{\alpha_it_a + \beta_it_m}$ where $\alpha_i$ indicates the percentage of vehicles paying with the automatic payment method at the hour $i$, and $\beta_i$ indicates the percentage of vehicles paying manually at the hour $i$, or $\beta = 1 - \alpha$. The resulting hourly values of $\mu$ are presented in Figure 7
 
-```{r graph, echo=FALSE}
-# Adds the hour of the day to each of the hourly service rate values.
-mu_df <- data.frame (
-  time = 0:23,
-  mu = mu
-)
-
-ggplot(data = mu_df, aes(x = time, y = mu)) +
+```{r serviceperhour, echo=FALSE}
+ggplot(data = mu_alberti, 
+       aes(x = substr(start_hour, 1, 2), y = service, group = 1)) +
   geom_line(linetype = "dashed") +
   geom_point(color = "blue") +
   labs(x = "Hour of the day", 
        y = "Amount of vehicles",
        title = "Vehicles served per hour per toll booth",
        caption = "Figure 7")
-
-rm(mu_df)
 ```
 
 ##### Traffic intensity
@@ -243,24 +300,28 @@ Given the definitions of $\lambda$ and $\mu$ in the prior two sections, the util
 
 ```{r realsample, echo=FALSE}
 # Using the empirically computed service rate, the utilization is recomputed.
-S <- 5
-rho <- lambda / (S * mu)
-
-# Adds the hour of the day to each of the hourly service rate values.
-rho_df <- data.frame (
-  time = 0:23,
-  rho = rho
+rho <- data.frame (
+  toll_booth_name = lambda$toll_booth_name,
+  start_hour = lambda$start_hour,
+  arrival = lambda$arrival,
+  service = mu$service,
+  booths = lambda$booths,
+  utilization = lambda$arrival / (lambda$booths * mu$service)
 )
 
-ggplot(data = rho_df, aes(x = time, y = 100 * rho)) +
+rho_alberti <- rho %>%
+  filter (
+    toll_booth_name == "Alberti"
+  )
+
+ggplot(data = rho_alberti, 
+       aes(x = substr(start_hour, 1, 2), y = 100 * utilization, group = 1)) +
   geom_line(linetype = "dashed") +
   geom_point(color = "blue") +
   labs(x = "Hour of the day", 
        y = "Percentage of toll booth plaza utilization",
        title = "Hourly utilization of Alberti toll booth plaza",
        caption = "Figure 8")
-
-rm(rho_df)
 ```
 
 ##### Characterization of the M/M/S system
@@ -357,25 +418,11 @@ The $L_q(S,\rho)$ metric can be reused to define the time spent waiting on queue
 
 ###### Example application for the 10am peak hour
 ```{r metricsatpeak, echo=FALSE}
-index <- which(rho == max(rho))
-lambda_max <- lambda[index]
-mu_max <- mu[index]
-S <- 5
+index <- which(rho_alberti$utilization == max(rho_alberti$utilization))
+lambda_max <- lambda_alberti$arrival[index]
+mu_max <- mu_alberti$service[index]
+S <- mean(rho_alberti$booths)
 
-metrics <- data.frame (
-  Lq = Lq(S, lambda_max, mu_max),
-  Wq = Wq(S, lambda_max, mu_max) * 3600,
-  P0 = p0_(S, lambda_max, mu_max) * 100,
-  PD = pd(S, lambda_max, mu_max) * 100,
-  rho = lambda_max / mu_max / S * 100
-)
-```
-In a previous section it was shown that the highest utilization of the _Alberti_ toll booth plaza happens during the interval of time between `r index` and `r index + 1`, with a percentage of utilization $\rho$ of `r round(max(rho), 2)`%. That number is obtained by computing $\rho = \frac{\lambda}{S\mu}$. For this particular set of metric values, the average length of the queue $L_q$ would be `r round(metrics$Lq, 2)` vehicles, the average time spent in a queue $W_q$ would be `r round(metrics$Wq, 2)` seconds, the probability of arriving at an empty queue $P_0$ would be `r round(metrics$P0, 2)`%, and the probability of having to wait to go throught he toll booth $P_d$ would be `r round(metrics$PD, 2)`%, for the mentioned utilization of `r round(max(rho), 2)`%.
-
-###### Variable servers number for a fixed point in time
-The previous example has such performance metrics with the assumption that the _Alberti_ toll booth plaza is servicing users with 5 toll booths. The table shown below exemplifies the behavior of the toll booth plaza on its entirety for scenarios where the amount of servers is different than 5. 
-
-```{r moreexamples, echo=FALSE}
 characteristics <- function (
   S, # Number of servers.
   lambda, # Arrivals to the system.
@@ -383,14 +430,24 @@ characteristics <- function (
 ) {
   c (
     S = S,
-    Lq = Lq(S, lambda_max, mu_max),
-    Wq = Wq(S, lambda_max, mu_max) * 3600,
-    P0 = p0_(S, lambda_max, mu_max) * 100,
-    PD = pd(S, lambda_max, mu_max) * 100,
-    rho = min(lambda_max / mu_max / S, 1) * 100
+    Lq = Lq(S, lambda, mu),
+    Wq = Wq(S, lambda, mu) * 3600,
+    P0 = p0_(S, lambda, mu) * 100,
+    PD = pd(S, lambda, mu) * 100,
+    rho = min(lambda / mu / S, 1) * 100
   )
 }
 
+metrics <- data.frame (
+  as.list(characteristics(S, lambda_max, mu_max))
+)
+```
+In a previous section it was shown that the highest utilization of the _Alberti_ toll booth plaza happens during the interval of time between `r index` and `r index + 1`, with a percentage of utilization $\rho$ of `r round(metrics$rho, 2)`%. That number is obtained by computing $\rho = \frac{\lambda}{S\mu}$. For this particular set of metric values, the average length of the queue $L_q$ would be `r round(metrics$Lq, 2)` vehicles, the average time spent in a queue $W_q$ would be `r round(metrics$Wq, 2)` seconds, the probability of arriving at an empty queue $P_0$ would be `r round(metrics$P0, 2)`%, and the probability of having to wait to go throught he toll booth $P_d$ would be `r round(metrics$PD, 2)`%, for the mentioned utilization of `r round(metrics$rho, 2)`%.
+
+###### Variable servers number for a fixed point in time
+The previous example has such performance metrics with the assumption that the _Alberti_ toll booth plaza is servicing users with 5 toll booths. The table shown below exemplifies the behavior of the toll booth plaza on its entirety for scenarios where the amount of servers is different than 5. 
+
+```{r moreexamples, echo=FALSE}
 metrics <- data.frame (
   do.call("rbind", lapply(1:10, characteristics, lambda_max, mu_max))
 )
@@ -414,28 +471,34 @@ ggplot(data = rho_diff,
        y = "Percentual points difference in utilization",
        title = "Impact on utilization of adding extra servers",
        caption = "Figure 9")
-
-rm(rho_diff, metrics)
 ```
 
 ###### Minimum amount of servers needed per hour of day
 The previous section illustrated the importance of having a minimum amount of servers available for the system to be stable (meaning $\lambda/\mu < 1$). As that section was specific for the 10am - 11am time period, this section extends it to the remaning intervals of time during the day.
 
 ```{r utilizationperhour, echo=FALSE}
-metrics <- data.frame (
-  hour = 0:23,
-  servers_req = ceiling(lambda / mu)
-)
+servers_required <- rho %>%
+  group_by (
+    toll_booth_name,
+    start_hour
+  ) %>%
+  summarise (
+    amount = ceiling(arrival / service)
+  )
 
-ggplot(data = metrics, 
-       aes(x = hour, y = servers_req)) +
+servers_required_alberti <- servers_required %>%
+  filter (
+    toll_booth_name == "Alberti"
+  )
+
+ggplot(data = servers_required_alberti, 
+       aes(x = substr(start_hour, 1, 2), y = amount, group = 1)) +
   geom_line(linetype = "dashed") +
   geom_point(color = "blue") +
   labs(x = "Hour of day", 
        y = "Amount of servers",
        title = "Minimal amount of servers to avoid infinite queues",
-       caption = "Figure 10") +
-  theme_minimal()
+       caption = "Figure 10")
 ```
 
 Figure 10 describes the amount of servers needed for the _Alberti_ toll booth in order to avoid infinite queues. Around 10am a recommended amount of 4 toll booths is indicated, which is consistent with the results shown in the table above, where the change from 3 to 4 servers droped the length of the queue and waiting time from infinite to a concrete number. Having said that, the amount of servers displayed in Figure 10 is only the minimum amount required to have a stable system, but not one that minimizes queue length or waiting times.
@@ -447,43 +510,6 @@ Building on the methodologies and calculation of traffic intensity and time spen
 The amount of vehicles that each toll booth plaza services is the building block for futher design decisions with respect to amount of toll booths, and thus average time-spent on queues. Figure 11 describes the traffic evolution during the day for each toll booth plaza. In terms of behavior, each of the toll booth plazas is subject to the same trend, but with different orders of magnitude.
 
 ```{r trafficperbooth, echo=FALSE}
-years_to_filter_by <- c(2019)
-
-toll_booth_ff <- unified_ff %>% as_tibble() %>%
-  filter (
-    year_ %in% years_to_filter_by
-    & payment_method %in% c("Automatic", "Cash")
-    & vehicle_type == "Car"
-  )
-
-amount_of_days <- toll_booth_ff %>%
-  distinct (
-    year_,
-    month_,
-    day_
-  ) %>%
-  nrow()
-
-payments <- toll_booth_ff %>%
-  group_by (
-    toll_booth_name,
-    payment_method,
-    start_hour,
-    booths
-  ) %>% 
-  summarise (
-    amount = 0.25 * sum(amount) / amount_of_days
-  )
-
-payments_per_hour <- payments %>%
-  group_by (
-    toll_booth_name,
-    start_hour
-  ) %>%
-  summarise (
-    amount = sum(amount)
-  )
-
 ggplot(data = payments_per_hour,
        aes(x = substr(start_hour, 1, 2), y = amount, group = toll_booth_name)) +
   geom_line(aes(color = toll_booth_name)) +
@@ -498,75 +524,23 @@ ggplot(data = payments_per_hour,
 #### Utilization of each toll booth plaza throughout the day
 Interpreting the arrivals information on Figure 11 as the arrival rate $\lambda$, and reusing the service rate information obtained empirically, an estimation of the hourly utilization $\rho$ of each toll booth plaza is presented in Figure 12. The top 3 more utilized toll booth plazas are: Avellaneda with a maximum average utilization of 81.5%, Alberti with a maximum average utilization of 73.4%, and lastly Dellepiane with a  maximum average utilization of, again, 73.4%.
 ```{r utilization, echo=FALSE}
-lambda <- payments %>%
-  group_by (
-    toll_booth_name,
-    start_hour,
-    booths
-  ) %>%
-  summarise (
-    amount = sum(amount),
-    booths_number = mean(booths)
-  )
-
-share <- payments %>%
-  group_by (
-    toll_booth_name,
-    start_hour
-  ) %>%
-  summarise (
-    manual = sum(amount[payment_method == "Cash"]) / sum(amount),
-    automatic = sum(amount[payment_method == "Automatic"]) / sum(amount)
-  )
-
-t_automatic <- mean(attention$time[attention$type == "automatic"]) / 3600
-t_manual <- mean(attention$time[attention$type == "manual"]) / 3600
-
-mu <- share %>%
-  group_by (
-    toll_booth_name,
-    start_hour
-  ) %>%
-  summarise (
-    amount = 1 / (automatic * t_automatic + manual * t_manual)
-  )
-
-rho <- data.frame (
-  toll_booth_name = lambda$toll_booth_name,
-  start_hour = lambda$start_hour,
-  lambda = lambda$amount,
-  mu = mu$amount,
-  booths = lambda$booths,
-  rho = lambda$amount / (lambda$booths_number * mu$amount)
-)
-
 ggplot(data = rho,
        aes(x = substr(start_hour, 1, 2), 
-           y = 100 * rho, 
+           y = 100 * utilization, 
            group = toll_booth_name)) +
   geom_line(aes(color = toll_booth_name)) +
   labs(x = "Hour of day",
        y = "Percentage of utilization",
-       title = 
-         "Hourly utilization for all toll booth plazas",
+       title = "Hourly utilization for all toll booth plazas",
        caption = "Figure 12")
 ```
 
 #### Minimum average number of toll booths required for each plaza
 The average utilization presented in Figure 13 uses the amount of servers that can be found in Google Maps. However, those amounts are actually higher than what is theoretically needed to avoid infinite queues. However, these additional toll booths are needed, since the theoretical values are averages, which means there can be situations where the traffic is higher than expected and may require an additional toll booth to cater for it. 
 ```{r minimumamount, echo=FALSE}
-metrics <- rho %>%
-  group_by (
-    toll_booth_name,
-    start_hour
-  ) %>%
-  summarise (
-    servers_req = ceiling(lambda / mu) 
-  )
-
-ggplot(data = metrics, 
+ggplot(data = servers_required, 
        aes(x = substr(start_hour, 1, 2), 
-           y = servers_req, 
+           y = amount, 
            group = toll_booth_name)) +
   geom_line(aes(color = toll_booth_name)) +
   labs(x = "Hour of day", 
@@ -575,18 +549,18 @@ ggplot(data = metrics,
        caption = "Figure 13")
 ```
 
-The table below shows the difference between the actual number of toll booths in each toll booth plaza and the minimum amount required to avoid infinite queues. The greatest difference appears for the Retiro toll booth plaza, where the minimum amount of required toll booths is around 59.4% of the existing toll booths, while for other plazas with high vehicle volumes such ratio is  84.4%.
+The table below shows the difference between the actual number of toll booths in each toll booth plaza and the minimum amount required to avoid infinite queues. The greatest difference appears for the Retiro toll booth plaza, where the minimum amount of required toll booths is around 59.4% of the existing toll booths, while for other plazas with high vehicle volumes such ratio is 84.4%.
 
 ```{r differencebetweenrealandaverage, echo=FALSE}
-toll_booth_max_req <- metrics %>%
+servers_required_max <- servers_required %>%
   group_by (
     toll_booth_name
   ) %>%
   summarise (
-    amount = max(servers_req)
+    amount = max(amount)
   )
 
-toll_booth_actual <- rho %>%
+servers_required_current <- rho %>%
   group_by (
     toll_booth_name
   ) %>%
@@ -595,15 +569,15 @@ toll_booth_actual <- rho %>%
   )
 
 data.frame (
-  name = toll_booth_actual$toll_booth_name,
-  actual = toll_booth_actual$amount,
-  minimum = toll_booth_max_req$amount,
-  difference = toll_booth_actual$amount - toll_booth_max_req$amount
+  name = servers_required_current$toll_booth_name,
+  actual = servers_required_current$amount,
+  minimum = servers_required_max$amount,
+  difference = servers_required_current$amount - servers_required_max$amount
 )
 ```
 
-
 ```{r removeall, echo=FALSE}
-rm(list = ls()); gc();
+rm(list = ls())
+gc()
 ```
 

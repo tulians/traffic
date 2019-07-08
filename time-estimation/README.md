@@ -81,7 +81,7 @@ One characteristic of *Alberti*'s toll booths is they are both automatic and man
 
 For this reason the service rate has to be expressed as a weighted sum which is function of the mean service times and its relative hourly weight. Such relation can be expressed as ![\\mu = \\frac{1}{\\alpha\_it\_a + \\beta\_it\_m}](https://latex.codecogs.com/png.latex?%5Cmu%20%3D%20%5Cfrac%7B1%7D%7B%5Calpha_it_a%20%2B%20%5Cbeta_it_m%7D "\mu = \frac{1}{\alpha_it_a + \beta_it_m}") where ![\\alpha\_i](https://latex.codecogs.com/png.latex?%5Calpha_i "\alpha_i") indicates the percentage of vehicles paying with the automatic payment method at the hour ![i](https://latex.codecogs.com/png.latex?i "i"), and ![\\beta\_i](https://latex.codecogs.com/png.latex?%5Cbeta_i "\beta_i") indicates the percentage of vehicles paying manually at the hour ![i](https://latex.codecogs.com/png.latex?i "i"), or ![\\beta = 1 - \\alpha](https://latex.codecogs.com/png.latex?%5Cbeta%20%3D%201%20-%20%5Calpha "\beta = 1 - \alpha"). The resulting hourly values of ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu") are presented in Figure 7
 
-![](README_files/figure-markdown_github/graph-1.png)
+![](README_files/figure-markdown_github/serviceperhour-1.png)
 
 ##### Traffic intensity
 
@@ -109,7 +109,7 @@ The ![L\_q(S,\\rho)](https://latex.codecogs.com/png.latex?L_q%28S%2C%5Crho%29 "L
 
 ###### Example application for the 10am peak hour
 
-In a previous section it was shown that the highest utilization of the *Alberti* toll booth plaza happens during the interval of time between 11 and 12, with a percentage of utilization ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") of 0.73%. That number is obtained by computing ![\\rho = \\frac{\\lambda}{S\\mu}](https://latex.codecogs.com/png.latex?%5Crho%20%3D%20%5Cfrac%7B%5Clambda%7D%7BS%5Cmu%7D "\rho = \frac{\lambda}{S\mu}"). For this particular set of metric values, the average length of the queue ![L\_q](https://latex.codecogs.com/png.latex?L_q "L_q") would be 1.21 vehicles, the average time spent in a queue ![W\_q](https://latex.codecogs.com/png.latex?W_q "W_q") would be 5.18 seconds, the probability of arriving at an empty queue ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") would be 2.07%, and the probability of having to wait to go throught he toll booth ![P\_d](https://latex.codecogs.com/png.latex?P_d "P_d") would be 43.56%, for the mentioned utilization of 0.73%.
+In a previous section it was shown that the highest utilization of the *Alberti* toll booth plaza happens during the interval of time between 11 and 12, with a percentage of utilization ![\\rho](https://latex.codecogs.com/png.latex?%5Crho "\rho") of 73.49%. That number is obtained by computing ![\\rho = \\frac{\\lambda}{S\\mu}](https://latex.codecogs.com/png.latex?%5Crho%20%3D%20%5Cfrac%7B%5Clambda%7D%7BS%5Cmu%7D "\rho = \frac{\lambda}{S\mu}"). For this particular set of metric values, the average length of the queue ![L\_q](https://latex.codecogs.com/png.latex?L_q "L_q") would be 1.21 vehicles, the average time spent in a queue ![W\_q](https://latex.codecogs.com/png.latex?W_q "W_q") would be 5.18 seconds, the probability of arriving at an empty queue ![P\_0](https://latex.codecogs.com/png.latex?P_0 "P_0") would be 2.07%, and the probability of having to wait to go throught he toll booth ![P\_d](https://latex.codecogs.com/png.latex?P_d "P_d") would be 43.56%, for the mentioned utilization of 73.49%.
 
 ###### Variable servers number for a fixed point in time
 
