@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 rm(list = ls()); gc();
 
 packages_to_include <- c (
-  "dplyr", "tibble", "ggplot2", "ff", "reshape2", "tseries"
+  "dplyr", "tibble", "ggplot2", "ff", "reshape2", "tseries", "ggrepel"
 )
 
 lapply (
@@ -39,15 +39,18 @@ R requires that variables are stored in RAM in its entirety, so managing a dataf
 
 ```{r readingunifiedfile, echo=FALSE}
 datasets_dir <- "../datasets"
+
 # Directory where `ff` stores temporary files. Take into account temporary files
 # will fill up this directory through time. Make sure to delete them once in a
 # while.
 options (
   fftempdir = file.path(datasets_dir, "tmp")
 )
+
 unified_ff <- read.csv.ffdf (
   file = file.path(datasets_dir, "unified.csv")
 )
+
 rm(datasets_dir)
 ```
 
@@ -165,6 +168,8 @@ ggplot(data = payments_per_hour_alberti,
        title = 
          "Hourly average volume of cars in the Alberti toll booth plaza",
        caption = "Figure 4")
+
+rm(years_to_filter_by, payments_per_hour_alberti, amount_of_days)
 ```
 
 The previous figure presents two peaks which correspond to the timeframes of 9am to 11am and 6pm to 8pm. It would be expected that the utilization of the system, length of the queues, and the time spent on them increases when approaching a peak hour. Figure 5 ilustrates the breakdown of the previously shown volume per payment method, which clearly indicates the peaks are mostly driven by users leaning towards the use of the automatic payment method.
@@ -181,13 +186,6 @@ lambda <- payments %>%
     arrival = sum(amount)
   )
 
-lambda_alberti <- lambda %>%
-  filter (
-    toll_booth_name == "Alberti"
-  )
-
-S_alberti <- mean(lambda_alberti$booths)
-
 ggplot(data = payments_alberti,
        aes(x = substr(start_hour, 1, 2), y = amount, group = payment_method)) +
   geom_line(aes(color = payment_method)) +
@@ -195,6 +193,8 @@ ggplot(data = payments_alberti,
        y = "Volume of vehicles",
        title = "Hourly vehicle volume breakdown per payment method",
        caption = "Figure 5")
+
+rm(payments_alberti)
 ```
 
 
@@ -240,11 +240,6 @@ share <- payments %>%
     automatic = sum(amount[payment_method == "Automatic"]) / sum(amount)
   )
 
-share_alberti <- share %>%
-  filter (
-    toll_booth_name == "Alberti"
-  )
-
 # Service rate. Given that the volume of vehicles paying with cash is not the 
 # exact same volume as those paying automatically, a weighted average of 
 # payments methods is used to compute the service rate.
@@ -278,6 +273,8 @@ mu_alberti <- mu %>%
   filter (
     toll_booth_name == "Alberti"
   )
+
+rm(avg_serving_time_automatic, avg_serving_time_manual)
 ```
 
 For this reason the service rate has to be expressed as a weighted sum which is function of the mean service times and its relative hourly weight. Such relation can be expressed as $\mu = \frac{1}{\alpha_it_a + \beta_it_m}$ where $\alpha_i$ indicates the percentage of vehicles paying with the automatic payment method at the hour $i$, and $\beta_i$ indicates the percentage of vehicles paying manually at the hour $i$, or $\beta = 1 - \alpha$. The resulting hourly values of $\mu$ are presented in Figure 7
@@ -291,6 +288,8 @@ ggplot(data = mu_alberti,
        y = "Amount of vehicles",
        title = "Vehicles served per hour per toll booth",
        caption = "Figure 7")
+
+rm(mu_alberti)
 ```
 
 ##### Traffic intensity
@@ -322,6 +321,8 @@ ggplot(data = rho_alberti,
        y = "Percentage of toll booth plaza utilization",
        title = "Hourly utilization of Alberti toll booth plaza",
        caption = "Figure 8")
+
+rm(lambda, mu)
 ```
 
 ##### Characterization of the M/M/S system
@@ -419,8 +420,8 @@ The $L_q(S,\rho)$ metric can be reused to define the time spent waiting on queue
 ###### Example application for the 10am peak hour
 ```{r metricsatpeak, echo=FALSE}
 index <- which(rho_alberti$utilization == max(rho_alberti$utilization))
-lambda_max <- lambda_alberti$arrival[index]
-mu_max <- mu_alberti$service[index]
+lambda_max <- rho_alberti$arrival[index]
+mu_max <- rho_alberti$service[index]
 S <- mean(rho_alberti$booths)
 
 characteristics <- function (
@@ -441,6 +442,8 @@ characteristics <- function (
 metrics <- data.frame (
   as.list(characteristics(S, lambda_max, mu_max))
 )
+
+rm(rho_alberti, S)
 ```
 In a previous section it was shown that the highest utilization of the _Alberti_ toll booth plaza happens during the interval of time between `r index` and `r index + 1`, with a percentage of utilization $\rho$ of `r round(metrics$rho, 2)`%. That number is obtained by computing $\rho = \frac{\lambda}{S\mu}$. For this particular set of metric values, the average length of the queue $L_q$ would be `r round(metrics$Lq, 2)` vehicles, the average time spent in a queue $W_q$ would be `r round(metrics$Wq, 2)` seconds, the probability of arriving at an empty queue $P_0$ would be `r round(metrics$P0, 2)`%, and the probability of having to wait to go throught he toll booth $P_d$ would be `r round(metrics$PD, 2)`%, for the mentioned utilization of `r round(metrics$rho, 2)`%.
 
@@ -448,6 +451,7 @@ In a previous section it was shown that the highest utilization of the _Alberti_
 The previous example has such performance metrics with the assumption that the _Alberti_ toll booth plaza is servicing users with 5 toll booths. The table shown below exemplifies the behavior of the toll booth plaza on its entirety for scenarios where the amount of servers is different than 5. 
 
 ```{r moreexamples, echo=FALSE}
+rm(index)
 metrics <- data.frame (
   do.call("rbind", lapply(1:10, characteristics, lambda_max, mu_max))
 )
@@ -466,11 +470,18 @@ ggplot(data = rho_diff,
        aes(x = servers, y = step, label = round(step, 1))) +
   geom_line(linetype = "dashed") +
   geom_point(color = "blue") +
-  geom_text(vjust = 0.6, hjust = -0.3) +
+  geom_text_repel(
+    point.padding = .6, 
+    nudge_x = .15,
+    nudge_y = .5,
+    arrow = arrow(length = unit(0.015, "npc"))
+  ) +
   labs(x = "Amount of servers", 
        y = "Percentual points difference in utilization",
        title = "Impact on utilization of adding extra servers",
        caption = "Figure 9")
+
+rm(metrics, rho_diff)
 ```
 
 ###### Minimum amount of servers needed per hour of day
@@ -519,6 +530,8 @@ ggplot(data = payments_per_hour,
          "Hourly average volume of cars in the Alberti toll booth plaza",
        caption = "Figure 11") +
   scale_y_continuous(trans = "log10")
+
+rm(payments_per_hour)
 ```
 
 #### Utilization of each toll booth plaza throughout the day
@@ -574,10 +587,64 @@ data.frame (
   minimum = servers_required_max$amount,
   difference = servers_required_current$amount - servers_required_max$amount
 )
+
+rm(servers_required, servers_required_max, servers_required_current,
+   servers_required_alberti)
 ```
 
-```{r removeall, echo=FALSE}
-rm(list = ls())
-gc()
+### Oil prices analysis
+The oil prices dataset consists of monthly prices of different types of oil: super, premium, gasoil, and euro. The four of them experienced a steady increase since 2008 until 2019, which is illustrated in Figure 14.
+
+```{r evolution, echo=FALSE}
+oil <- unified_ff %>% as_tibble() %>%
+  group_by (
+    year_,
+    oil_type
+  ) %>%
+  summarise (
+    price = mean(price)
+  )
+
+ggplot(data = oil, 
+       aes(x = year_, y = price, group = oil_type)) +
+  geom_line(aes(color = oil_type)) +
+  geom_point(aes(color = oil_type)) +
+  labs(x = NULL, 
+       y = "Price (ARS)",
+       title = "Evolution of oil price through years",
+       caption = "Figure 14") +
+  scale_x_continuous(breaks = 2008:2019)
 ```
 
+Taking differences of the time series above, shows the biggest increase in oil price happens in the transition from 2017 to 2018, where the increase climbs to 10.1 ARS, on average.
+
+```{r diffincrease, echo=FALSE}
+general_trend <- oil %>%
+  group_by (
+    year_
+  ) %>%
+  summarise (
+    price = mean(price)
+  )
+
+increase_diff <- data.frame (
+  year = 2009:2019,
+  difference = diff(general_trend$price)
+)
+
+ggplot(data = increase_diff,
+       aes(x = year, y = difference, label = round(difference, 1))) +
+  geom_line(linetype = "dashed") +
+  geom_point(color = "blue") +
+  geom_text_repel(
+    point.padding = .6, 
+    nudge_x = .35,
+    nudge_y = .5,
+    arrow = arrow(length = unit(0.015, "npc"))
+  ) +
+  labs(x = NULL, 
+       y = "Price (ARS)",
+       title = "Evolution of oil price through years",
+       caption = "Figure 15") +
+  scale_x_continuous(breaks = 2009:2019)
+```

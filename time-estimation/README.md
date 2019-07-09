@@ -6,6 +6,7 @@ Julián Ailán
 -   [Joining the traffic dataset with the oil dataset](#joining-the-traffic-dataset-with-the-oil-dataset)
 -   [Time spent waiting on queues estimation](#time-spent-waiting-on-queues-estimation)
 -   [Characterization of each AUSA's toll booth plazas](#characterization-of-each-ausas-toll-booth-plazas)
+-   [Oil prices analysis](#oil-prices-analysis)
 
 ### Objective
 
@@ -166,3 +167,13 @@ The table below shows the difference between the actual number of toll booths in
     ## 4     Retiro     32      19         13
     ## 5  Sarmiento      2       1          1
     ## 6   Salguero      2       1          1
+
+### Oil prices analysis
+
+The oil prices dataset consists of monthly prices of different types of oil: super, premium, gasoil, and euro. The four of them experienced a steady increase since 2008 until 2019, which is illustrated in Figure 14.
+
+![](README_files/figure-markdown_github/evolution-1.png)
+
+Taking differences of the time series above, shows the biggest increase in oil price happens in the transition from 2017 to 2018, where the increase climbs to 10.1 ARS, on average.
+
+![](README_files/figure-markdown_github/diffincrease-1.png)
