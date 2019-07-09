@@ -140,12 +140,6 @@ payments_per_hour <- payments %>%
     amount = sum(amount)
   )
 
-# Filtering only for Alberti information.
-toll_booth_alberti <- toll_booth_ff %>% as_tibble() %>%
-  filter (
-    toll_booth_name == "Alberti"
-  )
-
 payments_alberti <- payments %>%
   filter (
     toll_booth_name == "Alberti"
@@ -169,7 +163,7 @@ ggplot(data = payments_per_hour_alberti,
          "Hourly average volume of cars in the Alberti toll booth plaza",
        caption = "Figure 4")
 
-rm(years_to_filter_by, payments_per_hour_alberti, amount_of_days)
+rm(years_to_filter_by, payments_per_hour_alberti, amount_of_days, toll_booth_ff)
 ```
 
 The previous figure presents two peaks which correspond to the timeframes of 9am to 11am and 6pm to 8pm. It would be expected that the utilization of the system, length of the queues, and the time spent on them increases when approaching a peak hour. Figure 5 ilustrates the breakdown of the previously shown volume per payment method, which clearly indicates the peaks are mostly driven by users leaning towards the use of the automatic payment method.
@@ -219,6 +213,8 @@ ggplot(data = attention,
        y = "Density",
        title = "Density of each payment method",
        caption = "Figure 6")
+
+rm(datasets_dir)
 ```
 
 The density function for the automatic payment method is more narrow than its manual counter part given that the latter could be impacted by many factors like the driver not having exact change prepared to pay, or the toll booth employee taking more or less time to service different clients. The average service time for the automatic payment method is `r mean(attention$time[attention$type == "automatic"])` seconds, while the average service time for manual payments is `r mean(attention$time[attention$type == "manual"])` seconds.
@@ -274,7 +270,8 @@ mu_alberti <- mu %>%
     toll_booth_name == "Alberti"
   )
 
-rm(avg_serving_time_automatic, avg_serving_time_manual)
+rm(avg_serving_time_automatic, avg_serving_time_manual, share, attention,
+   payments)
 ```
 
 For this reason the service rate has to be expressed as a weighted sum which is function of the mean service times and its relative hourly weight. Such relation can be expressed as $\mu = \frac{1}{\alpha_it_a + \beta_it_m}$ where $\alpha_i$ indicates the percentage of vehicles paying with the automatic payment method at the hour $i$, and $\beta_i$ indicates the percentage of vehicles paying manually at the hour $i$, or $\beta = 1 - \alpha$. The resulting hourly values of $\mu$ are presented in Figure 7
@@ -481,7 +478,7 @@ ggplot(data = rho_diff,
        title = "Impact on utilization of adding extra servers",
        caption = "Figure 9")
 
-rm(metrics, rho_diff)
+rm(metrics, rho_diff, lambda_max, mu_max)
 ```
 
 ###### Minimum amount of servers needed per hour of day
@@ -589,7 +586,8 @@ data.frame (
 )
 
 rm(servers_required, servers_required_max, servers_required_current,
-   servers_required_alberti)
+   servers_required_alberti, characteristics, Lq, Ls, p0_, pd, rho_, Wq, Ws, 
+   rho)
 ```
 
 ### Oil prices analysis
