@@ -614,10 +614,27 @@ ggplot(data = oil,
   scale_x_continuous(breaks = 2008:2019)
 ```
 
-Taking differences of the time series above, shows the biggest increase in oil price happens in the transition from 2017 to 2018, where the increase climbs to 10.1 ARS, on average.
+Even though the oil price has been increasing since 2008, inflation in Argentina followed a similar trend, as shown in Figure 15. In order to interpret the actual oil price, the current figures are divided by the yearly mean dollar exchange price (provided by the [Banco Central de la República Argentina](https://www.bcra.gob.ar/PublicacionesEstadisticas/Evolucion_moneda.asp)). 
+```{r priceindollars, echo=FALSE}
+datasets_dir <- "../datasets/sources"
 
-```{r diffincrease, echo=FALSE}
-general_trend <- oil %>%
+exchange_rate <- read.csv (
+    file = file.path(datasets_dir, "dollar.csv"),
+    header = T,
+    dec = ".",
+    stringsAsFactors = F
+  ) %>%
+  filter (
+    year >= 2008
+  ) %>%
+  group_by (
+    year
+  ) %>%
+  summarise (
+    amount = mean(pesos_per_dollar)
+  )
+
+oil_yoy_trend <- oil %>%
   group_by (
     year_
   ) %>%
@@ -625,24 +642,67 @@ general_trend <- oil %>%
     price = mean(price)
   )
 
-increase_diff <- data.frame (
-  year = 2009:2019,
-  difference = diff(general_trend$price)
+oil_yoy_trend_dollar <- data.frame (
+  year = oil_yoy_trend$year_,
+  price = oil_yoy_trend$price / exchange_rate$amount
 )
 
-ggplot(data = increase_diff,
+ggplot() +
+  geom_line (
+    data = exchange_rate, 
+    aes(x = year, y = amount, color = "blue")
+  ) + 
+  geom_point (
+    data = exchange_rate, 
+    aes(x = year, y = amount, color = "blue")
+  ) +
+  geom_line (
+    data = oil_yoy_trend, 
+    aes(x = year_, y = price, color = "red")
+  ) +
+  geom_point (
+    data = oil_yoy_trend, 
+    aes(x = year_, y = price, color = "red")
+  ) +
+  scale_color_discrete(name = "Prices", labels = c("Oil", "ARS per USD")) +
+  scale_x_continuous(breaks = 2008:2019) +
+  labs(x = NULL, 
+       y = "ARS",
+       title = "Evolution of oil price and ARS/USD exchange through years",
+       caption = "Figure 15")
+
+rm(datasets_dir)
+```
+
+Taking differences of the ratio between oil price and ARS/USD exchange rate, Figure 16 shows there are two interesting points in time, where the oil price drops, comparing 2015 with 2016, and afterwars increases, comparing 2016 with 2017.
+
+```{r diffincrease, echo=FALSE}
+oil_increase_diff <- data.frame (
+  year = 2009:2019,
+  difference = diff(oil_yoy_trend_dollar$price)
+)
+
+ggplot(data = oil_increase_diff,
        aes(x = year, y = difference, label = round(difference, 1))) +
   geom_line(linetype = "dashed") +
   geom_point(color = "blue") +
-  geom_text_repel(
-    point.padding = .6, 
-    nudge_x = .35,
-    nudge_y = .5,
-    arrow = arrow(length = unit(0.015, "npc"))
-  ) +
   labs(x = NULL, 
-       y = "Price (ARS)",
-       title = "Evolution of oil price through years",
-       caption = "Figure 15") +
+       y = "Price (USD)",
+       title = "Difference in oil price through years",
+       caption = "Figure 16") +
   scale_x_continuous(breaks = 2009:2019)
+```
+
+However, these differences are in the order of cents, as the prices vary at most 20c. The stability of oil price expressed in dollars is illustrated in Figure 17.
+
+```{r diffincrease, echo=FALSE}
+ggplot(data = oil_yoy_trend_dollar,
+       aes(x = year, y = price, label = round(price, 1))) +
+  geom_line(linetype = "dashed") +
+  geom_point(color = "blue") +
+  labs(x = NULL, 
+       y = "Price (USD)",
+       title = "Evolution of oil price through years",
+       caption = "Figure 17") +
+  scale_x_continuous(breaks = 2008:2019)
 ```
