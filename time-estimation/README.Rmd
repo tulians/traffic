@@ -676,7 +676,7 @@ rm(datasets_dir)
 
 Taking differences of the ratio between oil price and ARS/USD exchange rate, Figure 16 shows there are two interesting points in time, where the oil price drops, comparing 2015 with 2016, and afterwars increases, comparing 2016 with 2017.
 
-```{r diffincrease, echo=FALSE}
+```{r diffs, echo=FALSE}
 oil_increase_diff <- data.frame (
   year = 2009:2019,
   difference = diff(oil_yoy_trend_dollar$price)
@@ -695,7 +695,7 @@ ggplot(data = oil_increase_diff,
 
 However, these differences are in the order of cents, as the prices vary at most 20c. The stability of oil price expressed in dollars is illustrated in Figure 17.
 
-```{r diffincrease, echo=FALSE}
+```{r dollarprice, echo=FALSE}
 ggplot(data = oil_yoy_trend_dollar,
        aes(x = year, y = price, label = round(price, 1))) +
   geom_line(linetype = "dashed") +
