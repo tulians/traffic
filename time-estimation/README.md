@@ -174,6 +174,12 @@ The oil prices dataset consists of monthly prices of different types of oil: sup
 
 ![](README_files/figure-markdown_github/evolution-1.png)
 
-Taking differences of the time series above, shows the biggest increase in oil price happens in the transition from 2017 to 2018, where the increase climbs to 10.1 ARS, on average.
+Even though the oil price has been increasing since 2008, inflation in Argentina followed a similar trend, as shown in Figure 15. In order to interpret the actual oil price, the current figures are divided by the yearly mean dollar exchange price (provided by the [Banco Central de la República Argentina](https://www.bcra.gob.ar/PublicacionesEstadisticas/Evolucion_moneda.asp)). ![](README_files/figure-markdown_github/priceindollars-1.png)
 
-![](README_files/figure-markdown_github/diffincrease-1.png)
+Taking differences of the ratio between oil price and ARS/USD exchange rate, Figure 16 shows there are two interesting points in time, where the oil price drops, comparing 2015 with 2016, and afterwars increases, comparing 2016 with 2017.
+
+![](README_files/figure-markdown_github/diffs-1.png)
+
+However, these differences are in the order of cents, as the prices vary at most 20c. The stability of oil price expressed in dollars is illustrated in Figure 17.
+
+![](README_files/figure-markdown_github/dollarprice-1.png)
