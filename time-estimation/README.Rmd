@@ -236,6 +236,19 @@ share <- payments %>%
     automatic = sum(amount[payment_method == "Automatic"]) / sum(amount)
   )
 
+# share_tall <- share %>%
+#   filter (
+#     toll_booth_name == "Alberti"
+#   ) %>%
+#   gather (
+#     PaymentMethod, Percentage, manual:automatic
+#   )
+# 
+# ggplot(data = share_tall, aes(x = Percentage, fill = PaymentMethod)) +
+#   geom_density(alpha = .3) +
+#   labs(x = "Porcentaje de uso",
+#        y = "Densidad")
+
 # Service rate. Given that the volume of vehicles paying with cash is not the 
 # exact same volume as those paying automatically, a weighted average of 
 # payments methods is used to compute the service rate.
@@ -264,6 +277,19 @@ mu <- share %>%
     service = (avg_serving_time_automatic[[1]] * automatic +
                  avg_serving_time_manual[[1]] * manual)^-1
   )
+
+# mu_f <- mu %>%
+#   filter (
+#     !toll_booth_name %in% c("Salguero", "Sarmiento")
+#   )
+# 
+# ggplot(data = mu_f, 
+#        aes(x = substr(start_hour, 1, 2),
+#            y = service, 
+#            group = toll_booth_name)) +
+#   geom_line(aes(color = toll_booth_name)) +
+#   geom_point(aes(color = toll_booth_name)) +
+#   labs(x = "Hora del día", y = "Cantidad de vehículos servidos")
 
 mu_alberti <- mu %>%
   filter (
