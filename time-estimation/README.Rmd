@@ -547,6 +547,7 @@ The amount of vehicles that each toll booth plaza services is the building block
 ggplot(data = payments_per_hour,
        aes(x = substr(start_hour, 1, 2), y = amount, group = toll_booth_name)) +
   geom_line(aes(color = toll_booth_name)) +
+  geom_point(aes(color = toll_booth_name)) +
   labs(x = "Hour of day",
        y = "Volume of vehicles",
        title = 
@@ -565,6 +566,7 @@ ggplot(data = rho,
            y = 100 * utilization, 
            group = toll_booth_name)) +
   geom_line(aes(color = toll_booth_name)) +
+  geom_point(aes(color = toll_booth_name)) +
   labs(x = "Hour of day",
        y = "Percentage of utilization",
        title = "Hourly utilization for all toll booth plazas",
