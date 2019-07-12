@@ -581,6 +581,7 @@ ggplot(data = servers_required,
            y = amount, 
            group = toll_booth_name)) +
   geom_line(aes(color = toll_booth_name)) +
+  geom_point(aes(color = toll_booth_name)) +
   labs(x = "Hour of day", 
        y = "Amount of servers",
        title = "Minimal amount of servers to avoid infinite queues",
