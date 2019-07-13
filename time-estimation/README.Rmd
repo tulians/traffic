@@ -480,6 +480,22 @@ metrics <- data.frame (
 )
 metrics
 ```
+```{r}
+# rho_t <- rho %>%
+#   filter (
+#     toll_booth_name == "Salguero"
+#   )
+# 
+# index <- which(rho_t$utilization == max(rho_t$utilization))
+# lambda_max <- rho_t$arrival[index]
+# mu_max <- rho_t$service[index]
+# S <- mean(rho_t$booths)
+# 
+# metrics <- data.frame (
+#   do.call("rbind", lapply(1:4, characteristics, lambda_max, mu_max))
+# )
+# metrics
+```
 
 As shown in the table above, any amount of servers lower than 4 toll booths will result in an infinite queue, as both $L_q$ and $W_q$ are infinite due to the fact $rho \geq 1$. Looking at the values of $\rho$, the biggest step in diminishing utilization appears when moving from 4 servers to 5 servers. As shown in Figure 9, there is a drop of 18.4 percentual points in utilization when a fifth toll booth is added to the plaza. This is the same amount of servers the _Alberti_ toll booth plaza has today, and is a critical step in the design of a toll booth plaza.
 
@@ -571,6 +587,13 @@ ggplot(data = rho,
        y = "Percentage of utilization",
        title = "Hourly utilization for all toll booth plazas",
        caption = "Figure 12")
+```
+```{r}
+ggplot(data = rho, aes(x = substr(start_hour, 1, 2), y = toll_booth_name)) +
+  geom_tile(aes(fill = utilization), color = "white") +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Hora del día",
+       y = "Plaza de peajes")
 ```
 
 #### Minimum average number of toll booths required for each plaza
