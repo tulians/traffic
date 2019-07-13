@@ -589,11 +589,11 @@ ggplot(data = rho,
        caption = "Figure 12")
 ```
 ```{r}
-ggplot(data = rho, aes(x = substr(start_hour, 1, 2), y = toll_booth_name)) +
-  geom_tile(aes(fill = utilization), color = "white") +
-  scale_fill_gradient(low = "white", high = "steelblue") +
-  labs(x = "Hora del día",
-       y = "Plaza de peajes")
+# ggplot(data = rho, aes(x = substr(start_hour, 1, 2), y = toll_booth_name)) +
+#   geom_tile(aes(fill = utilization), color = "white") +
+#   scale_fill_gradient(low = "white", high = "steelblue") +
+#   labs(x = "Hora del día",
+#        y = "Plaza de peajes")
 ```
 
 #### Minimum average number of toll booths required for each plaza
