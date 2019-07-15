@@ -15,7 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 rm(list = ls()); gc();
 
 packages_to_include <- c (
-  "dplyr", "tibble", "ggplot2", "ff", "reshape2", "tseries", "ggrepel"
+  "dplyr", "tibble", "ggplot2", "ff", "reshape2", "tseries", "ggrepel", 
+  "lubridate"
 )
 
 lapply (
@@ -236,6 +237,7 @@ share <- payments %>%
     automatic = sum(amount[payment_method == "Automatic"]) / sum(amount)
   )
 
+# Not used in this README. Maps to Figure 5 in the formal essay.
 # share_tall <- share %>%
 #   filter (
 #     toll_booth_name == "Alberti"
@@ -278,6 +280,7 @@ mu <- share %>%
                  avg_serving_time_manual[[1]] * manual)^-1
   )
 
+# Not used in this README. Maps to Figure 8 in the formal essay.
 # mu_f <- mu %>%
 #   filter (
 #     !toll_booth_name %in% c("Salguero", "Sarmiento")
@@ -588,16 +591,21 @@ ggplot(data = rho,
        title = "Hourly utilization for all toll booth plazas",
        caption = "Figure 12")
 ```
-```{r}
-# ggplot(data = rho, aes(x = substr(start_hour, 1, 2), y = toll_booth_name)) +
-#   geom_tile(aes(fill = utilization), color = "white") +
-#   scale_fill_gradient(low = "white", high = "steelblue") +
-#   labs(x = "Hora del día",
-#        y = "Plaza de peajes")
+
+Utilization can be more easily visualized with the heatmap presented in Figure 13.
+
+```{r heatmap, echo=FALSE}
+ggplot(data = rho, aes(x = substr(start_hour, 1, 2), y = toll_booth_name)) +
+  geom_tile(aes(fill = utilization), color = "white") +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Hour of day",
+       y = "Toll booth plaza",
+       title = "Hourly utilization for all toll booth plazas",
+       caption = "Figure 13")
 ```
 
 #### Minimum average number of toll booths required for each plaza
-The average utilization presented in Figure 13 uses the amount of servers that can be found in Google Maps. However, those amounts are actually higher than what is theoretically needed to avoid infinite queues. However, these additional toll booths are needed, since the theoretical values are averages, which means there can be situations where the traffic is higher than expected and may require an additional toll booth to cater for it. 
+The average utilization presented in Figure 14 uses the amount of servers that can be found in Google Maps. However, those amounts are actually higher than what is theoretically needed to avoid infinite queues. However, these additional toll booths are needed, since the theoretical values are averages, which means there can be situations where the traffic is higher than expected and may require an additional toll booth to cater for it. 
 ```{r minimumamount, echo=FALSE}
 ggplot(data = servers_required, 
        aes(x = substr(start_hour, 1, 2), 
@@ -608,7 +616,7 @@ ggplot(data = servers_required,
   labs(x = "Hour of day", 
        y = "Amount of servers",
        title = "Minimal amount of servers to avoid infinite queues",
-       caption = "Figure 13")
+       caption = "Figure 14")
 ```
 
 The table below shows the difference between the actual number of toll booths in each toll booth plaza and the minimum amount required to avoid infinite queues. The greatest difference appears for the Retiro toll booth plaza, where the minimum amount of required toll booths is around 59.4% of the existing toll booths, while for other plazas with high vehicle volumes such ratio is 84.4%.
@@ -643,7 +651,7 @@ rm(servers_required, servers_required_max, servers_required_current,
 ```
 
 ### Oil prices analysis
-The oil prices dataset consists of monthly prices of different types of oil: super, premium, gasoil, and euro. The four of them experienced a steady increase since 2008 until 2019, which is illustrated in Figure 14.
+The oil prices dataset consists of monthly prices of different types of oil: super, premium, gasoil, and euro. The four of them experienced a steady increase since 2008 until 2019, which is illustrated in Figure 15.
 
 ```{r evolution, echo=FALSE}
 oil <- unified_ff %>% as_tibble() %>%
@@ -662,11 +670,12 @@ ggplot(data = oil,
   labs(x = NULL, 
        y = "Price (ARS)",
        title = "Evolution of oil price through years",
-       caption = "Figure 14") +
+       caption = "Figure 15") +
   scale_x_continuous(breaks = 2008:2019)
 ```
 
-Even though the oil price has been increasing since 2008, inflation in Argentina followed a similar trend, as shown in Figure 15. In order to interpret the actual oil price, the current figures are divided by the yearly mean dollar exchange price (provided by the [Banco Central de la República Argentina](https://www.bcra.gob.ar/PublicacionesEstadisticas/Evolucion_moneda.asp)). 
+Even though the oil price has been increasing since 2008, inflation in Argentina followed a similar trend, as shown in Figure 16. In order to interpret the actual oil price, the current figures are divided by the yearly mean dollar exchange price (provided by the [Banco Central de la República Argentina](https://www.bcra.gob.ar/PublicacionesEstadisticas/Evolucion_moneda.asp)).
+
 ```{r priceindollars, echo=FALSE}
 datasets_dir <- "../datasets/sources"
 
@@ -675,7 +684,9 @@ exchange_rate <- read.csv (
     header = T,
     dec = ".",
     stringsAsFactors = F
-  ) %>%
+  )
+
+monthly_rate <- exchange_rate %>%
   filter (
     year >= 2008
   ) %>%
@@ -696,16 +707,16 @@ oil_yoy_trend <- oil %>%
 
 oil_yoy_trend_dollar <- data.frame (
   year = oil_yoy_trend$year_,
-  price = oil_yoy_trend$price / exchange_rate$amount
+  price = oil_yoy_trend$price / monthly_rate$amount
 )
 
 ggplot() +
   geom_line (
-    data = exchange_rate, 
+    data = monthly_rate, 
     aes(x = year, y = amount, color = "blue")
   ) + 
   geom_point (
-    data = exchange_rate, 
+    data = monthly_rate, 
     aes(x = year, y = amount, color = "blue")
   ) +
   geom_line (
@@ -721,12 +732,12 @@ ggplot() +
   labs(x = NULL, 
        y = "ARS",
        title = "Evolution of oil price and ARS/USD exchange through years",
-       caption = "Figure 15")
+       caption = "Figure 16")
 
 rm(datasets_dir)
 ```
 
-Taking differences of the ratio between oil price and ARS/USD exchange rate, Figure 16 shows there are two interesting points in time, where the oil price drops, comparing 2015 with 2016, and afterwars increases, comparing 2016 with 2017.
+Taking differences of the ratio between oil price and ARS/USD exchange rate, Figure 17 shows there are two interesting points in time, where the oil price drops, comparing 2015 with 2016, and afterwars increases, comparing 2016 with 2017.
 
 ```{r diffs, echo=FALSE}
 oil_increase_diff <- data.frame (
@@ -741,11 +752,11 @@ ggplot(data = oil_increase_diff,
   labs(x = NULL, 
        y = "Price (USD)",
        title = "Difference in oil price through years",
-       caption = "Figure 16") +
+       caption = "Figure 17") +
   scale_x_continuous(breaks = 2009:2019)
 ```
 
-However, these differences are in the order of cents, as the prices vary at most 20c. The stability of oil price expressed in dollars is illustrated in Figure 17.
+However, these differences are in the order of cents, as the prices vary at most 20c. The stability of oil price expressed in dollars is illustrated in Figure 18.
 
 ```{r dollarprice, echo=FALSE}
 ggplot(data = oil_yoy_trend_dollar,
@@ -755,6 +766,220 @@ ggplot(data = oil_yoy_trend_dollar,
   labs(x = NULL, 
        y = "Price (USD)",
        title = "Evolution of oil price through years",
-       caption = "Figure 17") +
+       caption = "Figure 18") +
   scale_x_continuous(breaks = 2008:2019)
+
+rm(monthly_rate, oil_increase_diff, oil_yoy_trend, oil_yoy_trend_dollar)
 ```
+
+```{r monthlyseries, echo=FALSE}
+monthly_vehicles <- unified_ff %>% 
+  as_tibble() %>%
+  filter (
+    (year_ >= 2015) & (year_ < 2019)
+  ) %>%
+  group_by (
+    year_,
+    month_
+  ) %>%
+  summarise (
+    amount = 0.25 * sum(amount),
+    price = mean(price)
+  )
+
+monthly_rate <- exchange_rate %>%
+  filter (
+    (year >= 2015) & (year < 2019)
+  )
+
+monthly_values <- data.frame (
+  year = monthly_vehicles$year_,
+  month = monthly_vehicles$month_,
+  ym = ymd(paste0(monthly_vehicles$year_, "-", monthly_vehicles$month_, "-01")),
+  vehicles = monthly_vehicles$amount,
+  rate = monthly_rate$pesos_per_dollar,
+  price = monthly_vehicles$price / monthly_rate$pesos_per_dollar
+)
+
+ggplot(data = monthly_values, aes(x = ym, group = 1)) +
+  geom_line(aes(y = vehicles, color = "Vehicles")) +
+  geom_line(aes(y = price * 1e7, color = "Oil price")) +
+  scale_y_continuous (
+    sec.axis = sec_axis(~./1e7, name = "Oil price (USD)")
+  ) +
+  scale_colour_manual(values = c("blue", "red")) +
+  labs(y = "Amount of vehicles",
+       x = "Date",
+       color = "Parameter",
+       title = "Evolution of oil price and vehicles through the months",
+       caption = "Figure 19") + 
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r monthlyseriesdiff, echo=FALSE}
+#' Evaluate whether an increase in series_a at time t resulted in an increase
+#' in series_b at time t + n.
+#'
+#' @param series_a Series to apply the lag to.
+#' @param series_b Series to match the other series to.
+#' @param lag_n Lag value to apply to series_a.
+#'
+#' @return Average amount of times an increase in series_a in time t generated
+#'         an increase in series_b in t + lag_n
+#'
+#' @examples lag_and_match(diff(x_1), x_2, 1)
+lag_and_match <- function (
+  series_a,
+  series_b,
+  lag_n
+) {
+  series_a <- lag(x = series_a, n = lag_n)
+  (series_a > 0) == (series_b < 0)
+}
+
+monthly_values_diff <- data.frame (
+  year = monthly_values$year[-1],
+  month = monthly_values$month[-1],
+  ym = monthly_values$ym[-1],
+  vehicles = diff(monthly_values$vehicles),
+  price = diff(monthly_values$price),
+  drop = lag_and_match (
+    diff(monthly_values$price),
+    diff(monthly_values$vehicles),
+    1
+  )
+)
+
+ggplot(data = monthly_values_diff, aes(x = ym, group = 1)) +
+  geom_line(aes(y = vehicles, color = "Vehicles")) +
+  geom_line(aes(y = lag(price * 1e7, n = 1), color = "Oil price")) +
+  scale_y_continuous (
+    sec.axis = sec_axis(~./1e7, name = "Oil price (USD)")
+  ) +
+  scale_colour_manual(values = c("blue", "red")) +
+  labs(y = "Amount of vehicles",
+       x = "Date",
+       color = "Parameter",
+       title = "Relation of variations in oil price and vehicle volume",
+       caption = "Figure 20") + 
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+### Prediction of time-spent
+```{r hourlytimespent, echo=FALSE}
+years_to_filter_by <- 2016:2019
+toll_booth_ff <- unified_ff %>% as_tibble() %>%
+  filter (
+    year_ %in% years_to_filter_by
+    & payment_method %in% c("Automatic", "Cash")
+    & vehicle_type == "Car"
+  )
+
+lambda <- toll_booth_ff %>%
+  mutate (
+    is_automatic = ifelse(payment_method == "Automatic", 1, 0)
+  ) %>%
+  group_by (
+    toll_booth_name,
+    year_,
+    month_,
+    day_,
+    start_hour,
+    booths
+  ) %>%
+  summarise (
+    arrivals = 0.25 * sum(amount),
+    arrivals_automatic = 0.25 * sum(amount[is_automatic == 1]),
+    arrivals_manual = 0.25 * sum(amount[is_automatic == 0]),
+    automatic = sum(amount[is_automatic == 1]) / sum(amount),
+    manual = sum(amount[is_automatic == 0]) / sum(amount)
+  )
+
+datasets_dir <- "../datasets/sources"
+attention <- data.frame (
+  read.csv (
+    file = file.path(datasets_dir, "attention.csv"), 
+    header = T, 
+    dec = ".",
+    stringsAsFactors = T
+  )
+)
+
+avg_serving_time_automatic <- attention %>%
+  filter (
+    type == "automatic"
+  ) %>%
+  summarise (
+    service = mean(time) / 3600
+  )
+
+avg_serving_time_manual <- attention %>%
+  filter (
+    type == "manual"
+  ) %>%
+  summarise (
+    service = mean(time) / 3600
+  )
+
+mu <- lambda %>%
+  group_by (
+    toll_booth_name,
+    year_,
+    month_,
+    day_,
+    start_hour,
+    booths
+  ) %>%
+  summarise (
+    service = (avg_serving_time_automatic[[1]] * automatic +
+                 avg_serving_time_manual[[1]] * manual)^-1
+  )
+
+rho <- data.frame (
+  toll_booth_name = lambda$toll_booth_name,
+  year = lambda$year_,
+  month = lambda$month_,
+  day = lambda$day_,
+  start_hour = lambda$start_hour,
+  lambda = lambda$arrivals,
+  mu = mu$service,
+  booths = lambda$booths,
+  booths_required = ceiling(lambda$arrivals / mu$service),
+  utilization = lambda$arrivals / (lambda$booths * mu$service)
+)
+
+required_more <- rho %>% filter(utilization >= 1)
+
+ggplot(data = required_more,
+       aes(x = hour(hms(as.character(required_more$start_hour))))) +
+  geom_histogram (
+    binwidth = 1,
+    aes(y=..density..),
+    color = "black",
+    fill = "white"
+  ) +
+  geom_density(alpha=.2, fill="#FF6666") +
+  labs(y = "Density",
+       x = "Hour of day",
+       title = "Distribution of over-demand",
+       caption = "Figure 20")
+
+rho_stable <- rho %>% filter(utilization < 1)
+
+data <- rho_stable %>%
+  mutate (
+    queue_delay = apply (
+      rho_stable[, c("booths", "lambda", "mu")], 
+      1, 
+      function(x) 3600 * Wq(x["booths"], x["lambda"], x["mu"])
+    )
+  )
+
+ts_alberti <- data$queue_delay[data$toll_booth_name == "Alberti"]
+ts_alberti <- msts (
+  data = ts_alberti,
+  seasonal.periods = c(24, 168, 8766),
+  start = c(1, 1, 2016)
+)
+```
+
