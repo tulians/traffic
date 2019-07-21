@@ -16,7 +16,7 @@ rm(list = ls()); gc();
 
 packages_to_include <- c (
   "dplyr", "tibble", "ggplot2", "ff", "reshape2", "tseries", "ggrepel", 
-  "lubridate"
+  "lubridate", "urca", "forecast"
 )
 
 lapply (
@@ -646,8 +646,7 @@ data.frame (
 )
 
 rm(servers_required, servers_required_max, servers_required_current,
-   servers_required_alberti, characteristics, Lq, Ls, p0_, pd, rho_, Wq, Ws, 
-   rho)
+   servers_required_alberti, characteristics, rho)
 ```
 
 ### Oil prices analysis
@@ -876,6 +875,7 @@ toll_booth_ff <- unified_ff %>% as_tibble() %>%
   )
 
 lambda <- toll_booth_ff %>%
+  # Add this new column to avoid performing string equality in `summarise`.
   mutate (
     is_automatic = ifelse(payment_method == "Automatic", 1, 0)
   ) %>%
@@ -940,6 +940,8 @@ rho <- data.frame (
   year = lambda$year_,
   month = lambda$month_,
   day = lambda$day_,
+  week = isoweek(
+    ymd(paste0(lambda$year_, "-", lambda$month_, "-", lambda$day_))),
   start_hour = lambda$start_hour,
   lambda = lambda$arrivals,
   mu = mu$service,
@@ -947,6 +949,19 @@ rho <- data.frame (
   booths_required = ceiling(lambda$arrivals / mu$service),
   utilization = lambda$arrivals / (lambda$booths * mu$service)
 )
+
+# Used in Chart 3.
+# gt <- rho %>%
+#   filter(utilization >= 1) %>%
+#   group_by(toll_booth_name) %>%
+#   summarise(x = n())
+# a <- rho %>%
+#   group_by(toll_booth_name) %>%
+#   summarise(x = n())
+# data.frame (
+#   tb = a$toll_booth_name,
+#   x = gt$x / a$x
+# )
 
 required_more <- rho %>% filter(utilization >= 1)
 
@@ -973,13 +988,52 @@ data <- rho_stable %>%
       1, 
       function(x) 3600 * Wq(x["booths"], x["lambda"], x["mu"])
     )
+  ) %>%
+  select (
+    toll_booth_name, year, month, day, week, start_hour, queue_delay
   )
 
-ts_alberti <- data$queue_delay[data$toll_booth_name == "Alberti"]
-ts_alberti <- msts (
-  data = ts_alberti,
-  seasonal.periods = c(24, 168, 8766),
-  start = c(1, 1, 2016)
-)
+rm(list = ls()[!ls() %in% c("data")])
+```
+
+
+```{r reg, echo=FALSE}
+data <- data %>%
+  filter (
+    toll_booth_name == "Alberti"
+  ) %>%
+  group_by (
+    year,
+    month,
+    day
+  ) %>%
+  summarise (
+    queue_delay = median(queue_delay)
+  )
+
+# A stationary time series is one whose properties do not depend on the time at 
+# which the series is observed. if {y_t} is a stationary time series, then for 
+# all `s`, the distribution of  (y_t, … , y_{t+s}) does not depend on t. It's of 
+# interest for future forecasts to know if the queue_delay time-series is 
+# stationary.
+
+qd_ts <- data$queue_delay %>% 
+  msts(seasonal.periods = c(365.25))
+
+qd_ts %>% diff() %>%
+  stl(s.window = "periodic") %>% 
+  autoplot()
+
+# The statistic value is tiny, within the range expected for stationary data.
+qd_ts %>% urca::ur.kpss() %>% summary()
+qd_ts %>% diff() %>% urca::ur.kpss() %>% summary()
+# Validate the interpretation with `ndiffs()`. 0 is yielded again.
+qd_ts %>% diff() %>% forecast::ndiffs()
+# Validate if there's a need for seasonal differencing. 0 is yielded = no diff.
+qd_ts %>% diff() %>% forecast::nsdiffs()
+# In summary, there is no need to compute a first difference, or a seasonal
+# difference.
+
+qd_ts %>% diff() %>% forecast() %>% autoplot()
 ```
 
