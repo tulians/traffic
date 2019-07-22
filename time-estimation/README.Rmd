@@ -1016,16 +1016,19 @@ data <- data %>%
 # all `s`, the distribution of  (y_t, … , y_{t+s}) does not depend on t. It's of 
 # interest for future forecasts to know if the queue_delay time-series is 
 # stationary.
+qd_ts <- data$queue_delay %>%
+  forecast::msts(seasonal.periods = c(365.25))
 
-qd_ts <- data$queue_delay %>% 
-  msts(seasonal.periods = c(365.25))
+# Decompose the time-series.
+qd_ts %>%
+  stats::stl(s.window = "periodic") %>% 
+  forecast::autoplot()
 
-qd_ts %>% diff() %>%
-  stl(s.window = "periodic") %>% 
-  autoplot()
-
-# The statistic value is tiny, within the range expected for stationary data.
+# The test statistic is much bigger than the 1% critical value, indicating the 
+# null hypothesis is rejected. That is, the data are not stationary. We can 
+# difference the data, and apply the test again.
 qd_ts %>% urca::ur.kpss() %>% summary()
+# The statistic value is tiny, within the range expected for stationary data.
 qd_ts %>% diff() %>% urca::ur.kpss() %>% summary()
 # Validate the interpretation with `ndiffs()`. 0 is yielded again.
 qd_ts %>% diff() %>% forecast::ndiffs()
@@ -1034,6 +1037,7 @@ qd_ts %>% diff() %>% forecast::nsdiffs()
 # In summary, there is no need to compute a first difference, or a seasonal
 # difference.
 
-qd_ts %>% diff() %>% forecast() %>% autoplot()
+# Perform forecast and display forecasted values.
+qd_ts %>% auto.arima(d = 1, D = 1) %>% forecast() %>% autoplot()
 ```
 
